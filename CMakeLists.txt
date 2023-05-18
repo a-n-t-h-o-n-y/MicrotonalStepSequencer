@@ -17,7 +17,6 @@ target_compile_options(sequencer
         -Wall
         -Wextra
         -Wpedantic
-        -Werror
 )
 
 # Add your test cpp file

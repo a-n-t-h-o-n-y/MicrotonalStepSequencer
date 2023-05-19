@@ -17,16 +17,16 @@ TEST_CASE("randomize_intervals", "[modify]")
     auto const min = 10;
     auto const max = 20;
 
-    SECTION("All NoteOn")
+    SECTION("All Note")
     {
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 0.8f, 0.1f, 0.4f},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
-            NoteOn{3, 0.4f, 0.3f, 0.2f},
-            NoteOn{4, 0.2f, 0.4f, 0.1f},
-            NoteOn{5, 0.0f, 0.5f, 0.0f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 0.8f, 0.1f, 0.4f},
+            Note{2, 0.6f, 0.2f, 0.3f},
+            Note{3, 0.4f, 0.3f, 0.2f},
+            Note{4, 0.2f, 0.4f, 0.1f},
+            Note{5, 0.0f, 0.5f, 0.0f},
         }};
 
         // Randomize the intervals in the sequence
@@ -38,7 +38,7 @@ TEST_CASE("randomize_intervals", "[modify]")
         // Check that each interval is within the expected range
         for (auto const &cell : randomized_seq.cells)
         {
-            auto const interval = std::get<NoteOn>(cell).interval;
+            auto const interval = std::get<Note>(cell).interval;
             REQUIRE(interval >= min);
             REQUIRE(interval <= max);
         }
@@ -72,8 +72,8 @@ TEST_CASE("randomize_intervals", "[modify]")
     SECTION("Throws std::invalid_argument")
     {
         // Create a test sequence
-        auto const seq = Sequence{
-            {NoteOn{0, 1.0f, 0.0f, 0.5f}, Rest{}, NoteOn{2, 0.6f, 0.2f, 0.3f}}};
+        auto const seq =
+            Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
         REQUIRE_THROWS_AS(modify::randomize_intervals(seq, 10, -10),
@@ -85,15 +85,15 @@ TEST_CASE("randomize_intervals", "[modify]")
         // Create a test sequence
         auto const seq = Sequence{
             {
-                NoteOn{0, 1.0f, 0.0f, 0.5f},
+                Note{0, 1.0f, 0.0f, 0.5f},
                 Sequence{{
-                    NoteOn{1, 0.8f, 0.1f, 0.4f},
-                    NoteOn{2, 0.6f, 0.2f, 0.3f},
+                    Note{1, 0.8f, 0.1f, 0.4f},
+                    Note{2, 0.6f, 0.2f, 0.3f},
                 }},
-                NoteOn{3, 0.4f, 0.3f, 0.2f},
+                Note{3, 0.4f, 0.3f, 0.2f},
                 Sequence{{
-                    NoteOn{4, 0.2f, 0.4f, 0.1f},
-                    NoteOn{5, 0.0f, 0.5f, 0.0f},
+                    Note{4, 0.2f, 0.4f, 0.1f},
+                    Note{5, 0.0f, 0.5f, 0.0f},
                 }},
             },
         };
@@ -105,7 +105,7 @@ TEST_CASE("randomize_intervals", "[modify]")
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
 
         // Check that each interval is within the expected range
-        test::helper::check_sequence(randomized_seq, [&](NoteOn const &note) {
+        test::helper::check_sequence(randomized_seq, [&](Note const &note) {
             REQUIRE(note.interval >= min);
             REQUIRE(note.interval <= max);
         });
@@ -117,16 +117,16 @@ TEST_CASE("randomize_velocity", "[modify]")
     auto const min = 0.2f;
     auto const max = 0.7f;
 
-    SECTION("All NoteOn")
+    SECTION("All Note")
     {
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 0.8f, 0.1f, 0.4f},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
-            NoteOn{3, 0.4f, 0.3f, 0.2f},
-            NoteOn{4, 0.2f, 0.4f, 0.1f},
-            NoteOn{5, 0.0f, 0.5f, 0.0f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 0.8f, 0.1f, 0.4f},
+            Note{2, 0.6f, 0.2f, 0.3f},
+            Note{3, 0.4f, 0.3f, 0.2f},
+            Note{4, 0.2f, 0.4f, 0.1f},
+            Note{5, 0.0f, 0.5f, 0.0f},
         }};
 
         // Randomize the velocity in the sequence
@@ -138,7 +138,7 @@ TEST_CASE("randomize_velocity", "[modify]")
         // Check that each velocity is within the expected range
         for (auto const &cell : randomized_seq.cells)
         {
-            auto const velocity = std::get<NoteOn>(cell).velocity;
+            auto const velocity = std::get<Note>(cell).velocity;
             REQUIRE(velocity >= min);
             REQUIRE(velocity <= max);
         }
@@ -165,8 +165,8 @@ TEST_CASE("randomize_velocity", "[modify]")
     SECTION("Throws std::invalid_argument")
     {
         // Create a test sequence
-        auto const seq = Sequence{
-            {NoteOn{0, 1.0f, 0.0f, 0.5f}, Rest{}, NoteOn{2, 0.6f, 0.2f, 0.3f}}};
+        auto const seq =
+            Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
         REQUIRE_THROWS_AS(modify::randomize_velocity(seq, 0.7f, 0.2f),
@@ -193,15 +193,15 @@ TEST_CASE("randomize_velocity", "[modify]")
         // Create a test sequence
         auto const seq = Sequence{
             {
-                NoteOn{0, 1.0f, 0.0f, 0.5f},
+                Note{0, 1.0f, 0.0f, 0.5f},
                 Sequence{{
-                    NoteOn{1, 0.8f, 0.1f, 0.4f},
-                    NoteOn{2, 0.6f, 0.2f, 0.3f},
+                    Note{1, 0.8f, 0.1f, 0.4f},
+                    Note{2, 0.6f, 0.2f, 0.3f},
                 }},
-                NoteOn{3, 0.4f, 0.3f, 0.2f},
+                Note{3, 0.4f, 0.3f, 0.2f},
                 Sequence{{
-                    NoteOn{4, 0.2f, 0.4f, 0.1f},
-                    NoteOn{5, 0.0f, 0.5f, 0.0f},
+                    Note{4, 0.2f, 0.4f, 0.1f},
+                    Note{5, 0.0f, 0.5f, 0.0f},
                 }},
             },
         };
@@ -213,7 +213,7 @@ TEST_CASE("randomize_velocity", "[modify]")
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
 
         // Check that each velocity is within the expected range
-        test::helper::check_sequence(randomized_seq, [&](NoteOn const &note) {
+        test::helper::check_sequence(randomized_seq, [&](Note const &note) {
             REQUIRE(note.velocity >= min);
             REQUIRE(note.velocity <= max);
         });
@@ -225,16 +225,16 @@ TEST_CASE("randomize_delay", "[modify]")
     auto const min = 0.2f;
     auto const max = 0.7f;
 
-    SECTION("All NoteOn")
+    SECTION("All Note")
     {
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 0.8f, 0.1f, 0.4f},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
-            NoteOn{3, 0.4f, 0.3f, 0.2f},
-            NoteOn{4, 0.2f, 0.4f, 0.1f},
-            NoteOn{5, 0.0f, 0.5f, 0.0f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 0.8f, 0.1f, 0.4f},
+            Note{2, 0.6f, 0.2f, 0.3f},
+            Note{3, 0.4f, 0.3f, 0.2f},
+            Note{4, 0.2f, 0.4f, 0.1f},
+            Note{5, 0.0f, 0.5f, 0.0f},
         }};
 
         // Randomize the delay in the sequence
@@ -246,7 +246,7 @@ TEST_CASE("randomize_delay", "[modify]")
         // Check that each delay is within the expected range
         for (auto const &cell : randomized_seq.cells)
         {
-            auto const delay = std::get<NoteOn>(cell).delay;
+            auto const delay = std::get<Note>(cell).delay;
             REQUIRE(delay >= min);
             REQUIRE(delay <= max);
         }
@@ -280,8 +280,8 @@ TEST_CASE("randomize_delay", "[modify]")
     SECTION("Throws std::invalid_argument")
     {
         // Create a test sequence
-        auto const seq = Sequence{
-            {NoteOn{0, 1.0f, 0.0f, 0.5f}, Rest{}, NoteOn{2, 0.6f, 0.2f, 0.3f}}};
+        auto const seq =
+            Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
         REQUIRE_THROWS_AS(modify::randomize_delay(seq, 0.7f, 0.2f),
@@ -309,15 +309,15 @@ TEST_CASE("randomize_delay", "[modify]")
         // Create a test sequence
         auto const seq = Sequence{
             {
-                NoteOn{0, 1.0f, 0.0f, 0.5f},
+                Note{0, 1.0f, 0.0f, 0.5f},
                 Sequence{{
-                    NoteOn{1, 0.8f, 0.1f, 0.4f},
-                    NoteOn{2, 0.6f, 0.2f, 0.3f},
+                    Note{1, 0.8f, 0.1f, 0.4f},
+                    Note{2, 0.6f, 0.2f, 0.3f},
                 }},
-                NoteOn{3, 0.4f, 0.3f, 0.2f},
+                Note{3, 0.4f, 0.3f, 0.2f},
                 Sequence{{
-                    NoteOn{4, 0.2f, 0.4f, 0.1f},
-                    NoteOn{5, 0.0f, 0.5f, 0.0f},
+                    Note{4, 0.2f, 0.4f, 0.1f},
+                    Note{5, 0.0f, 0.5f, 0.0f},
                 }},
             },
         };
@@ -329,7 +329,7 @@ TEST_CASE("randomize_delay", "[modify]")
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
 
         // Check that each delay is within the expected range
-        test::helper::check_sequence(randomized_seq, [&](NoteOn const &note) {
+        test::helper::check_sequence(randomized_seq, [&](Note const &note) {
             REQUIRE(note.delay >= min);
             REQUIRE(note.delay <= max);
         });
@@ -341,16 +341,16 @@ TEST_CASE("randomize_gate", "[modify]")
     auto const min = 0.2f;
     auto const max = 0.7f;
 
-    SECTION("All NoteOn")
+    SECTION("All Note")
     {
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 0.8f, 0.1f, 0.4f},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
-            NoteOn{3, 0.4f, 0.3f, 0.2f},
-            NoteOn{4, 0.2f, 0.4f, 0.1f},
-            NoteOn{5, 0.0f, 0.5f, 0.0f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 0.8f, 0.1f, 0.4f},
+            Note{2, 0.6f, 0.2f, 0.3f},
+            Note{3, 0.4f, 0.3f, 0.2f},
+            Note{4, 0.2f, 0.4f, 0.1f},
+            Note{5, 0.0f, 0.5f, 0.0f},
         }};
 
         // Randomize the gate in the sequence
@@ -362,7 +362,7 @@ TEST_CASE("randomize_gate", "[modify]")
         // Check that each gate is within the expected range
         for (auto const &cell : randomized_seq.cells)
         {
-            auto const gate = std::get<NoteOn>(cell).gate;
+            auto const gate = std::get<Note>(cell).gate;
             REQUIRE(gate >= min);
             REQUIRE(gate <= max);
         }
@@ -389,8 +389,8 @@ TEST_CASE("randomize_gate", "[modify]")
     SECTION("Throws std::invalid_argument")
     {
         // Create a test sequence
-        auto const seq = Sequence{
-            {NoteOn{0, 1.0f, 0.0f, 0.5f}, Rest{}, NoteOn{2, 0.6f, 0.2f, 0.3f}}};
+        auto const seq =
+            Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
         REQUIRE_THROWS_AS(modify::randomize_gate(seq, 0.7f, 0.2f),
@@ -418,15 +418,15 @@ TEST_CASE("randomize_gate", "[modify]")
         // Create a test sequence
         auto const seq = Sequence{
             {
-                NoteOn{0, 1.0f, 0.0f, 0.5f},
+                Note{0, 1.0f, 0.0f, 0.5f},
                 Sequence{{
-                    NoteOn{1, 0.8f, 0.1f, 0.4f},
-                    NoteOn{2, 0.6f, 0.2f, 0.3f},
+                    Note{1, 0.8f, 0.1f, 0.4f},
+                    Note{2, 0.6f, 0.2f, 0.3f},
                 }},
-                NoteOn{3, 0.4f, 0.3f, 0.2f},
+                Note{3, 0.4f, 0.3f, 0.2f},
                 Sequence{{
-                    NoteOn{4, 0.2f, 0.4f, 0.1f},
-                    NoteOn{5, 0.0f, 0.5f, 0.0f},
+                    Note{4, 0.2f, 0.4f, 0.1f},
+                    Note{5, 0.0f, 0.5f, 0.0f},
                 }},
             },
         };
@@ -438,7 +438,7 @@ TEST_CASE("randomize_gate", "[modify]")
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
 
         // Check that each gate is within the expected range
-        test::helper::check_sequence(randomized_seq, [&](NoteOn const &note) {
+        test::helper::check_sequence(randomized_seq, [&](Note const &note) {
             REQUIRE(note.gate >= min);
             REQUIRE(note.gate <= max);
         });
@@ -451,9 +451,9 @@ TEST_CASE("shift_pitch", "[modify]")
     {
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
+            Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
         // Shift the pitch in the sequence
@@ -467,10 +467,10 @@ TEST_CASE("shift_pitch", "[modify]")
         {
             auto const &original_cell = seq.cells[i];
             auto const &shifted_cell = shifted_seq.cells[i];
-            if (holds<NoteOn>(shifted_cell))
+            if (holds<Note>(shifted_cell))
             {
-                auto const interval = std::get<NoteOn>(shifted_cell).interval;
-                REQUIRE(interval == std::get<NoteOn>(original_cell).interval);
+                auto const interval = std::get<Note>(shifted_cell).interval;
+                REQUIRE(interval == std::get<Note>(original_cell).interval);
             }
         }
     }
@@ -481,9 +481,9 @@ TEST_CASE("shift_pitch", "[modify]")
 
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
+            Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
         // Shift the pitch in the sequence
@@ -497,10 +497,10 @@ TEST_CASE("shift_pitch", "[modify]")
         {
             auto const &original_cell = seq.cells[i];
             auto const &shifted_cell = shifted_seq.cells[i];
-            if (holds<NoteOn>(shifted_cell))
+            if (holds<Note>(shifted_cell))
             {
-                auto const interval = std::get<NoteOn>(shifted_cell).interval;
-                REQUIRE(interval == std::get<NoteOn>(original_cell).interval + shift);
+                auto const interval = std::get<Note>(shifted_cell).interval;
+                REQUIRE(interval == std::get<Note>(original_cell).interval + shift);
             }
         }
     }
@@ -511,9 +511,9 @@ TEST_CASE("shift_pitch", "[modify]")
 
         // Create a test sequence
         auto const seq = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{2, 0.6f, 0.2f, 0.3f},
+            Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
         // Shift the pitch in the sequence
@@ -527,10 +527,10 @@ TEST_CASE("shift_pitch", "[modify]")
         {
             auto const &original_cell = seq.cells[i];
             auto const &shifted_cell = shifted_seq.cells[i];
-            if (holds<NoteOn>(shifted_cell))
+            if (holds<Note>(shifted_cell))
             {
-                auto const interval = std::get<NoteOn>(shifted_cell).interval;
-                REQUIRE(interval == std::get<NoteOn>(original_cell).interval + shift);
+                auto const interval = std::get<Note>(shifted_cell).interval;
+                REQUIRE(interval == std::get<Note>(original_cell).interval + shift);
             }
         }
     }
@@ -540,15 +540,15 @@ TEST_CASE("shift_pitch", "[modify]")
         // Create a test sequence
         auto const seq = Sequence{
             {
-                NoteOn{5, 1.0f, 0.0f, 0.5f},
+                Note{5, 1.0f, 0.0f, 0.5f},
                 Sequence{{
-                    NoteOn{5, 0.8f, 0.1f, 0.4f},
-                    NoteOn{5, 0.6f, 0.2f, 0.3f},
+                    Note{5, 0.8f, 0.1f, 0.4f},
+                    Note{5, 0.6f, 0.2f, 0.3f},
                 }},
-                NoteOn{5, 0.4f, 0.3f, 0.2f},
+                Note{5, 0.4f, 0.3f, 0.2f},
                 Sequence{{
-                    NoteOn{5, 0.2f, 0.4f, 0.1f},
-                    NoteOn{5, 0.0f, 0.5f, 0.0f},
+                    Note{5, 0.2f, 0.4f, 0.1f},
+                    Note{5, 0.0f, 0.5f, 0.0f},
                 }},
             },
         };
@@ -560,9 +560,8 @@ TEST_CASE("shift_pitch", "[modify]")
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
         // Check that each gate is within the expected range
-        test::helper::check_sequence(shifted_seq, [&](NoteOn const &note) {
-            REQUIRE(note.interval == (5 + 2));
-        });
+        test::helper::check_sequence(
+            shifted_seq, [&](Note const &note) { REQUIRE(note.interval == (5 + 2)); });
     }
 }
 
@@ -571,24 +570,24 @@ TEST_CASE("rotate", "[modify]")
     // Create a test sequence
     auto const seq = Sequence{
         {
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{1, 0.6f, 0.2f, 0.3f},
-            NoteOn{2, 1.0f, 0.0f, 0.5f},
+            Note{1, 0.6f, 0.2f, 0.3f},
+            Note{2, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{3, 0.6f, 0.2f, 0.3f},
-            NoteOn{4, 1.0f, 0.0f, 0.5f},
+            Note{3, 0.6f, 0.2f, 0.3f},
+            Note{4, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{5, 0.6f, 0.2f, 0.3f},
-            NoteOn{6, 1.0f, 0.0f, 0.5f},
+            Note{5, 0.6f, 0.2f, 0.3f},
+            Note{6, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{7, 0.6f, 0.2f, 0.3f},
-            NoteOn{8, 1.0f, 0.0f, 0.5f},
+            Note{7, 0.6f, 0.2f, 0.3f},
+            Note{8, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{9, 0.6f, 0.2f, 0.3f},
-            NoteOn{10, 1.0f, 0.0f, 0.5f},
+            Note{9, 0.6f, 0.2f, 0.3f},
+            Note{10, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{11, 0.6f, 0.2f, 0.3f},
+            Note{11, 0.6f, 0.2f, 0.3f},
         },
     };
 
@@ -675,7 +674,7 @@ auto check_swing(Sequence const &seq, float expected) -> void
     {
         auto const is_odd = (i % 2) == 1;
         std::visit(overload{
-                       [&](NoteOn const &note) {
+                       [&](Note const &note) {
                            REQUIRE(note.delay == (is_odd ? expected : 0.f));
                        },
                        [](Rest) {},
@@ -690,24 +689,24 @@ TEST_CASE("swing", "[modify]")
     // Create a test sequence
     auto const seq = Sequence{
         {
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{1, 0.6f, 0.2f, 0.3f},
-            NoteOn{2, 1.0f, 0.5f, 0.5f},
+            Note{1, 0.6f, 0.2f, 0.3f},
+            Note{2, 1.0f, 0.5f, 0.5f},
             Rest{},
-            NoteOn{3, 0.6f, 0.2f, 0.3f},
-            NoteOn{4, 1.0f, 0.0f, 0.5f},
+            Note{3, 0.6f, 0.2f, 0.3f},
+            Note{4, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{5, 0.6f, 0.2f, 0.3f},
-            NoteOn{6, 1.0f, 0.0f, 0.5f},
+            Note{5, 0.6f, 0.2f, 0.3f},
+            Note{6, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{7, 0.6f, 0.2f, 0.3f},
-            NoteOn{8, 1.0f, 0.0f, 0.5f},
+            Note{7, 0.6f, 0.2f, 0.3f},
+            Note{8, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{9, 0.6f, 0.2f, 0.3f},
-            NoteOn{10, 1.0f, 0.0f, 0.5f},
+            Note{9, 0.6f, 0.2f, 0.3f},
+            Note{10, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{11, 0.6f, 0.4f, 0.3f},
+            Note{11, 0.6f, 0.4f, 0.3f},
         },
     };
 
@@ -721,7 +720,7 @@ TEST_CASE("swing", "[modify]")
 
         // Check that the swung sequence delays are all zero
         test::helper::check_sequence(
-            swung_seq, [&](NoteOn const &note) { REQUIRE(note.delay == 0.f); });
+            swung_seq, [&](Note const &note) { REQUIRE(note.delay == 0.f); });
     }
 
     SECTION("0.5 Swing")
@@ -773,34 +772,34 @@ TEST_CASE("swing", "[modify]")
         // Create a test sequence with sub sequences
         auto const seqs = Sequence{
             {
-                NoteOn{0, 1.0f, 0.0f, 0.5f},
+                Note{0, 1.0f, 0.0f, 0.5f},
                 Rest{},
                 Sequence{
                     {
-                        NoteOn{1, 0.6f, 0.2f, 0.3f},
-                        NoteOn{2, 1.0f, 0.5f, 0.5f},
+                        Note{1, 0.6f, 0.2f, 0.3f},
+                        Note{2, 1.0f, 0.5f, 0.5f},
                         Rest{},
-                        NoteOn{3, 0.6f, 0.2f, 0.3f},
+                        Note{3, 0.6f, 0.2f, 0.3f},
                     },
                 },
-                NoteOn{4, 1.0f, 0.0f, 0.5f},
+                Note{4, 1.0f, 0.0f, 0.5f},
                 Rest{},
                 Sequence{
                     {
-                        NoteOn{5, 0.6f, 0.2f, 0.3f},
-                        NoteOn{6, 1.0f, 0.0f, 0.5f},
+                        Note{5, 0.6f, 0.2f, 0.3f},
+                        Note{6, 1.0f, 0.0f, 0.5f},
                         Rest{},
-                        NoteOn{7, 0.6f, 0.2f, 0.3f},
+                        Note{7, 0.6f, 0.2f, 0.3f},
                     },
                 },
-                NoteOn{8, 1.0f, 0.0f, 0.5f},
+                Note{8, 1.0f, 0.0f, 0.5f},
                 Rest{},
                 Sequence{
                     {
-                        NoteOn{9, 0.6f, 0.2f, 0.3f},
-                        NoteOn{10, 1.0f, 0.0f, 0.5f},
+                        Note{9, 0.6f, 0.2f, 0.3f},
+                        Note{10, 1.0f, 0.0f, 0.5f},
                         Rest{},
-                        NoteOn{11, 0.6f, 0.4f, 0.3f},
+                        Note{11, 0.6f, 0.4f, 0.3f},
                     },
                 },
             },
@@ -818,34 +817,34 @@ TEST_CASE("quantize", "[modify]")
     // Create a test sequence with subsequences
     auto const seq = Sequence{
         {
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{1, 0.6f, 0.2f, 0.3f},
-                    NoteOn{2, 1.0f, 0.5f, 0.5f},
+                    Note{1, 0.6f, 0.2f, 0.3f},
+                    Note{2, 1.0f, 0.5f, 0.5f},
                     Rest{},
-                    NoteOn{3, 0.6f, 0.2f, 0.3f},
+                    Note{3, 0.6f, 0.2f, 0.3f},
                 },
             },
-            NoteOn{4, 1.0f, 0.0f, 0.5f},
+            Note{4, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{5, 0.6f, 0.2f, 0.3f},
-                    NoteOn{6, 1.0f, 0.0f, 0.5f},
+                    Note{5, 0.6f, 0.2f, 0.3f},
+                    Note{6, 1.0f, 0.0f, 0.5f},
                     Rest{},
-                    NoteOn{7, 0.6f, 0.2f, 0.3f},
+                    Note{7, 0.6f, 0.2f, 0.3f},
                 },
             },
-            NoteOn{8, 1.0f, 0.0f, 0.5f},
+            Note{8, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{9, 0.6f, 0.2f, 0.3f},
-                    NoteOn{10, 1.0f, 0.0f, 0.5f},
+                    Note{9, 0.6f, 0.2f, 0.3f},
+                    Note{10, 1.0f, 0.0f, 0.5f},
                     Rest{},
-                    NoteOn{11, 0.6f, 0.4f, 0.3f},
+                    Note{11, 0.6f, 0.4f, 0.3f},
                 },
             },
         },
@@ -860,7 +859,7 @@ TEST_CASE("quantize", "[modify]")
         REQUIRE(quantized_seq.cells.size() == seq.cells.size());
 
         // Check that the quantized sequence delays are all 0.f and gate is 1.f
-        test::helper::check_sequence(quantized_seq, [&](NoteOn const &note) {
+        test::helper::check_sequence(quantized_seq, [&](Note const &note) {
             REQUIRE(note.delay == 0.f);
             REQUIRE(note.gate == 1.f);
         });
@@ -872,34 +871,34 @@ TEST_CASE("mirror", "[modify]")
     // Create a test sequence with subsequences
     auto const seq = Sequence{
         {
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{1, 0.6f, 0.2f, 0.3f},
-                    NoteOn{2, 1.0f, 0.5f, 0.5f},
+                    Note{1, 0.6f, 0.2f, 0.3f},
+                    Note{2, 1.0f, 0.5f, 0.5f},
                     Rest{},
-                    NoteOn{3, 0.6f, 0.2f, 0.3f},
+                    Note{3, 0.6f, 0.2f, 0.3f},
                 },
             },
-            NoteOn{4, 1.0f, 0.0f, 0.5f},
+            Note{4, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{5, 0.6f, 0.2f, 0.3f},
-                    NoteOn{6, 1.0f, 0.0f, 0.5f},
+                    Note{5, 0.6f, 0.2f, 0.3f},
+                    Note{6, 1.0f, 0.0f, 0.5f},
                     Rest{},
-                    NoteOn{7, 0.6f, 0.2f, 0.3f},
+                    Note{7, 0.6f, 0.2f, 0.3f},
                 },
             },
-            NoteOn{8, 1.0f, 0.0f, 0.5f},
+            Note{8, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{9, 0.6f, 0.2f, 0.3f},
-                    NoteOn{10, 1.0f, 0.0f, 0.5f},
+                    Note{9, 0.6f, 0.2f, 0.3f},
+                    Note{10, 1.0f, 0.0f, 0.5f},
                     Rest{},
-                    NoteOn{11, 0.6f, 0.4f, 0.3f},
+                    Note{11, 0.6f, 0.4f, 0.3f},
                 },
             },
         },
@@ -916,8 +915,8 @@ TEST_CASE("mirror", "[modify]")
         // Create expected sequence
         auto expected = seq;
         using namespace utility;
-        test::helper::modify_notes(
-            expected, [](NoteOn &note) { note.interval = -note.interval; });
+        test::helper::modify_notes(expected,
+                                   [](Note &note) { note.interval = -note.interval; });
         REQUIRE(mirrored_seq == expected);
     }
 
@@ -933,7 +932,7 @@ TEST_CASE("mirror", "[modify]")
         auto expected = seq;
         using namespace utility;
         test::helper::modify_notes(
-            expected, [](NoteOn &note) { note.interval = 5 + (5 - note.interval); });
+            expected, [](Note &note) { note.interval = 5 + (5 - note.interval); });
         REQUIRE(mirrored_seq == expected);
     }
 
@@ -948,9 +947,8 @@ TEST_CASE("mirror", "[modify]")
         // Create expected sequence
         auto expected = seq;
         using namespace utility;
-        test::helper::modify_notes(expected, [](NoteOn &note) {
-            note.interval = -10 + (-10 - note.interval);
-        });
+        test::helper::modify_notes(
+            expected, [](Note &note) { note.interval = -10 + (-10 - note.interval); });
         REQUIRE(mirrored_seq == expected);
     }
 }
@@ -959,17 +957,17 @@ TEST_CASE("reverse", "[modify]")
 {
     // Create a test sequence with subsequences
     auto const seq = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Rest{},
         Sequence{
             {
-                NoteOn{1, 0.6f, 0.2f, 0.3f},
-                NoteOn{2, 1.0f, 0.5f, 0.5f},
+                Note{1, 0.6f, 0.2f, 0.3f},
+                Note{2, 1.0f, 0.5f, 0.5f},
                 Rest{},
-                NoteOn{3, 0.6f, 0.2f, 0.3f},
+                Note{3, 0.6f, 0.2f, 0.3f},
             },
         },
-        NoteOn{4, 1.0f, 0.0f, 0.5f},
+        Note{4, 1.0f, 0.0f, 0.5f},
     }};
 
     SECTION("Reverse")
@@ -1006,17 +1004,17 @@ TEST_CASE("repeat", "[modify]")
 {
     auto const seq = Sequence{
         {
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
             Sequence{
                 {
-                    NoteOn{1, 0.6f, 0.2f, 0.3f},
-                    NoteOn{2, 1.0f, 0.5f, 0.5f},
+                    Note{1, 0.6f, 0.2f, 0.3f},
+                    Note{2, 1.0f, 0.5f, 0.5f},
                     Rest{},
-                    NoteOn{3, 0.6f, 0.2f, 0.3f},
+                    Note{3, 0.6f, 0.2f, 0.3f},
                 },
             },
-            NoteOn{4, 1.0f, 0.0f, 0.5f},
+            Note{4, 1.0f, 0.0f, 0.5f},
         },
     };
 
@@ -1067,9 +1065,9 @@ TEST_CASE("repeat", "[modify]")
 TEST_CASE("stretch", "[modify]")
 {
     auto const seq = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Rest{},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
     }};
 
     SECTION("Stretch by 0")
@@ -1109,12 +1107,12 @@ TEST_CASE("stretch", "[modify]")
 TEST_CASE("compress", "[modify]")
 {
     auto const seq = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Rest{},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
     }};
 
     SECTION("Throws")
@@ -1151,17 +1149,17 @@ TEST_CASE("compress", "[modify]")
     SECTION("Subsequence")
     {
         auto const seq2 = Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Sequence{{
-                NoteOn{0, 1.0f, 0.0f, 0.5f},
-                NoteOn{1, 1.0f, 0.0f, 0.5f},
-                NoteOn{1, 1.0f, 0.0f, 0.5f},
+                Note{0, 1.0f, 0.0f, 0.5f},
+                Note{1, 1.0f, 0.0f, 0.5f},
+                Note{1, 1.0f, 0.0f, 0.5f},
             }},
             Rest{},
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 1.0f, 0.0f, 0.5f},
+            Note{1, 1.0f, 0.0f, 0.5f},
         }};
 
         auto const compressed_seq = modify::compress(seq2, 2);
@@ -1178,20 +1176,20 @@ TEST_CASE("shuffle", "[modify]")
 {
     // medium sequence with subsequence
     auto const seq = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 1.0f, 0.0f, 0.5f},
-            NoteOn{2, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 1.0f, 0.0f, 0.5f},
+            Note{2, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
         }},
         Rest{},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
-        NoteOn{2, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
+        Note{2, 1.0f, 0.0f, 0.5f},
     }};
 
     SECTION("shuffle returns a sequence with the same number of cells")
@@ -1253,29 +1251,29 @@ TEST_CASE("shuffle", "[modify]")
 TEST_CASE("concat", "[modify]")
 {
     auto const seq1 = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
-            NoteOn{1, 1.0f, 0.0f, 0.5f},
-            NoteOn{2, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
+            Note{1, 1.0f, 0.0f, 0.5f},
+            Note{2, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
         }},
         Rest{},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
-        NoteOn{2, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
+        Note{2, 1.0f, 0.0f, 0.5f},
     }};
 
     // different than seq1
     auto const seq2 = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
-        NoteOn{2, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
+        Note{2, 1.0f, 0.0f, 0.5f},
         Rest{},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Rest{},
     }};
 
@@ -1335,21 +1333,21 @@ TEST_CASE("concat", "[modify]")
 TEST_CASE("merge", "[modify]")
 {
     auto const seq1 = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Sequence{{
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
         }},
         Rest{},
-        NoteOn{2, 1.0f, 0.0f, 0.5f},
+        Note{2, 1.0f, 0.0f, 0.5f},
     }};
 
     auto const seq2 = Sequence{{
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
         Rest{},
-        NoteOn{3, 1.0f, 0.0f, 0.5f},
+        Note{3, 1.0f, 0.0f, 0.5f},
     }};
 
     SECTION("merge returns a sequence with 2 * max cell count cells")
@@ -1402,16 +1400,16 @@ TEST_CASE("merge", "[modify]")
 TEST_CASE("split", "[modify]")
 {
     auto const seq = Sequence{{
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
-        NoteOn{1, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
+        Note{1, 1.0f, 0.0f, 0.5f},
         Sequence{{
-            NoteOn{2, 1.0f, 0.0f, 0.5f},
+            Note{2, 1.0f, 0.0f, 0.5f},
             Rest{},
-            NoteOn{0, 1.0f, 0.0f, 0.5f},
+            Note{0, 1.0f, 0.0f, 0.5f},
         }},
-        NoteOn{2, 1.0f, 0.0f, 0.5f},
+        Note{2, 1.0f, 0.0f, 0.5f},
         Rest{},
-        NoteOn{0, 1.0f, 0.0f, 0.5f},
+        Note{0, 1.0f, 0.0f, 0.5f},
         Rest{},
     }};
 

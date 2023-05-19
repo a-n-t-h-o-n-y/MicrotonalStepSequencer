@@ -42,7 +42,7 @@ namespace sequence::modify
 
     visit_cells(randomized_seq,
                 overload{
-                    [&](NoteOn &note) { note.interval = dis(gen); },
+                    [&](Note &note) { note.interval = dis(gen); },
                     [](Rest) {},
                     [&](Sequence &seq) { seq = randomize_intervals(seq, min, max); },
                 });
@@ -84,7 +84,7 @@ namespace sequence::modify
 
     visit_cells(randomized_seq,
                 overload{
-                    [&](NoteOn &note) { note.velocity = dis(gen); },
+                    [&](Note &note) { note.velocity = dis(gen); },
                     [](Rest) {},
                     [&](Sequence &seq) { seq = randomize_velocity(seq, min, max); },
                 });
@@ -126,7 +126,7 @@ namespace sequence::modify
 
     visit_cells(randomized_seq,
                 overload{
-                    [&](NoteOn &note) { note.delay = dis(gen); },
+                    [&](Note &note) { note.delay = dis(gen); },
                     [](Rest) {},
                     [&](Sequence &seq) { seq = randomize_delay(seq, min, max); },
                 });
@@ -168,7 +168,7 @@ namespace sequence::modify
 
     visit_cells(randomized_seq,
                 overload{
-                    [&](NoteOn &note) { note.gate = dis(gen); },
+                    [&](Note &note) { note.gate = dis(gen); },
                     [](Rest) {},
                     [&](Sequence &seq) { seq = randomize_gate(seq, min, max); },
                 });
@@ -192,7 +192,7 @@ namespace sequence::modify
     using namespace utility;
 
     visit_cells(shifted_seq, overload{
-                                 [&](NoteOn &note) { note.interval += amount; },
+                                 [&](Note &note) { note.interval += amount; },
                                  [](Rest) {},
                                  [&](Sequence &seq) { seq = shift_pitch(seq, amount); },
                              });
@@ -255,7 +255,7 @@ namespace sequence::modify
         using namespace utility;
         auto const is_odd = (i % 2) == 1;
         std::visit(overload{
-                       [&](NoteOn &note) { note.delay = is_odd ? amount : 0.f; },
+                       [&](Note &note) { note.delay = is_odd ? amount : 0.f; },
                        [](Rest) {},
                        [&](Sequence &sub_seq) { sub_seq = swing(sub_seq, amount); },
                    },
@@ -279,7 +279,7 @@ namespace sequence::modify
 
     visit_cells(quantized_seq,
                 overload{
-                    [&](NoteOn &note) {
+                    [&](Note &note) {
                         note.delay = 0.f;
                         note.gate = 1.f;
                     },
@@ -305,7 +305,7 @@ namespace sequence::modify
 
     visit_cells(mirrored_seq,
                 overload{
-                    [&](NoteOn &note) {
+                    [&](Note &note) {
                         auto const diff = center_note - note.interval;
                         note.interval = center_note + diff;
                     },
@@ -332,7 +332,7 @@ namespace sequence::modify
     {
         using namespace utility;
         std::visit(overload{
-                       [](NoteOn &) {},
+                       [](Note &) {},
                        [](Rest &) {},
                        [&](Sequence &sub_seq) { sub_seq = reverse(sub_seq); },
                    },
@@ -453,7 +453,7 @@ namespace sequence::modify
 
     visit_cells(shuffled_seq,
                 overload{
-                    [](NoteOn &) {},
+                    [](Note &) {},
                     [](Rest &) {},
                     [&](Sequence &sub_seq) { sub_seq = shuffle(sub_seq); },
                 });

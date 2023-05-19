@@ -6,9 +6,9 @@
 namespace sequence
 {
 
-using Cell = std::variant<struct NoteOn, struct Rest, struct Sequence>;
+using Cell = std::variant<struct Note, struct Rest, struct Sequence>;
 
-struct NoteOn
+struct Note
 {
     int interval = 0;      // 0 is scale's base note, 1 is scale's second note, etc.
     float velocity = 0.7f; // 0.0 to 1.0, percentage of max velocity
@@ -26,18 +26,18 @@ struct Sequence
 };
 
 /**
- * @brief Compares two NoteOns for equality.
+ * @brief Compares two Notes for equality.
  */
-[[nodiscard]] constexpr auto operator==(NoteOn const &lhs, NoteOn const &rhs) -> bool
+[[nodiscard]] constexpr auto operator==(Note const &lhs, Note const &rhs) -> bool
 {
     return lhs.interval == rhs.interval && lhs.velocity == rhs.velocity &&
            lhs.delay == rhs.delay && lhs.gate == rhs.gate;
 }
 
 /**
- * @brief Compares two NoteOns for inequality.
+ * @brief Compares two Notes for inequality.
  */
-[[nodiscard]] constexpr auto operator!=(NoteOn const &lhs, NoteOn const &rhs) -> bool
+[[nodiscard]] constexpr auto operator!=(Note const &lhs, Note const &rhs) -> bool
 {
     return !(lhs == rhs);
 }

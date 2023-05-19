@@ -25,7 +25,7 @@ namespace sequence::generate
 }
 
 /**
- * @brief Generates a sequence of duplicated NoteOn cells.
+ * @brief Generates a sequence of duplicated Note cells.
  *
  * @param size The number of cells to generate.
  * @param note The note to duplicate.
@@ -33,27 +33,27 @@ namespace sequence::generate
  *
  * @throws std::out_of_range if size < 0.
  */
-[[nodiscard]] inline auto full(int size, NoteOn note = {0, 0.8f, 0.f, 1.f}) -> Sequence
+[[nodiscard]] inline auto full(int size, Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence
 {
     return Sequence{std::vector<Cell>(size, note)};
 }
 
 /**
- * @brief Generates a sequence of cells, each of which is either a NoteOne or Rest in an
+ * @brief Generates a sequence of cells, each of which is either a Notee or Rest in an
  * evenly spaced pattern.
  *
  * @param size The number of cells to generate.
- * @param interval The number of steps taken before placing the next NoteOn. A value of
- * 1 will place a NoteOn in every cell, a value of 2 will place a NoteOn in every other
+ * @param interval The number of steps taken before placing the next Note. A value of
+ * 1 will place a Note in every cell, a value of 2 will place a Note in every other
  * cell, etc.
- * @param offset The offset in cells of the first NoteOn.
+ * @param offset The offset in cells of the first Note.
  * @param note The note to duplicate.
  * @return Sequence
  *
  * @throws std::out_of_range if size < 0, interval < 1, or offset < 0.
  */
 [[nodiscard]] inline auto interval(int size, int interval, int offset = 0,
-                                   NoteOn note = {0, 0.8f, 0.f, 1.f}) -> Sequence
+                                   Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence
 {
     if (size < 0 || interval < 1 || offset < 0)
     {
@@ -71,17 +71,17 @@ namespace sequence::generate
 }
 
 /**
- * @brief Generates a sequence of NoteOn and Rest cells in a random pattern.
+ * @brief Generates a sequence of Note and Rest cells in a random pattern.
  *
  * @param size The number of cells to generate.
- * @param density The percentage of cells that will be NoteOn cells.
+ * @param density The percentage of cells that will be Note cells.
  * @param note The note to duplicate.
  * @return Sequence
  *
  * @throws std::out_of_range if size < 0, density < 0, or density > 1.
  */
 [[nodiscard]] inline auto random(int size, float density = 0.6f,
-                                 NoteOn note = {0, 0.8f, 0.f, 1.f}) -> Sequence
+                                 Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence
 {
     if (size < 0 || density < 0.f || density > 1.f)
     {

@@ -21,18 +21,18 @@ template <typename T, typename X>
 }
 
 template <typename Fn>
-concept NoteOnChecker = requires(Fn fn, NoteOn const &note) {
+concept NoteChecker = requires(Fn fn, Note const &note) {
     {
         fn(note)
     } -> std::same_as<void>;
 };
 
-template <NoteOnChecker Fn>
+template <NoteChecker Fn>
 auto check_sequence(Sequence const &seq, Fn &&checker) -> void
 {
     using namespace sequence::utility;
     visit_cells(seq, overload{
-                         [&checker](NoteOn const &note) { checker(note); },
+                         [&checker](Note const &note) { checker(note); },
                          [](Rest) {},
                          [&checker](Sequence const &seq) {
                              check_sequence(seq, std::forward<Fn>(checker));
@@ -45,7 +45,7 @@ auto modify_notes(Sequence &seq, Fn &&modifier) -> void
 {
     using namespace sequence::utility;
     visit_cells(seq, overload{
-                         [&modifier](NoteOn &note) { modifier(note); },
+                         [&modifier](Note &note) { modifier(note); },
                          [](Rest) {},
                          [&modifier](Sequence &seq) {
                              modify_notes(seq, std::forward<Fn>(modifier));
@@ -64,10 +64,10 @@ inline auto print_sequence(Sequence const &seq, int indent = 0) -> void
     using namespace sequence::utility;
     visit_cells(seq,
                 overload{
-                    [&](NoteOn const &note) {
+                    [&](Note const &note) {
                         std::cout << std::string(indent * 2, ' ');
                         std::cout << std::format(
-                            "NoteOn(interval={}, velocity={}, delay={}, gate={})\n",
+                            "Note(interval={}, velocity={}, delay={}, gate={})\n",
                             note.interval, note.velocity, note.delay, note.gate);
                     },
                     [](Rest) { std::cout << "Rest\n"; },

@@ -23,6 +23,7 @@ target_compile_options(sequencer
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test)
 add_executable(tests
     test/catch.main.cpp
+    test/modify.test.cpp
     test/test.cpp
 )
 target_link_libraries(tests sequencer)

@@ -6,18 +6,14 @@
 namespace sequence
 {
 
-using Cell = std::variant<struct NoteOn, struct NoteOff, struct Rest, struct Sequence>;
+using Cell = std::variant<struct NoteOn, struct Rest, struct Sequence>;
 
 struct NoteOn
 {
-    int interval;   // 0 is scale's base note, 1 is scale's second note, etc.
-    float velocity; // 0.0 to 1.0, percentage of max velocity
-    float delay;    // 0.0 to 1.0, percentage of cell length to wait before triggering
-    float gate;     // 0.0 to 1.0, percentage of note length to play
-};
-
-struct NoteOff
-{
+    int interval = 0;      // 0 is scale's base note, 1 is scale's second note, etc.
+    float velocity = 0.7f; // 0.0 to 1.0, percentage of max velocity
+    float delay = 0.f;     // 0.0 to 1.0, percentage of cell length to wait
+    float gate = 1.f;      // 0.0 to 1.0, percentage of note length to play
 };
 
 struct Rest
@@ -46,23 +42,45 @@ struct Sequence
     return !(lhs == rhs);
 }
 
-// /**
-//  * @brief Compares two Sequences for equality.
-//  */
-// [[nodiscard]] constexpr auto operator==(Sequence const &lhs, Sequence const &rhs)
-//     -> bool
-// {
-//     return lhs.cells == rhs.cells;
-// }
+[[nodiscard]] constexpr auto operator==(Rest const &, Rest const &) -> bool
+{
+    return true;
+}
 
-// /**
-//  * @brief Compares two Sequences for inequality.
-//  */
-// [[nodiscard]] constexpr auto operator!=(Sequence const &lhs, Sequence const &rhs)
-//     -> bool
-// {
-//     return !(lhs == rhs);
-// }
+[[nodiscard]] constexpr auto operator!=(Rest const &lhs, Rest const &rhs) -> bool
+{
+    return !(lhs == rhs);
+}
+
+[[nodiscard]] constexpr auto operator==(Sequence const &lhs, Sequence const &rhs)
+    -> bool
+{
+    return lhs.cells == rhs.cells;
+}
+
+[[nodiscard]] constexpr auto operator!=(Sequence const &lhs, Sequence const &rhs)
+    -> bool
+{
+    return !(lhs == rhs);
+}
+
+[[nodiscard]] constexpr auto operator==(Cell const &lhs, Cell const &rhs) -> bool
+{
+    return std::visit(
+        [](auto const &lhs, auto const &rhs) -> bool {
+            using T = std::decay_t<decltype(lhs)>;
+            using U = std::decay_t<decltype(rhs)>;
+            if constexpr (std::is_same_v<T, U>)
+            {
+                return lhs == rhs;
+            }
+            else
+            {
+                return false;
+            }
+        },
+        lhs, rhs);
+}
 
 } // namespace sequence
 #endif // SEQUENCE_SEQUENCE_HPP

@@ -1,43 +1,39 @@
 #include <filesystem>
 #include <variant>
 
+#include "catch.hpp"
+
+#include "helper.hpp"
 #include <sequence/generate.hpp>
 #include <sequence/scale.hpp>
 #include <sequence/sequence.hpp>
 
-#include "catch.hpp"
-
-namespace seq = sequence;
-
-template <typename T, typename X>
-[[nodiscard]] inline auto holds(X const &x) -> bool
-{
-    return std::holds_alternative<T>(x);
-}
+using namespace sequence;
+using namespace sequence::test::helper;
 
 TEST_CASE("Sequence", "[sequence]")
 {
-    auto s = seq::Sequence{};
-    s.cells.push_back(seq::NoteOn{0, 0.5, 0.5, 0.5});
-    s.cells.push_back(seq::NoteOff{});
-    s.cells.push_back(seq::Rest{});
-    s.cells.push_back(seq::Sequence{});
-    std::get<seq::Sequence>(s.cells[3]).cells.push_back(seq::NoteOn{0, 0.5, 0.5, 0.5});
-    std::get<seq::Sequence>(s.cells[3]).cells.push_back(seq::NoteOff{});
-    std::get<seq::Sequence>(s.cells[3]).cells.push_back(seq::Rest{});
-    REQUIRE(holds<seq::NoteOn>(s.cells[0]));
-    REQUIRE(holds<seq::NoteOff>(s.cells[1]));
-    REQUIRE(holds<seq::Rest>(s.cells[2]));
-    REQUIRE(holds<seq::Sequence>(s.cells[3]));
-    REQUIRE(holds<seq::NoteOn>(std::get<seq::Sequence>(s.cells[3]).cells[0]));
-    REQUIRE(holds<seq::NoteOff>(std::get<seq::Sequence>(s.cells[3]).cells[1]));
-    REQUIRE(holds<seq::Rest>(std::get<seq::Sequence>(s.cells[3]).cells[2]));
+    auto s = Sequence{};
+    s.cells.push_back(NoteOn{0, 0.5, 0.5, 0.5});
+    s.cells.push_back(Rest{});
+    s.cells.push_back(Rest{});
+    s.cells.push_back(Sequence{});
+    std::get<Sequence>(s.cells[3]).cells.push_back(NoteOn{0, 0.5, 0.5, 0.5});
+    std::get<Sequence>(s.cells[3]).cells.push_back(Rest{});
+    std::get<Sequence>(s.cells[3]).cells.push_back(Rest{});
+    REQUIRE(holds<NoteOn>(s.cells[0]));
+    REQUIRE(holds<Rest>(s.cells[1]));
+    REQUIRE(holds<Rest>(s.cells[2]));
+    REQUIRE(holds<Sequence>(s.cells[3]));
+    REQUIRE(holds<NoteOn>(std::get<Sequence>(s.cells[3]).cells[0]));
+    REQUIRE(holds<Rest>(std::get<Sequence>(s.cells[3]).cells[1]));
+    REQUIRE(holds<Rest>(std::get<Sequence>(s.cells[3]).cells[2]));
 }
 
 TEST_CASE("Scala file import", "[sequence]")
 {
     constexpr auto file = "../test/12-edo.scl";
-    auto const scale = seq::from_scala(file);
+    auto const scale = from_scala(file);
     REQUIRE(scale.size() == 12 + 1);
     REQUIRE(scale[0] == 0.f);
     REQUIRE(scale[1] == 100.f);
@@ -61,7 +57,7 @@ TEST_CASE("No scl archive files will throw errors", "[sequence]")
     {
         if (entry.path().extension() == ".scl")
         {
-            REQUIRE_NOTHROW(seq::from_scala(entry.path().c_str()));
+            REQUIRE_NOTHROW(from_scala(entry.path().c_str()));
         }
     }
 }
@@ -71,19 +67,19 @@ TEST_CASE("Generate Empty Sequences", "[sequence]")
     SECTION("Zero Cells")
     {
         auto const size = 0;
-        auto const s = seq::generate::empty(size);
+        auto const s = generate::empty(size);
         REQUIRE(s.cells.size() == size);
     }
 
     SECTION("4 Cells")
     {
         auto const size = 4;
-        auto const s = seq::generate::empty(size);
+        auto const s = generate::empty(size);
         REQUIRE(s.cells.size() == size);
 
         for (auto const &cell : s.cells)
         {
-            REQUIRE(holds<seq::Rest>(cell));
+            REQUIRE(holds<Rest>(cell));
         }
     }
 }
@@ -96,8 +92,8 @@ TEST_CASE("Generate Full Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::full(size, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::full(size, note);
 
         REQUIRE(s.cells.size() == size);
     }
@@ -108,14 +104,14 @@ TEST_CASE("Generate Full Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::full(size, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::full(size, note);
 
         REQUIRE(s.cells.size() == size);
 
         for (auto const &cell : s.cells)
         {
-            REQUIRE((holds<seq::NoteOn>(cell) && std::get<seq::NoteOn>(cell) == note));
+            REQUIRE((holds<NoteOn>(cell) && std::get<NoteOn>(cell) == note));
         }
     }
 }
@@ -128,8 +124,8 @@ TEST_CASE("Generate Interval Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::interval(size, 2, 1, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::interval(size, 2, 1, note);
 
         REQUIRE(s.cells.size() == size);
     }
@@ -140,8 +136,8 @@ TEST_CASE("Generate Interval Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::interval(size, 2, 1, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::interval(size, 2, 1, note);
 
         REQUIRE(s.cells.size() == size);
 
@@ -149,12 +145,12 @@ TEST_CASE("Generate Interval Sequences", "[sequence]")
         {
             if (i % 2 == 0)
             {
-                REQUIRE(holds<seq::Rest>(s.cells[i]));
+                REQUIRE(holds<Rest>(s.cells[i]));
             }
             else
             {
-                REQUIRE((holds<seq::NoteOn>(s.cells[i]) &&
-                         std::get<seq::NoteOn>(s.cells[i]) == note));
+                REQUIRE((holds<NoteOn>(s.cells[i]) &&
+                         std::get<NoteOn>(s.cells[i]) == note));
             }
         }
     }
@@ -169,8 +165,8 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::random(size, density, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::random(size, density, note);
 
         REQUIRE(s.cells.size() == size);
     }
@@ -182,8 +178,8 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::random(size, density, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::random(size, density, note);
 
         REQUIRE(s.cells.size() == size);
 
@@ -191,12 +187,12 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto rest_count = 0;
         for (auto const &cell : s.cells)
         {
-            if (holds<seq::NoteOn>(cell))
+            if (holds<NoteOn>(cell))
             {
-                REQUIRE(std::get<seq::NoteOn>(cell) == note);
+                REQUIRE(std::get<NoteOn>(cell) == note);
                 ++note_on_count;
             }
-            else if (holds<seq::Rest>(cell))
+            else if (holds<Rest>(cell))
             {
                 ++rest_count;
             }
@@ -216,8 +212,8 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::random(size, density, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::random(size, density, note);
 
         REQUIRE(s.cells.size() == size);
 
@@ -225,12 +221,12 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto rest_count = 0;
         for (auto const &cell : s.cells)
         {
-            if (holds<seq::NoteOn>(cell))
+            if (holds<NoteOn>(cell))
             {
-                REQUIRE(std::get<seq::NoteOn>(cell) == note);
+                REQUIRE(std::get<NoteOn>(cell) == note);
                 ++note_on_count;
             }
-            else if (holds<seq::Rest>(cell))
+            else if (holds<Rest>(cell))
             {
                 ++rest_count;
             }
@@ -249,8 +245,8 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto const velocity = 0.4f;
         auto const delay = 0.01f;
         auto const gate = 0.8f;
-        auto const note = seq::NoteOn{5, velocity, delay, gate};
-        auto const s = seq::generate::random(size, density, note);
+        auto const note = NoteOn{5, velocity, delay, gate};
+        auto const s = generate::random(size, density, note);
 
         REQUIRE(s.cells.size() == size);
 
@@ -258,12 +254,12 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         auto rest_count = 0;
         for (auto const &cell : s.cells)
         {
-            if (holds<seq::NoteOn>(cell))
+            if (holds<NoteOn>(cell))
             {
-                REQUIRE(std::get<seq::NoteOn>(cell) == note);
+                REQUIRE(std::get<NoteOn>(cell) == note);
                 ++note_on_count;
             }
-            else if (holds<seq::Rest>(cell))
+            else if (holds<Rest>(cell))
             {
                 ++rest_count;
             }

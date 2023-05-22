@@ -5,8 +5,8 @@
 
 #include "helper.hpp"
 #include <sequence/generate.hpp>
-#include <sequence/scale.hpp>
 #include <sequence/sequence.hpp>
+#include <sequence/tuning.hpp>
 
 using namespace sequence;
 using namespace sequence::test::helper;
@@ -33,20 +33,23 @@ TEST_CASE("Sequence", "[sequence]")
 TEST_CASE("Scala file import", "[sequence]")
 {
     constexpr auto file = "../test/12-edo.scl";
-    auto const scale = from_scala(file);
-    REQUIRE(scale.size() == 12 + 1);
-    REQUIRE(scale[0] == 0.f);
-    REQUIRE(scale[1] == 100.f);
-    REQUIRE(scale[2] == 200.f);
-    REQUIRE(scale[3] == 300.f);
-    REQUIRE(scale[4] == 400.f);
-    REQUIRE(scale[5] == 500.f);
-    REQUIRE(scale[6] == 600.f);
-    REQUIRE(scale[7] == 700.f);
-    REQUIRE(scale[8] == 800.f);
-    REQUIRE(scale[9] == 900.f);
-    REQUIRE(scale[10] == 1000.f);
-    REQUIRE(scale[11] == 1100.f);
+    auto const tuning = from_scala(file);
+    REQUIRE(tuning.octave == 1200.f);
+
+    auto &intervals = tuning.intervals;
+    REQUIRE(intervals.size() == 12);
+    REQUIRE(intervals[0] == 0.f);
+    REQUIRE(intervals[1] == 100.f);
+    REQUIRE(intervals[2] == 200.f);
+    REQUIRE(intervals[3] == 300.f);
+    REQUIRE(intervals[4] == 400.f);
+    REQUIRE(intervals[5] == 500.f);
+    REQUIRE(intervals[6] == 600.f);
+    REQUIRE(intervals[7] == 700.f);
+    REQUIRE(intervals[8] == 800.f);
+    REQUIRE(intervals[9] == 900.f);
+    REQUIRE(intervals[10] == 1000.f);
+    REQUIRE(intervals[11] == 1100.f);
 }
 
 TEST_CASE("No scl archive files will throw errors", "[sequence]")
@@ -149,8 +152,8 @@ TEST_CASE("Generate Interval Sequences", "[sequence]")
             }
             else
             {
-                REQUIRE((holds<Note>(s.cells[i]) &&
-                         std::get<Note>(s.cells[i]) == note));
+                REQUIRE(
+                    (holds<Note>(s.cells[i]) && std::get<Note>(s.cells[i]) == note));
             }
         }
     }

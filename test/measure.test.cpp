@@ -8,34 +8,33 @@ TEST_CASE("create_measure", "[measure]")
 
     SECTION("throws if cell_resolution < 1")
     {
-        REQUIRE_THROWS_AS(create_measure({4, 4}, {0, 1}, 0), std::invalid_argument);
-        REQUIRE_THROWS_AS(create_measure({4, 4}, {0, 1}, -1), std::invalid_argument);
+        REQUIRE_THROWS_AS(create_measure({4, 4}, 0), std::invalid_argument);
+        REQUIRE_THROWS_AS(create_measure({4, 4}, -1), std::invalid_argument);
     }
 
-    SECTION("returns a measure with the correct time signature and scale")
+    SECTION("returns a measure with the correct time signature")
     {
-        auto const measure = create_measure({4, 4}, {0.f, 100.f, 200.f}, 1);
+        auto const measure = create_measure({4, 4}, 1);
         REQUIRE(measure.time_signature.numerator == 4);
         REQUIRE(measure.time_signature.denominator == 4);
-        REQUIRE(measure.scale == Scale{0.f, 100.f, 200.f});
     }
 
     SECTION("returns a measure with the correct number of cells")
     {
-        auto const measure = create_measure({4, 4}, {0, 1}, 1);
+        auto const measure = create_measure({4, 4}, 1);
         REQUIRE(measure.sequence.cells.size() == 4);
     }
 
     SECTION(
         "returns a measure with the correct number of cells when cell_resolution > 1")
     {
-        auto const measure = create_measure({4, 4}, {0, 1}, 2);
+        auto const measure = create_measure({4, 4}, 2);
         REQUIRE(measure.sequence.cells.size() == 8);
     }
 
     SECTION("returns a measure with sequence of Rest cells")
     {
-        auto const measure = create_measure({4, 4}, {0, 1}, 1);
+        auto const measure = create_measure({4, 4}, 1);
         REQUIRE(std::holds_alternative<Rest>(measure.sequence.cells[0]));
         REQUIRE(std::holds_alternative<Rest>(measure.sequence.cells[1]));
         REQUIRE(std::holds_alternative<Rest>(measure.sequence.cells[2]));

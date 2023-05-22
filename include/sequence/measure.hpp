@@ -1,7 +1,6 @@
 #ifndef SEQUENCE_MEASURE_HPP
 #define SEQUENCE_MEASURE_HPP
 #include <sequence/generate.hpp>
-#include <sequence/scale.hpp>
 #include <sequence/sequence.hpp>
 #include <sequence/time_signature.hpp>
 
@@ -11,14 +10,12 @@ namespace sequence
 /**
  * @brief A measure.
  *
- * A measure is a sequence of notes that are played in a specific time signature and
- * scale.
+ * A measure is a sequence of notes that are played in a specific time signature.
  */
 struct Measure
 {
     Sequence sequence;
     TimeSignature time_signature;
-    Scale scale;
 };
 
 /**
@@ -32,8 +29,7 @@ struct Measure
  * @throws std::invalid_argument if resolution < 1.
  */
 [[nodiscard]] inline auto create_measure(TimeSignature const &time_signature,
-                                         Scale const &scale, int cell_resolution = 1)
-    -> Measure
+                                         int cell_resolution = 1) -> Measure
 {
     if (cell_resolution < 1)
     {
@@ -43,7 +39,6 @@ struct Measure
     return Measure{
         generate::empty(time_signature.numerator * cell_resolution),
         time_signature,
-        scale,
     };
 }
 

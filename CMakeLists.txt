@@ -25,6 +25,7 @@ add_executable(tests
     test/catch.main.cpp
     test/modify.test.cpp
     test/measure.test.cpp
+    test/midi.test.cpp
     test/test.cpp
 )
 target_link_libraries(tests sequencer)

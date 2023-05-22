@@ -1,5 +1,5 @@
-#ifndef SEQUENCE_SCALE_HPP
-#define SEQUENCE_SCALE_HPP
+#ifndef SEQUENCE_TUNING_HPP
+#define SEQUENCE_TUNING_HPP
 #include <cmath>
 #include <fstream>
 #include <sstream>
@@ -12,28 +12,36 @@ namespace sequence
 {
 
 /**
- * @brief A musical scale defined by intervals from the base note in cents.
- *
- * @details The first entry is always the base note, 1/1
+ * @brief A musical tuning defined by intervals (cents) from the base note and an octave
+ * interval.
  *
  * @example
  * 12-tone equal temperament:
- * {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100}
+ * {
+ *   intervals: {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
+ *   octave: 1200
+ * }
  */
-using Scale = std::vector<float>;
+struct Tuning
+{
+    using Interval_t = float;
+
+    std::vector<Interval_t> intervals;
+    Interval_t octave;
+};
 
 /**
- * @brief Generates a scale from a Scala file.
+ * @brief Generates a Tuning from a Scala file.
  *
  * @details The Scala file format is described here:
  * http://www.huygens-fokker.org/scala/scl_format.html
  *
- * @param scala_file The Scala file to generate the scale from.
- * @return Scale - The generated scale.
+ * @param scala_file The Scala file to generate the Tuning from.
+ * @return Tuning - The generated tuning.
  *
  * @throws std::runtime_error
  */
-[[nodiscard]] inline auto from_scala(std::string_view scala_file) -> Scale
+[[nodiscard]] inline auto from_scala(std::string_view scala_file) -> Tuning
 {
     auto file = std::ifstream{scala_file.data()};
 
@@ -42,7 +50,9 @@ using Scale = std::vector<float>;
         throw std::runtime_error("Could not open file: " + std::string{scala_file});
     }
 
-    auto scale = Scale{0.f}; // The first note of 1/1 or 0.0 cents is implicit in file.
+    auto tuning = Tuning{};
+    auto &intervals = tuning.intervals;
+    intervals.push_back(0.f); // The first interval is always 0
 
     auto line = std::string{};
     bool description_line_skipped = false;
@@ -93,7 +103,7 @@ using Scale = std::vector<float>;
                         "Negative ratio or zero denominator is not allowed.");
                 }
                 // Ratio to Cents
-                scale.push_back(1200.f * std::log2(numerator / denominator));
+                intervals.push_back(1200.f * std::log2(numerator / denominator));
             }
             catch (...)
             {
@@ -109,7 +119,7 @@ using Scale = std::vector<float>;
             {
                 throw std::runtime_error("Invalid cents value.");
             }
-            scale.push_back(cents);
+            intervals.push_back(cents);
         }
         else // Integer ratio
         {
@@ -120,7 +130,7 @@ using Scale = std::vector<float>;
                 {
                     throw std::runtime_error("Negative ratio is not allowed.");
                 }
-                scale.push_back(1200.f * std::log2(static_cast<float>(numerator)));
+                intervals.push_back(1200.f * std::log2(static_cast<float>(numerator)));
             }
             catch (...)
             {
@@ -136,8 +146,11 @@ using Scale = std::vector<float>;
         throw std::runtime_error("Not enough pitch values in the file.");
     }
 
-    return scale;
+    tuning.octave = intervals.back();
+    intervals.pop_back();
+
+    return tuning;
 }
 
 } // namespace sequence
-#endif // SEQUENCE_SCALE_HPP
+#endif // SEQUENCE_TUNING_HPP

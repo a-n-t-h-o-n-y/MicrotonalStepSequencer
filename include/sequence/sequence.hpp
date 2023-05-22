@@ -10,7 +10,7 @@ using Cell = std::variant<struct Note, struct Rest, struct Sequence>;
 
 struct Note
 {
-    int interval = 0;      // 0 is scale's base note, 1 is scale's second note, etc.
+    int interval = 0;      // 0 is tunings's base note, 1 is tunings's second note, etc.
     float velocity = 0.7f; // 0.0 to 1.0, percentage of max velocity
     float delay = 0.f;     // 0.0 to 1.0, percentage of cell length to wait
     float gate = 1.f;      // 0.0 to 1.0, percentage of note length to play

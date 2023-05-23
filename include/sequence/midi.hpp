@@ -298,6 +298,16 @@ using Event = std::variant<NoteOn, NoteOff, PitchBend>;
 /// A MIDI Event paired with a sample offset.
 using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
 
+/**
+ * @brief Flattens a measure into a vector of MIDI events.
+ *
+ * Returns a sequence of MIDI events of type NoteOn, NoteOff, or PitchBend, paired with
+ * the sample offset of the event.
+ *
+ * @param measures The measures to create a timeline of.
+ *
+ * @return EventTimeline
+ */
 [[nodiscard]] inline auto translate_to_midi_timeline(
     std::vector<Measure> const &measures, std::uint32_t sample_rate, std::uint16_t bpm,
     Tuning const &tuning, float base_frequency) -> EventTimeline
@@ -316,7 +326,6 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
     assert(ranges.size() == notes.size());
 
     // create a midi event for each entry
-
     for (auto i = 0u; i < ranges.size(); ++i)
     {
         auto const [begin, end] = ranges[i];

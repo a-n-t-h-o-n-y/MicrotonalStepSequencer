@@ -187,7 +187,6 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         REQUIRE(s.cells.size() == size);
 
         auto note_on_count = 0;
-        auto rest_count = 0;
         for (auto const &cell : s.cells)
         {
             if (holds<Note>(cell))
@@ -197,7 +196,6 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
             }
             else if (holds<Rest>(cell))
             {
-                ++rest_count;
             }
             else
             {
@@ -239,6 +237,7 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
             }
         }
         REQUIRE(note_on_count == 0);
+        REQUIRE(rest_count == size);
     }
 
     SECTION("Density One")
@@ -272,5 +271,6 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
             }
         }
         REQUIRE(note_on_count == size);
+        REQUIRE(rest_count == 0);
     }
 }

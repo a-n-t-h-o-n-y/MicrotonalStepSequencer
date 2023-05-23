@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <variant>
 
+#include <sequence/midi.hpp>
 #include <sequence/sequence.hpp>
 #include <sequence/utility.hpp>
 
@@ -62,21 +63,46 @@ auto modify_notes(Sequence &seq, Fn &&modifier) -> void
 inline auto print_sequence(Sequence const &seq, int indent = 0) -> void
 {
     using namespace sequence::utility;
-    visit_cells(seq,
-                overload{
-                    [&](Note const &note) {
-                        std::cout << std::string(indent * 2, ' ');
-                        std::cout << std::format(
-                            "Note(interval={}, velocity={}, delay={}, gate={})\n",
-                            note.interval, note.velocity, note.delay, note.gate);
-                    },
-                    [](Rest) { std::cout << "Rest\n"; },
-                    [&](Sequence const &seq) {
-                        std::cout << "Sequence(\n";
-                        print_sequence(seq, indent + 1);
-                        std::cout << ")\n";
-                    },
-                });
+    visit_cells(seq, overload{
+                         [&](Note const &note) {
+                             std::cout << std::string(indent * 2, ' ');
+                             std::cout << std::format(
+                                 "Note(interval={}, velocity={}, delay={}, gate={})\n",
+                                 note.interval, note.velocity, note.delay, note.gate);
+                         },
+                         [](Rest) { std::cout << "Rest\n"; },
+                         [&](Sequence const &seq) {
+                             std::cout << "Sequence(\n";
+                             print_sequence(seq, indent + 1);
+                             std::cout << ")\n";
+                         },
+                     });
+}
+
+inline auto print_midi_event_timeline(midi::EventTimeline const &timeline) -> void
+{
+    using namespace sequence::utility;
+    for (auto const &[event, offset] : timeline)
+    {
+        using namespace utility;
+        std::cout << "Event: ";
+        visit(overload{
+                  [&](midi::NoteOn const &note_on) {
+                      std::cout
+                          << std::format("NoteOn(note={}, velocity={})",
+                                         (int)note_on.note, (int)note_on.velocity);
+                  },
+                  [&](midi::NoteOff const &note_off) {
+                      std::cout << std::format("NoteOff(note={})", (int)note_off.note);
+                  },
+                  [&](midi::PitchBend const &pitch_bend) {
+                      std::cout
+                          << std::format("PitchBend(amount={})", pitch_bend.value);
+                  },
+              },
+              event);
+        std::cout << std::format(" | offset={}\n", offset);
+    }
 }
 
 } // namespace sequence::test::helper

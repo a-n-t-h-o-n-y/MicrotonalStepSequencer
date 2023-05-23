@@ -2,7 +2,11 @@
 
 #include <iostream>
 
+#include "helper.hpp"
+#include <sequence/measure.hpp>
 #include <sequence/midi.hpp>
+#include <sequence/sequence.hpp>
+#include <sequence/time_signature.hpp>
 
 using namespace sequence;
 
@@ -31,11 +35,12 @@ TEST_CASE("create_midi_note", "[midi]")
 
     SECTION("grail (microtonal)")
     {
-        auto const tuning =
-            Tuning{{0.f, 86.869027f, 195.623009f, 304.376991f, 391.246018f, 504.376991f,
-                    578.080960f, 695.623009f, 795.623009f, 895.623009f, 1013.165056f,
-                    1086.869026f},
-                   1200.f};
+        auto const tuning = Tuning{
+            {0.f, 86.869027f, 195.623009f, 304.376991f, 391.246018f, 504.376991f,
+             578.080960f, 695.623009f, 795.623009f, 895.623009f, 1013.165056f,
+             1086.869026f},
+            1200.f,
+        };
 
         SECTION("tuning_base = 60")
         {
@@ -205,10 +210,11 @@ TEST_CASE("create_midi_note", "[midi]")
     SECTION("anharmonic tunings (e.g. non-octave based)")
     {
         // 13 Equal Divisions of the Tritave
-        auto const tuning =
-            Tuning{{0.f, 146.3f, 292.6f, 438.9f, 585.2f, 731.5f, 877.8f, 1024.1f,
-                    1170.4f, 1316.7f, 1463.0f, 1609.3f, 1755.7f},
-                   1902.f};
+        auto const tuning = Tuning{
+            {0.f, 146.3f, 292.6f, 438.9f, 585.2f, 731.5f, 877.8f, 1024.1f, 1170.4f,
+             1316.7f, 1463.0f, 1609.3f, 1755.7f},
+            1902.f,
+        };
         auto const tuning_base = 60.f;
         SECTION("Positive Intervals")
         {
@@ -262,4 +268,315 @@ TEST_CASE("create_midi_note", "[midi]")
             }
         }
     }
+}
+
+TEST_CASE("flatten_and_translate_to_midi_notes", "[midi]")
+{
+    auto const tuning = Tuning{
+        {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
+        1200,
+    };
+
+    auto const measure = [] {
+        auto m = create_measure({4, 4}, 2);
+        for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+        {
+            // if even create a subsequence else create a note
+            if (i % 2 == 0)
+            {
+                m.sequence.cells[i] = Sequence{{
+                    Note{i, 0.75f, 0.f, 1.f},
+                    Rest{},
+                    Note{i + 2, 0.75f, 0.f, 1.f},
+                }};
+            }
+            else
+            {
+                m.sequence.cells[i] = Note{i, 0.75f, 0.f, 1.f};
+            }
+        }
+        return m;
+    }();
+
+    auto const notes = midi::flatten_and_translate_to_midi_notes(measure, tuning);
+
+    REQUIRE(notes.size() == 12);
+
+    for (auto const &note : notes)
+    {
+        REQUIRE(note.pitch_bend == 8192);
+    }
+
+    REQUIRE(notes[0].note == 69);
+    REQUIRE(notes[1].note == 71);
+    REQUIRE(notes[2].note == 70);
+    REQUIRE(notes[3].note == 71);
+    REQUIRE(notes[4].note == 73);
+    REQUIRE(notes[5].note == 72);
+    REQUIRE(notes[6].note == 73);
+    REQUIRE(notes[7].note == 75);
+    REQUIRE(notes[8].note == 74);
+    REQUIRE(notes[9].note == 75);
+    REQUIRE(notes[10].note == 77);
+    REQUIRE(notes[11].note == 76);
+}
+
+TEST_CASE("flatten_notes", "[midi]")
+{
+    auto const seq = Sequence{{
+        Rest{},
+        Note{0, 0.5f, 0.f, 1.f},
+        Sequence{{
+            Note{1, 0.5f, 0.f, 1.f},
+            Rest{},
+            Note{2, 0.5f, 0.f, 1.f},
+        }},
+        Rest{},
+        Note{3, 0.5f, 0.f, 1.f},
+    }};
+    auto const flat = midi::flatten_notes(seq);
+
+    REQUIRE(flat.size() == 4);
+    REQUIRE(flat[0] == Note{0, 0.5f, 0.f, 1.f});
+    REQUIRE(flat[1] == Note{1, 0.5f, 0.f, 1.f});
+    REQUIRE(flat[2] == Note{2, 0.5f, 0.f, 1.f});
+    REQUIRE(flat[3] == Note{3, 0.5f, 0.f, 1.f});
+}
+
+TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
+{
+
+    auto const tuning = Tuning{
+        {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
+        1200,
+    };
+
+    SECTION("Straight")
+    {
+        auto const measure = [] {
+            auto m = create_measure({4, 4}, 2);
+            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            {
+                // if even create a subsequence else create a note
+                if (i % 2 == 0)
+                {
+                    m.sequence.cells[i] = Sequence{{
+                        Note{i, 0.75f, 0.f, 1.f},
+                        Rest{},
+                        Note{i + 2, 0.75f, 0.f, 1.f},
+                    }};
+                }
+                else
+                {
+                    m.sequence.cells[i] = Note{i, 0.75f, 0.f, 1.f};
+                }
+            }
+            return m;
+        }();
+
+        auto const infos =
+            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+
+        REQUIRE(infos.size() == 12);
+
+        REQUIRE(infos[0].begin == 0);
+        REQUIRE(infos[0].end == 1837);
+
+        REQUIRE(infos[1].begin == 3674);
+        REQUIRE(infos[1].end == 5511);
+
+        REQUIRE(infos[2].begin == 5512);
+        REQUIRE(infos[2].end == 11024);
+
+        REQUIRE(infos[3].begin == 11025);
+        REQUIRE(infos[3].end == 12862);
+
+        REQUIRE(infos[4].begin == 14699);
+        REQUIRE(infos[4].end == 16536);
+
+        REQUIRE(infos[5].begin == 16537);
+        REQUIRE(infos[5].end == 22049);
+    }
+
+    SECTION("With gate")
+    {
+        auto const measure = [] {
+            auto m = create_measure({4, 4}, 2);
+            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            {
+                // if even create a subsequence else create a note
+                if (i % 2 == 0)
+                {
+                    m.sequence.cells[i] = Sequence{{
+                        Note{i, 0.75f, 0.f, 0.5f},
+                        Rest{},
+                        Note{i + 2, 0.75f, 0.f, 0.25f},
+                    }};
+                }
+                else
+                {
+                    m.sequence.cells[i] = Note{i, 0.75f, 0.f, 0.f};
+                }
+            }
+            return m;
+        }();
+
+        auto const infos =
+            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+
+        REQUIRE(infos[0].begin == 0);
+        REQUIRE(infos[0].end == 918);
+
+        REQUIRE(infos[1].begin == 3674);
+        REQUIRE(infos[1].end == 4133);
+
+        REQUIRE(infos[2].begin == 5512);
+        REQUIRE(infos[2].end == 5512); // zero gate is allowed but not recommended.
+
+        REQUIRE(infos[3].begin == 11025);
+        REQUIRE(infos[3].end == 11943);
+
+        REQUIRE(infos[4].begin == 14699);
+        REQUIRE(infos[4].end == 15158);
+
+        REQUIRE(infos[5].begin == 16537);
+        REQUIRE(infos[5].end == 16537);
+    }
+
+    SECTION("With delay")
+    {
+        auto const measure = [] {
+            auto m = create_measure({4, 4}, 2);
+            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            {
+                // if even create a subsequence else create a note
+                if (i % 2 == 0)
+                {
+                    m.sequence.cells[i] = Sequence{{
+                        Note{i, 0.75f, 0.5f, 1.f},
+                        Rest{},
+                        Note{i + 2, 0.75f, 0.25f, 1.f},
+                    }};
+                }
+                else
+                {
+                    m.sequence.cells[i] = Note{i, 0.75f, 1.f, 1.f};
+                }
+            }
+            return m;
+        }();
+
+        auto const infos =
+            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+
+        REQUIRE(infos[0].begin == 918);
+        REQUIRE(infos[0].end == 1837);
+
+        REQUIRE(infos[1].begin == 4133);
+        REQUIRE(infos[1].end == 5511);
+
+        REQUIRE(infos[2].begin == 11024);
+        REQUIRE(infos[2].end == 11024);
+
+        REQUIRE(infos[3].begin == 11943);
+        REQUIRE(infos[3].end == 12862);
+
+        REQUIRE(infos[4].begin == 15158);
+        REQUIRE(infos[4].end == 16536);
+
+        REQUIRE(infos[5].begin == 22049);
+        REQUIRE(infos[5].end == 22049);
+    }
+
+    SECTION("With delay and gate")
+    {
+        auto const measure = [] {
+            auto m = create_measure({4, 4}, 2);
+            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            {
+                // if even create a subsequence else create a note
+                if (i % 2 == 0)
+                {
+                    m.sequence.cells[i] = Sequence{{
+                        Note{i, 0.75f, 0.5f, 0.8f},
+                        Rest{},
+                        Note{i + 2, 0.75f, 0.25f, 0.1f},
+                    }};
+                }
+                else
+                {
+                    m.sequence.cells[i] = Note{i, 0.75f, 1.f, 0.1f};
+                }
+            }
+            return m;
+        }();
+
+        auto const infos =
+            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+
+        REQUIRE(infos[0].begin == 918);
+        REQUIRE(infos[0].end == 1653);
+
+        REQUIRE(infos[1].begin == 4133);
+        REQUIRE(infos[1].end == 4270);
+
+        REQUIRE(infos[2].begin == 11024);
+        REQUIRE(infos[2].end == 11024);
+
+        REQUIRE(infos[3].begin == 11943);
+        REQUIRE(infos[3].end == 12678);
+
+        REQUIRE(infos[4].begin == 15158);
+        REQUIRE(infos[4].end == 15295);
+
+        REQUIRE(infos[5].begin == 22049);
+        REQUIRE(infos[5].end == 22049);
+    }
+}
+
+TEST_CASE("translate_to_midi_timeline", "[midi]")
+{
+    auto const measure1 = [] {
+        auto m = create_measure({4, 4}, 2);
+        for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+        {
+            // if even create a subsequence else create a note
+            if (i % 2 == 0)
+            {
+                m.sequence.cells[i] = Sequence{{
+                    Note{i, 0.75f, 0.5f, 0.8f},
+                    Rest{},
+                    Note{i + 2, 0.75f, 0.25f, 0.1f},
+                }};
+            }
+            else
+            {
+                m.sequence.cells[i] = Note{i, 0.75f, 1.f, 0.1f};
+            }
+        }
+        return m;
+    }();
+
+    auto const measure2 = [] {
+        auto m = create_measure({3, 4}, 3);
+        for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+        {
+            m.sequence.cells[i] = Sequence{{
+                Note{i, 0.75f, 0.5f, 0.8f},
+                Rest{},
+                Note{i + 2, 0.75f, 0.25f, 0.1f},
+            }};
+        }
+        return m;
+    }();
+
+    auto const tuning = Tuning{
+        {0, 50, 100, 150, 200},
+        1200,
+    };
+
+    auto const timeline = midi::translate_to_midi_timeline(
+        std::vector{measure1, measure2}, 44100, 120, tuning, 440.f);
+
+    // test::helper::print_midi_event_timeline(timeline);
 }

@@ -32,8 +32,11 @@ TEST_CASE("Sequence", "[sequence]")
 
 TEST_CASE("Scala file import", "[sequence]")
 {
-    constexpr auto file = "../test/12-edo.scl";
+    auto dir = std::filesystem::path{__FILE__};
+    dir.remove_filename();
+    auto const file = dir / "12-edo.scl";
     auto const tuning = from_scala(file);
+
     REQUIRE(tuning.octave == 1200.f);
 
     auto &intervals = tuning.intervals;
@@ -54,13 +57,15 @@ TEST_CASE("Scala file import", "[sequence]")
 
 TEST_CASE("No scl archive files will throw errors", "[sequence]")
 {
-    constexpr auto dir = "../test/scl-archive/";
+    auto dir = std::filesystem::path{__FILE__};
+    dir.remove_filename();
+    dir /= "scl-archive";
 
     for (auto const &entry : std::filesystem::directory_iterator(dir))
     {
         if (entry.path().extension() == ".scl")
         {
-            REQUIRE_NOTHROW(from_scala(entry.path().c_str()));
+            REQUIRE_NOTHROW(from_scala(entry.path()));
         }
     }
 }

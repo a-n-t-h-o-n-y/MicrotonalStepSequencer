@@ -12,11 +12,9 @@ target_compile_features(sequencer
     INTERFACE
         cxx_std_20
 )
-target_compile_options(sequencer
-    INTERFACE
-        -Wall
-        -Wextra
-        -Wpedantic
+target_compile_options(sequencer INTERFACE
+  $<$<CXX_COMPILER_ID:MSVC>:/W1>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
 )
 
 # Add your test cpp file

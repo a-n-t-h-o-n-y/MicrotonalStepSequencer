@@ -1,6 +1,7 @@
 #ifndef SEQUENCE_TUNING_HPP
 #define SEQUENCE_TUNING_HPP
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -41,13 +42,13 @@ struct Tuning
  *
  * @throws std::runtime_error
  */
-[[nodiscard]] inline auto from_scala(std::string_view scala_file) -> Tuning
+[[nodiscard]] inline auto from_scala(std::filesystem::path const &scala_file) -> Tuning
 {
-    auto file = std::ifstream{scala_file.data()};
+    auto file = std::ifstream{scala_file};
 
     if (!file)
     {
-        throw std::runtime_error("Could not open file: " + std::string{scala_file});
+        throw std::runtime_error("Could not open file: " + scala_file.string());
     }
 
     auto tuning = Tuning{};

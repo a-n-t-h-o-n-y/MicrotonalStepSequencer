@@ -6,7 +6,7 @@ project(sequence)
 add_library(sequencer INTERFACE)
 target_include_directories(sequencer
     INTERFACE
-        include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_compile_features(sequencer
     INTERFACE
@@ -18,7 +18,6 @@ target_compile_options(sequencer INTERFACE
 )
 
 # Add your test cpp file
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test)
 add_executable(tests
     test/catch.main.cpp
     test/modify.test.cpp

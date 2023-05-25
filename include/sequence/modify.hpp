@@ -221,7 +221,7 @@ namespace sequence::modify
     amount = amount % static_cast<int>(rotated_seq.cells.size());
     if (amount < 0)
     {
-        amount += rotated_seq.cells.size();
+        amount += static_cast<int>(rotated_seq.cells.size());
     }
     std::rotate(rotated_seq.cells.begin(), rotated_seq.cells.begin() + amount,
                 rotated_seq.cells.end());

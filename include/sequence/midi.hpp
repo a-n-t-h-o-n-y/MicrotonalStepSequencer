@@ -261,14 +261,7 @@ struct SampleRange
 
     for (auto const &measure : measures)
     {
-        auto const samples_per_measure = [&] {
-            auto const &time_sig = measure.time_signature;
-
-            auto const samples_per_beat = static_cast<float>(sample_rate) * 60.f / bpm;
-            auto const beats_per_measure =
-                (static_cast<float>(time_sig.numerator) / time_sig.denominator) * 2;
-            return samples_per_beat * beats_per_measure;
-        }();
+        auto const samples_per_measure = samples_count(measure, sample_rate, bpm);
         auto const result =
             note_sample_infos(measure.sequence, samples_per_measure, sample_offset);
         std::copy(std::cbegin(result), std::cend(result), std::back_inserter(infos));
@@ -332,8 +325,8 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
         auto const [note, pitch_bend] = midi_notes[i];
         std::uint8_t const velocity = notes[i].velocity * 127;
 
-        midi_events.emplace_back(NoteOn{note, velocity}, begin);
         midi_events.emplace_back(PitchBend{pitch_bend}, begin);
+        midi_events.emplace_back(NoteOn{note, velocity}, begin);
         midi_events.emplace_back(NoteOff{note}, end);
     }
 

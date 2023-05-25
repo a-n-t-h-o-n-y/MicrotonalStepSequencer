@@ -1,5 +1,7 @@
 #ifndef SEQUENCE_MEASURE_HPP
 #define SEQUENCE_MEASURE_HPP
+#include <cstdint>
+
 #include <sequence/generate.hpp>
 #include <sequence/sequence.hpp>
 #include <sequence/time_signature.hpp>
@@ -17,6 +19,8 @@ struct Measure
     Sequence sequence;
     TimeSignature time_signature;
 };
+
+using Phrase = std::vector<sequence::Measure>;
 
 /**
  * @brief Generates a measure of Rest cells.
@@ -40,6 +44,43 @@ struct Measure
         generate::empty(time_signature.numerator * cell_resolution),
         time_signature,
     };
+}
+
+/**
+ * @brief Calculates the number of samples in the given measure.
+ *
+ * @param measure The measure to calculate the number of samples for.
+ * @param sample_rate The sample rate of the audio.
+ * @param bpm The beats per minute of the audio.
+ * @return std::uint32_t - The number of samples in the measure.
+ */
+[[nodiscard]] inline auto samples_count(Measure const &measure,
+                                        std::uint32_t sample_rate, std::uint16_t bpm)
+    -> std::uint32_t
+{
+    auto const &time_sig = measure.time_signature;
+
+    auto const samples_per_beat = static_cast<float>(sample_rate) * 60.f / bpm;
+    auto const beats_per_measure =
+        (static_cast<float>(time_sig.numerator) / time_sig.denominator) * 2;
+    return static_cast<std::uint32_t>(samples_per_beat * beats_per_measure);
+}
+
+/**
+ * @brief Calculates the number of samples in the given phrase.
+ *
+ * @param phrase The phrase to calculate the number of samples for.
+ * @return std::uint32_t - The number of samples in the phrase.
+ */
+[[nodiscard]] inline auto samples_count(Phrase const &phrase, std::uint32_t sample_rate,
+                                        std::uint16_t bpm) -> std::uint32_t
+{
+    auto output = std::uint32_t{0};
+    for (auto const &measure : phrase)
+    {
+        output += samples_count(measure, sample_rate, bpm);
+    }
+    return output;
 }
 
 } // namespace sequence

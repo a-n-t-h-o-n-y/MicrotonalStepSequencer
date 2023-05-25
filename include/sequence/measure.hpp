@@ -55,7 +55,7 @@ using Phrase = std::vector<sequence::Measure>;
  * @return std::uint32_t - The number of samples in the measure.
  */
 [[nodiscard]] inline auto samples_count(Measure const &measure,
-                                        std::uint32_t sample_rate, std::uint16_t bpm)
+                                        std::uint32_t sample_rate, float bpm)
     -> std::uint32_t
 {
     auto const &time_sig = measure.time_signature;
@@ -73,7 +73,7 @@ using Phrase = std::vector<sequence::Measure>;
  * @return std::uint32_t - The number of samples in the phrase.
  */
 [[nodiscard]] inline auto samples_count(Phrase const &phrase, std::uint32_t sample_rate,
-                                        std::uint16_t bpm) -> std::uint32_t
+                                        float bpm) -> std::uint32_t
 {
     auto output = std::uint32_t{0};
     for (auto const &measure : phrase)

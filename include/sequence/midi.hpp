@@ -1,6 +1,7 @@
 #ifndef SEQUENCY_MIDI_HPP
 #define SEQUENCY_MIDI_HPP
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <numeric>
@@ -133,12 +134,12 @@ struct MicrotonalNote
 }
 
 [[nodiscard]] inline auto flatten_and_translate_to_midi_notes(
-    std::vector<Measure> const &measures, Tuning const &tuning,
-    float base_frequency = 440.f) -> std::vector<MicrotonalNote>
+    Phrase const &phrase, Tuning const &tuning, float base_frequency = 440.f)
+    -> std::vector<MicrotonalNote>
 {
     auto notes = std::vector<MicrotonalNote>{};
 
-    for (auto const &measure : measures)
+    for (auto const &measure : phrase)
     {
         auto const results =
             flatten_and_translate_to_midi_notes(measure, tuning, base_frequency);
@@ -175,12 +176,11 @@ struct MicrotonalNote
     return notes;
 }
 
-[[nodiscard]] inline auto flatten_notes(std::vector<Measure> const &measures)
-    -> std::vector<Note>
+[[nodiscard]] inline auto flatten_notes(Phrase const &phrase) -> std::vector<Note>
 {
     auto notes = std::vector<Note>{};
 
-    for (auto const &measure : measures)
+    for (auto const &measure : phrase)
     {
         auto const measure_notes = flatten_notes(measure.sequence);
         std::copy(std::cbegin(measure_notes), std::cend(measure_notes),
@@ -223,15 +223,19 @@ struct SampleRange
         auto const result = std::visit(
             utility::overload{
                 [&](Note const &note) {
-                    std::uint32_t const delay = samples_per_cell * note.delay;
-                    std::uint32_t const note_samples =
-                        (samples_per_cell - delay) * note.gate;
-                    return std::vector{
-                        SampleRange(offset + delay, offset + delay + note_samples)};
+                    auto const delay =
+                        static_cast<std::uint32_t>(samples_per_cell * note.delay);
+                    auto const note_samples = static_cast<std::uint32_t>(
+                        (samples_per_cell - delay) * note.gate);
+                    return std::vector{SampleRange{
+                        static_cast<std::uint32_t>(offset + delay),
+                        static_cast<std::uint32_t>(offset + delay + note_samples),
+                    }};
                 },
                 [](Rest const &) { return std::vector<SampleRange>{}; },
                 [&](Sequence const &subseq) {
-                    return note_sample_infos(subseq, samples_per_cell, offset);
+                    return note_sample_infos(
+                        subseq, static_cast<std::uint32_t>(samples_per_cell), offset);
                 },
             },
             cell);
@@ -252,14 +256,14 @@ struct SampleRange
  * @return std::vector<SampleRange>
  */
 [[nodiscard]] inline auto flatten_and_translate_to_sample_infos(
-    std::vector<Measure> const &measures, std::uint32_t sample_rate, std::uint16_t bpm)
+    Phrase const &phrase, std::uint32_t sample_rate, float bpm)
     -> std::vector<SampleRange>
 {
     auto infos = std::vector<SampleRange>{};
 
     auto sample_offset = 0.f;
 
-    for (auto const &measure : measures)
+    for (auto const &measure : phrase)
     {
         auto const samples_per_measure = samples_count(measure, sample_rate, bpm);
         auto const result =
@@ -297,23 +301,24 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
  * Returns a sequence of MIDI events of type NoteOn, NoteOff, or PitchBend, paired with
  * the sample offset of the event.
  *
- * @param measures The measures to create a timeline of.
+ * @param phrase The measures to create a timeline of.
  *
  * @return EventTimeline
  */
-[[nodiscard]] inline auto translate_to_midi_timeline(
-    std::vector<Measure> const &measures, std::uint32_t sample_rate, std::uint16_t bpm,
-    Tuning const &tuning, float base_frequency) -> EventTimeline
+[[nodiscard]] inline auto translate_to_midi_timeline(Phrase const &phrase,
+                                                     std::uint32_t sample_rate,
+                                                     float bpm, Tuning const &tuning,
+                                                     float base_frequency)
+    -> EventTimeline
 {
     auto midi_events = EventTimeline{};
 
-    auto const ranges =
-        flatten_and_translate_to_sample_infos(measures, sample_rate, bpm);
+    auto const ranges = flatten_and_translate_to_sample_infos(phrase, sample_rate, bpm);
 
     auto const midi_notes =
-        flatten_and_translate_to_midi_notes(measures, tuning, base_frequency);
+        flatten_and_translate_to_midi_notes(phrase, tuning, base_frequency);
 
-    auto const notes = flatten_notes(measures);
+    auto const notes = flatten_notes(phrase);
 
     assert(ranges.size() == midi_notes.size());
     assert(ranges.size() == notes.size());
@@ -323,7 +328,8 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
     {
         auto const [begin, end] = ranges[i];
         auto const [note, pitch_bend] = midi_notes[i];
-        std::uint8_t const velocity = notes[i].velocity * 127;
+        std::uint8_t const velocity =
+            static_cast<std::uint8_t>(notes[i].velocity * 127);
 
         midi_events.emplace_back(PitchBend{pitch_bend}, begin);
         midi_events.emplace_back(NoteOn{note, velocity}, begin);

@@ -380,22 +380,22 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         REQUIRE(infos.size() == 12);
 
         REQUIRE(infos[0].begin == 0);
-        REQUIRE(infos[0].end == 1837);
+        REQUIRE(infos[0].end == 3'675);
 
-        REQUIRE(infos[1].begin == 3674);
-        REQUIRE(infos[1].end == 5511);
+        REQUIRE(infos[1].begin == 7'350);
+        REQUIRE(infos[1].end == 11'025);
 
-        REQUIRE(infos[2].begin == 5512);
-        REQUIRE(infos[2].end == 11024);
+        REQUIRE(infos[2].begin == 11'025);
+        REQUIRE(infos[2].end == 22'050);
 
-        REQUIRE(infos[3].begin == 11025);
-        REQUIRE(infos[3].end == 12862);
+        REQUIRE(infos[3].begin == 22'050);
+        REQUIRE(infos[3].end == 25'725);
 
-        REQUIRE(infos[4].begin == 14699);
-        REQUIRE(infos[4].end == 16536);
+        REQUIRE(infos[4].begin == 29'400);
+        REQUIRE(infos[4].end == 33'075);
 
-        REQUIRE(infos[5].begin == 16537);
-        REQUIRE(infos[5].end == 22049);
+        REQUIRE(infos[5].begin == 33'075);
+        REQUIRE(infos[5].end == 44'100);
     }
 
     SECTION("With gate")

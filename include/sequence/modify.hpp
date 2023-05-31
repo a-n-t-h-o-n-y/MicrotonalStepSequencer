@@ -16,6 +16,9 @@ namespace sequence::modify
 /**
  * @brief Randomize the note intervals in an existing sequence.
  *
+ * This overwrites existings notes, it does not apply a random offset to the existing
+ * notes.
+ *
  * This recurses on child Sequences.
  *
  * @param seq The sequence to randomize.

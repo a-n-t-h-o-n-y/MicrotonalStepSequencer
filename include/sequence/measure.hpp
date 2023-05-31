@@ -61,8 +61,7 @@ using Phrase = std::vector<sequence::Measure>;
     auto const &time_sig = measure.time_signature;
 
     auto const samples_per_beat = static_cast<float>(sample_rate) * 60.f / bpm;
-    auto const beats_per_measure =
-        (static_cast<float>(time_sig.numerator) / time_sig.denominator) * 2;
+    auto const beats_per_measure = static_cast<float>(time_sig.numerator);
     return static_cast<std::uint32_t>(samples_per_beat * beats_per_measure);
 }
 

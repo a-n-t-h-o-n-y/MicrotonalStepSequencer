@@ -425,22 +425,22 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
             midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
 
         REQUIRE(infos[0].begin == 0);
-        REQUIRE(infos[0].end == 918);
+        REQUIRE(infos[0].end == 1'837);
 
-        REQUIRE(infos[1].begin == 3674);
-        REQUIRE(infos[1].end == 4133);
+        REQUIRE(infos[1].begin == 7'350);
+        REQUIRE(infos[1].end == 8'268);
 
-        REQUIRE(infos[2].begin == 5512);
-        REQUIRE(infos[2].end == 5512); // zero gate is allowed but not recommended.
+        REQUIRE(infos[2].begin == 11'025);
+        REQUIRE(infos[2].end == 11'025); // zero gate is allowed but not recommended.
 
-        REQUIRE(infos[3].begin == 11025);
-        REQUIRE(infos[3].end == 11943);
+        REQUIRE(infos[3].begin == 22'050);
+        REQUIRE(infos[3].end == 23'887);
 
-        REQUIRE(infos[4].begin == 14699);
-        REQUIRE(infos[4].end == 15158);
+        REQUIRE(infos[4].begin == 29'400);
+        REQUIRE(infos[4].end == 30'318);
 
-        REQUIRE(infos[5].begin == 16537);
-        REQUIRE(infos[5].end == 16537);
+        REQUIRE(infos[5].begin == 33'075);
+        REQUIRE(infos[5].end == 33'075);
     }
 
     SECTION("With delay")
@@ -469,23 +469,23 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         auto const infos =
             midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
 
-        REQUIRE(infos[0].begin == 918);
-        REQUIRE(infos[0].end == 1837);
+        REQUIRE(infos[0].begin == 1'837);
+        REQUIRE(infos[0].end == 3'675);
 
-        REQUIRE(infos[1].begin == 4133);
-        REQUIRE(infos[1].end == 5511);
+        REQUIRE(infos[1].begin == 8'268);
+        REQUIRE(infos[1].end == 11'025);
 
-        REQUIRE(infos[2].begin == 11024);
-        REQUIRE(infos[2].end == 11024);
+        REQUIRE(infos[2].begin == 22'050);
+        REQUIRE(infos[2].begin == 22'050);
 
-        REQUIRE(infos[3].begin == 11943);
-        REQUIRE(infos[3].end == 12862);
+        REQUIRE(infos[3].begin == 23'887);
+        REQUIRE(infos[3].end == 25'725);
 
-        REQUIRE(infos[4].begin == 15158);
-        REQUIRE(infos[4].end == 16536);
+        REQUIRE(infos[4].begin == 30'318);
+        REQUIRE(infos[4].end == 33'075);
 
-        REQUIRE(infos[5].begin == 22049);
-        REQUIRE(infos[5].end == 22049);
+        REQUIRE(infos[5].begin == 44'100);
+        REQUIRE(infos[5].end == 44'100);
     }
 
     SECTION("With delay and gate")
@@ -514,23 +514,23 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         auto const infos =
             midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
 
-        REQUIRE(infos[0].begin == 918);
-        REQUIRE(infos[0].end == 1653);
+        REQUIRE(infos[0].begin == 1'837);
+        REQUIRE(infos[0].end == 3'307);
 
-        REQUIRE(infos[1].begin == 4133);
-        REQUIRE(infos[1].end == 4270);
+        REQUIRE(infos[1].begin == 8'268);
+        REQUIRE(infos[1].end == 8'543);
 
-        REQUIRE(infos[2].begin == 11024);
-        REQUIRE(infos[2].end == 11024);
+        REQUIRE(infos[2].begin == 22'050);
+        REQUIRE(infos[2].end == 22'050);
 
-        REQUIRE(infos[3].begin == 11943);
-        REQUIRE(infos[3].end == 12678);
+        REQUIRE(infos[3].begin == 23'887);
+        REQUIRE(infos[3].end == 25'357);
 
-        REQUIRE(infos[4].begin == 15158);
-        REQUIRE(infos[4].end == 15295);
+        REQUIRE(infos[4].begin == 30'318);
+        REQUIRE(infos[4].end == 30'593);
 
-        REQUIRE(infos[5].begin == 22049);
-        REQUIRE(infos[5].end == 22049);
+        REQUIRE(infos[5].begin == 44'100);
+        REQUIRE(infos[5].end == 44'100);
     }
 }
 

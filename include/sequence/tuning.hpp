@@ -187,7 +187,7 @@ inline auto to_scala(Tuning const &tuning, std::filesystem::path const &file,
     // Then come the intervals, one per line. Skip the first entry, which is always 0
     // set up stream to output 6 decimal places
     ofs << std::fixed << std::setprecision(6);
-    for (auto i = 1; i < tuning.intervals.size(); ++i)
+    for (auto i = std::size_t{1}; i < tuning.intervals.size(); ++i)
     {
         ofs << tuning.intervals[i] << "\n";
     }

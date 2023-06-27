@@ -2,7 +2,6 @@
 #define SEQUENCE_TEST_HELPER_HPP
 
 #include <concepts>
-#include <format>
 #include <iostream>
 #include <type_traits>
 #include <variant>
@@ -66,9 +65,10 @@ inline auto print_sequence(Sequence const &seq, int indent = 0) -> void
     visit_cells(seq, overload{
                          [&](Note const &note) {
                              std::cout << std::string(indent * 2, ' ');
-                             std::cout << std::format(
-                                 "Note(interval={}, velocity={}, delay={}, gate={})\n",
-                                 note.interval, note.velocity, note.delay, note.gate);
+                             std::cout << "Note(interval=" << note.interval
+                                       << ", velocity=" << note.velocity
+                                       << ", delay=" << note.delay
+                                       << ", gate=" << note.gate << ")\n";
                          },
                          [](Rest) { std::cout << "Rest\n"; },
                          [&](Sequence const &seq) {
@@ -88,20 +88,18 @@ inline auto print_midi_event_timeline(midi::EventTimeline const &timeline) -> vo
         std::cout << "Event: ";
         visit(overload{
                   [&](midi::NoteOn const &note_on) {
-                      std::cout
-                          << std::format("NoteOn(note={}, velocity={})",
-                                         (int)note_on.note, (int)note_on.velocity);
+                      std::cout << "NoteOn(note=" << (int)note_on.note
+                                << ", velocity=" << (int)note_on.velocity << ")";
                   },
                   [&](midi::NoteOff const &note_off) {
-                      std::cout << std::format("NoteOff(note={})", (int)note_off.note);
+                      std::cout << "NoteOff(note=" << (int)note_off.note << ")";
                   },
                   [&](midi::PitchBend const &pitch_bend) {
-                      std::cout
-                          << std::format("PitchBend(amount={})", pitch_bend.value);
+                      std::cout << "PitchBend(amount=" << (int)pitch_bend.value << ")";
                   },
               },
               event);
-        std::cout << std::format(" | offset={}\n", offset);
+        std::cout << " | offset=" << offset << "\n";
     }
 }
 

@@ -165,9 +165,8 @@ struct Tuning
  *
  * @throws std::runtime_error if the file could not be opened.
  */
-[[nodiscard]] inline auto to_scala(Tuning const &tuning,
-                                   std::filesystem::path const &file,
-                                   std::string const &description = "") -> void
+inline auto to_scala(Tuning const &tuning, std::filesystem::path const &file,
+                     std::string const &description = "") -> void
 {
     std::ofstream ofs(file);
 

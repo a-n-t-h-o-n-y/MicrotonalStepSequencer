@@ -67,12 +67,12 @@ struct Sequence
 [[nodiscard]] constexpr auto operator==(Cell const &lhs, Cell const &rhs) -> bool
 {
     return std::visit(
-        [](auto const &lhs, auto const &rhs) -> bool {
-            using T = std::decay_t<decltype(lhs)>;
-            using U = std::decay_t<decltype(rhs)>;
+        [](auto const &l, auto const &r) -> bool {
+            using T = std::decay_t<decltype(l)>;
+            using U = std::decay_t<decltype(r)>;
             if constexpr (std::is_same_v<T, U>)
             {
-                return lhs == rhs;
+                return l == r;
             }
             else
             {

@@ -1024,11 +1024,6 @@ TEST_CASE("repeat", "[modify]")
         REQUIRE(repeated_seq.cells.empty());
     }
 
-    SECTION("Throws")
-    {
-        REQUIRE_THROWS_AS(modify::repeat(seq, -1), std::invalid_argument);
-    }
-
     SECTION("Repeat 1 time")
     {
         auto const repeated_seq = modify::repeat(seq, 1);
@@ -1076,11 +1071,6 @@ TEST_CASE("stretch", "[modify]")
         REQUIRE(stretched_seq.cells.empty());
     }
 
-    SECTION("Throws")
-    {
-        REQUIRE_THROWS_AS(modify::stretch(seq, -1), std::invalid_argument);
-    }
-
     SECTION("Stretch by 1")
     {
         auto const stretched_seq = modify::stretch(seq, 1);
@@ -1118,7 +1108,6 @@ TEST_CASE("compress", "[modify]")
     SECTION("Throws")
     {
         REQUIRE_THROWS_AS(modify::compress(seq, 0), std::invalid_argument);
-        REQUIRE_THROWS_AS(modify::compress(seq, -1), std::invalid_argument);
     }
 
     SECTION("Compress by 1")
@@ -1412,11 +1401,6 @@ TEST_CASE("split", "[modify]")
         Note{0, 1.0f, 0.0f, 0.5f},
         Rest{},
     }};
-
-    SECTION("Throws if split index is less than zero")
-    {
-        REQUIRE_THROWS_AS(modify::split(seq, -1), std::invalid_argument);
-    }
 
     SECTION("split at index zero returns empty sequence and original sequence")
     {

@@ -47,7 +47,7 @@ namespace sequence::modify
                 overload{
                     [&](Note &note) { note.interval = dis(gen); },
                     [](Rest) {},
-                    [&](Sequence &seq) { seq = randomize_intervals(seq, min, max); },
+                    [&](Sequence &s) { s = randomize_intervals(s, min, max); },
                 });
 
     return randomized_seq;
@@ -89,7 +89,7 @@ namespace sequence::modify
                 overload{
                     [&](Note &note) { note.velocity = dis(gen); },
                     [](Rest) {},
-                    [&](Sequence &seq) { seq = randomize_velocity(seq, min, max); },
+                    [&](Sequence &s) { s = randomize_velocity(s, min, max); },
                 });
 
     return randomized_seq;
@@ -131,7 +131,7 @@ namespace sequence::modify
                 overload{
                     [&](Note &note) { note.delay = dis(gen); },
                     [](Rest) {},
-                    [&](Sequence &seq) { seq = randomize_delay(seq, min, max); },
+                    [&](Sequence &s) { s = randomize_delay(s, min, max); },
                 });
 
     return randomized_seq;
@@ -173,7 +173,7 @@ namespace sequence::modify
                 overload{
                     [&](Note &note) { note.gate = dis(gen); },
                     [](Rest) {},
-                    [&](Sequence &seq) { seq = randomize_gate(seq, min, max); },
+                    [&](Sequence &s) { s = randomize_gate(s, min, max); },
                 });
 
     return randomized_seq;
@@ -197,7 +197,7 @@ namespace sequence::modify
     visit_cells(shifted_seq, overload{
                                  [&](Note &note) { note.interval += amount; },
                                  [](Rest) {},
-                                 [&](Sequence &seq) { seq = shift_pitch(seq, amount); },
+                                 [&](Sequence &s) { s = shift_pitch(s, amount); },
                              });
 
     return shifted_seq;
@@ -351,20 +351,13 @@ namespace sequence::modify
  * @param seq The sequence to duplicate.
  * @param count The number of copies to make, if zero, returns an empty Sequence.
  * @return Sequence The repeated sequence.
- *
- * @throws std::invalid_argument If count is less than zero.
  */
-[[nodiscard]] inline auto repeat(Sequence const &seq, int count) -> Sequence
+[[nodiscard]] inline auto repeat(Sequence const &seq, std::size_t count) -> Sequence
 {
-    if (count < 0)
-    {
-        throw std::invalid_argument("count must be greater than or equal to zero");
-    }
-
     auto repeated_seq = Sequence{};
     repeated_seq.cells.reserve(seq.cells.size() * count);
 
-    for (auto i = 0; i < count; ++i)
+    for (auto i = std::size_t{0}; i < count; ++i)
     {
         std::copy(std::cbegin(seq.cells), std::cend(seq.cells),
                   std::back_inserter(repeated_seq.cells));
@@ -382,22 +375,15 @@ namespace sequence::modify
  * @param amount The number of times to repeat each note, if zero, returns an empty
  * Sequence.
  * @return Sequence The stretched sequence.
- *
- * @throws std::invalid_argument If amount is less than zero.
  */
-[[nodiscard]] inline auto stretch(Sequence const &seq, int amount) -> Sequence
+[[nodiscard]] inline auto stretch(Sequence const &seq, std::size_t amount) -> Sequence
 {
-    if (amount < 0)
-    {
-        throw std::invalid_argument("count must be greater than or equal to zero");
-    }
-
     auto stretched_seq = Sequence{};
     stretched_seq.cells.reserve(seq.cells.size() * amount);
 
     for (auto const &cell : seq.cells)
     {
-        for (auto i = 0; i < amount; ++i)
+        for (auto i = std::size_t{0}; i < amount; ++i)
         {
             stretched_seq.cells.push_back(cell);
         }
@@ -418,7 +404,7 @@ namespace sequence::modify
  *
  * @throws std::invalid_argument If amount is less than one.
  */
-[[nodiscard]] inline auto compress(Sequence const &seq, int amount) -> Sequence
+[[nodiscard]] inline auto compress(Sequence const &seq, std::size_t amount) -> Sequence
 {
     if (amount < 1)
     {
@@ -527,22 +513,16 @@ namespace sequence::modify
  * @param seq The sequence to split.
  * @param index The index to split at, this element is included in the second Sequence.
  * @return std::pair<Sequence, Sequence> The split Sequences.
- *
- * @throws std::invalid_argument If index is less than zero.
  */
-[[nodiscard]] inline auto split(Sequence const &seq, int index)
+[[nodiscard]] inline auto split(Sequence const &seq, std::size_t index)
     -> std::pair<Sequence, Sequence>
 {
-    if (index < 0)
-    {
-        throw std::invalid_argument("index must be greater than or equal to zero");
-    }
+    index = std::min(index, seq.cells.size());
 
-    index = std::min(index, static_cast<int>(seq.cells.size()));
-
-    return {
-        Sequence{std::vector(std::cbegin(seq.cells), std::cbegin(seq.cells) + index)},
-        Sequence{std::vector(std::cbegin(seq.cells) + index, std::cend(seq.cells))}};
+    return {Sequence{std::vector(std::cbegin(seq.cells),
+                                 std::cbegin(seq.cells) + (std::ptrdiff_t)index)},
+            Sequence{std::vector(std::cbegin(seq.cells) + (std::ptrdiff_t)index,
+                                 std::cend(seq.cells))}};
 }
 
 } // namespace sequence::modify

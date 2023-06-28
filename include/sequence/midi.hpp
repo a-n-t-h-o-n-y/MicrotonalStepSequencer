@@ -51,18 +51,19 @@ struct MicrotonalNote
 
     auto const fractional_note = tuning_base + [&] {
         constexpr auto semitone_cents = 100.f;
-        auto const length = static_cast<int>(tuning.intervals.size());
+        auto const length = (int)tuning.intervals.size();
 
-        auto const octave_offset = static_cast<int>(interval / length) * tuning.octave;
+        auto const octave_offset = (int)(interval / length) * tuning.octave;
         auto const interval_offset = [&] {
             auto const interval_index = interval % length;
             if (interval_index < 0)
             {
-                return tuning.intervals[interval_index + length] - tuning.octave;
+                return tuning.intervals[(std::size_t)(interval_index + length)] -
+                       tuning.octave;
             }
             else
             {
-                return tuning.intervals[interval_index];
+                return tuning.intervals[(std::size_t)interval_index];
             }
         }();
 

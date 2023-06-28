@@ -9,7 +9,6 @@ TEST_CASE("create_measure", "[measure]")
     SECTION("throws if cell_resolution < 1")
     {
         REQUIRE_THROWS_AS(create_measure({4, 4}, 0), std::invalid_argument);
-        REQUIRE_THROWS_AS(create_measure({4, 4}, -1), std::invalid_argument);
     }
 
     SECTION("returns a measure with the correct time signature")

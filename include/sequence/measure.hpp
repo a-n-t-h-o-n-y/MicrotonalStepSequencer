@@ -33,7 +33,7 @@ using Phrase = std::vector<sequence::Measure>;
  * @throws std::invalid_argument if resolution < 1.
  */
 [[nodiscard]] inline auto create_measure(TimeSignature const &time_signature,
-                                         int cell_resolution = 1) -> Measure
+                                         std::size_t cell_resolution = 1) -> Measure
 {
     if (cell_resolution < 1)
     {

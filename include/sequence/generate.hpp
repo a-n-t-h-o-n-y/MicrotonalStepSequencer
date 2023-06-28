@@ -19,7 +19,7 @@ namespace sequence::generate
  *
  * @throws std::out_of_range if size < 0.
  */
-[[nodiscard]] inline auto empty(int size) -> Sequence
+[[nodiscard]] inline auto empty(std::size_t size) -> Sequence
 {
     return Sequence{std::vector<Cell>(size, Rest{})};
 }
@@ -33,7 +33,8 @@ namespace sequence::generate
  *
  * @throws std::out_of_range if size < 0.
  */
-[[nodiscard]] inline auto full(int size, Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence
+[[nodiscard]] inline auto full(std::size_t size, Note note = {0, 0.8f, 0.f, 1.f})
+    -> Sequence
 {
     return Sequence{std::vector<Cell>(size, note)};
 }
@@ -52,14 +53,10 @@ namespace sequence::generate
  *
  * @throws std::out_of_range if size < 0, interval < 1, or offset < 0.
  */
-[[nodiscard]] inline auto interval(int size, int interval, int offset = 0,
+[[nodiscard]] inline auto interval(std::size_t size, std::size_t interval,
+                                   std::size_t offset = 0,
                                    Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence
 {
-    if (size < 0 || interval < 1 || offset < 0)
-    {
-        throw std::out_of_range("Invalid arguments");
-    }
-
     auto seq = Sequence{std::vector<Cell>(size, Rest{})};
 
     for (auto i = offset; i < size; i += interval)
@@ -80,10 +77,10 @@ namespace sequence::generate
  *
  * @throws std::out_of_range if size < 0, density < 0, or density > 1.
  */
-[[nodiscard]] inline auto random(int size, float density = 0.6f,
+[[nodiscard]] inline auto random(std::size_t size, float density = 0.6f,
                                  Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence
 {
-    if (size < 0 || density < 0.f || density > 1.f)
+    if (density < 0.f || density > 1.f)
     {
         throw std::out_of_range("Invalid arguments");
     }
@@ -94,11 +91,11 @@ namespace sequence::generate
     auto gen = std::mt19937{rd()};
     auto dist = std::uniform_real_distribution<float>{0.f, 1.f};
 
-    for (int i = 0; i < size; ++i)
+    for (auto &cell : seq.cells)
     {
         if (dist(gen) < density)
         {
-            seq.cells[i] = note;
+            cell = note;
         }
     }
 

@@ -117,7 +117,7 @@ TEST_CASE("create_midi_note", "[midi]")
             auto const tuning_base = 10.5f;
             {
                 auto const note = midi::create_midi_note(-1, tuning, tuning_base);
-                REQUIRE(note.note == 9);
+                REQUIRE((int)note.note == 9);
                 REQUIRE(note.pitch_bend == 11212);
             }
             {

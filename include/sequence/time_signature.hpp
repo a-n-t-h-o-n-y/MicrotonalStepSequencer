@@ -14,8 +14,8 @@ namespace sequence
  */
 struct TimeSignature
 {
-    int numerator;   // Number of beats per measure
-    int denominator; // Beat value
+    uint numerator;   // Number of beats per measure
+    uint denominator; // Beat value
 };
 
 } // namespace sequence

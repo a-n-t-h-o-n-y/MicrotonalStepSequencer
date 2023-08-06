@@ -53,7 +53,7 @@ struct MicrotonalNote
         constexpr auto semitone_cents = 100.f;
         auto const length = (int)tuning.intervals.size();
 
-        auto const octave_offset = (int)(interval / length) * tuning.octave;
+        auto const octave_offset = (float)(interval / length) * tuning.octave;
         auto const interval_offset = [&] {
             auto const interval_index = interval % length;
             if (interval_index < 0)
@@ -215,7 +215,7 @@ struct SampleRange
     -> std::vector<SampleRange>
 {
     // This is float to avoid accumulating rounding errors.
-    float const samples_per_cell = static_cast<float>(total_samples) / seq.cells.size();
+    float const samples_per_cell = (float)(total_samples) / (float)seq.cells.size();
 
     auto infos = std::vector<SampleRange>{};
 
@@ -227,7 +227,7 @@ struct SampleRange
                     auto const delay =
                         static_cast<std::uint32_t>(samples_per_cell * note.delay);
                     auto const note_samples = static_cast<std::uint32_t>(
-                        (samples_per_cell - delay) * note.gate);
+                        (samples_per_cell - (float)delay) * note.gate);
                     return std::vector{SampleRange{
                         static_cast<std::uint32_t>(offset + delay),
                         static_cast<std::uint32_t>(offset + delay + note_samples),

@@ -33,10 +33,11 @@ TEST_CASE("randomize_intervals", "[modify]")
         auto const randomized_seq = modify::randomize_intervals(seq, min, max);
 
         // Check that the randomized sequence has the same length
-        REQUIRE(randomized_seq.cells.size() == seq.cells.size());
+        REQUIRE(std::holds_alternative<Sequence>(randomized_seq));
+        REQUIRE(std::get<Sequence>(randomized_seq).cells.size() == seq.cells.size());
 
         // Check that each interval is within the expected range
-        for (auto const &cell : randomized_seq.cells)
+        for (auto const &cell : std::get<Sequence>(randomized_seq).cells)
         {
             auto const interval = std::get<Note>(cell).interval;
             REQUIRE(interval >= min);
@@ -60,10 +61,11 @@ TEST_CASE("randomize_intervals", "[modify]")
         auto const randomized_seq = modify::randomize_intervals(seq, min, max);
 
         // Check that the randomized sequence has the same length
-        REQUIRE(randomized_seq.cells.size() == seq.cells.size());
+        REQUIRE(std::holds_alternative<Sequence>(randomized_seq));
+        REQUIRE(std::get<Sequence>(randomized_seq).cells.size() == seq.cells.size());
 
         // Check that each interval is within the expected range
-        for (auto const &cell : randomized_seq.cells)
+        for (auto const &cell : std::get<Sequence>(randomized_seq).cells)
         {
             REQUIRE(holds<Rest>(cell));
         }
@@ -102,7 +104,8 @@ TEST_CASE("randomize_intervals", "[modify]")
         auto const randomized_seq = modify::randomize_intervals(seq, min, max);
 
         // Check that the randomized sequence has the same length
-        REQUIRE(randomized_seq.cells.size() == seq.cells.size());
+        REQUIRE(std::holds_alternative<Sequence>(randomized_seq));
+        REQUIRE(std::get<Sequence>(randomized_seq).cells.size() == seq.cells.size());
 
         // Check that each interval is within the expected range
         test::helper::check_sequence(randomized_seq, [&](Note const &note) {
@@ -130,7 +133,8 @@ TEST_CASE("randomize_velocity", "[modify]")
         }};
 
         // Randomize the velocity in the sequence
-        auto const randomized_seq = modify::randomize_velocity(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_velocity(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -150,7 +154,8 @@ TEST_CASE("randomize_velocity", "[modify]")
         auto const seq = Sequence{{Rest{}, Rest{}, Rest{}, Rest{}, Rest{}, Rest{}}};
 
         // Randomize the velocity in the sequence
-        auto const randomized_seq = modify::randomize_velocity(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_velocity(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -207,7 +212,8 @@ TEST_CASE("randomize_velocity", "[modify]")
         };
 
         // Randomize the velocity in the sequence
-        auto const randomized_seq = modify::randomize_velocity(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_velocity(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -238,7 +244,8 @@ TEST_CASE("randomize_delay", "[modify]")
         }};
 
         // Randomize the delay in the sequence
-        auto const randomized_seq = modify::randomize_delay(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_delay(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -265,7 +272,8 @@ TEST_CASE("randomize_delay", "[modify]")
         }};
 
         // Randomize the delay in the sequence
-        auto const randomized_seq = modify::randomize_delay(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_delay(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -323,7 +331,8 @@ TEST_CASE("randomize_delay", "[modify]")
         };
 
         // Randomize the delay in the sequence
-        auto const randomized_seq = modify::randomize_delay(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_delay(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -354,7 +363,8 @@ TEST_CASE("randomize_gate", "[modify]")
         }};
 
         // Randomize the gate in the sequence
-        auto const randomized_seq = modify::randomize_gate(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_gate(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -374,7 +384,8 @@ TEST_CASE("randomize_gate", "[modify]")
         auto const seq = Sequence{{Rest{}, Rest{}, Rest{}, Rest{}, Rest{}, Rest{}}};
 
         // Randomize the gate in the sequence
-        auto const randomized_seq = modify::randomize_gate(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_gate(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -432,7 +443,8 @@ TEST_CASE("randomize_gate", "[modify]")
         };
 
         // Randomize the gate in the sequence
-        auto const randomized_seq = modify::randomize_gate(seq, min, max);
+        auto const randomized_seq =
+            std::get<Sequence>(modify::randomize_gate(seq, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -457,7 +469,7 @@ TEST_CASE("shift_pitch", "[modify]")
         }};
 
         // Shift the pitch in the sequence
-        auto const shifted_seq = modify::shift_pitch(seq, 0);
+        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, 0));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
@@ -487,7 +499,7 @@ TEST_CASE("shift_pitch", "[modify]")
         }};
 
         // Shift the pitch in the sequence
-        auto const shifted_seq = modify::shift_pitch(seq, shift);
+        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, shift));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
@@ -517,7 +529,7 @@ TEST_CASE("shift_pitch", "[modify]")
         }};
 
         // Shift the pitch in the sequence
-        auto const shifted_seq = modify::shift_pitch(seq, shift);
+        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, shift));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
@@ -554,7 +566,7 @@ TEST_CASE("shift_pitch", "[modify]")
         };
 
         // Shift the pitch in the sequence
-        auto const shifted_seq = modify::shift_pitch(seq, 2);
+        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, 2));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
@@ -594,7 +606,7 @@ TEST_CASE("rotate", "[modify]")
     SECTION("Zero Rotate")
     {
         // Rotate the sequence
-        auto const rotated_seq = modify::rotate(seq, 0);
+        auto const rotated_seq = std::get<Sequence>(modify::rotate(seq, 0));
 
         // Check that the rotated sequence has the same length
         REQUIRE(rotated_seq.cells.size() == seq.cells.size());
@@ -606,7 +618,7 @@ TEST_CASE("rotate", "[modify]")
     SECTION("+4 Shift")
     {
         // Rotate the sequence
-        auto const rotated_seq = modify::rotate(seq, 4);
+        auto const rotated_seq = std::get<Sequence>(modify::rotate(seq, 4));
 
         // Check that the rotated sequence has the same length
         REQUIRE(rotated_seq.cells.size() == seq.cells.size());
@@ -621,7 +633,7 @@ TEST_CASE("rotate", "[modify]")
     SECTION("-5 Shift")
     {
         // Rotate the sequence
-        auto const rotated_seq = modify::rotate(seq, -5);
+        auto const rotated_seq = std::get<Sequence>(modify::rotate(seq, -5));
 
         // Check that the rotated sequence has the same length
         REQUIRE(rotated_seq.cells.size() == seq.cells.size());
@@ -638,7 +650,7 @@ TEST_CASE("rotate", "[modify]")
     {
         // Rotate the sequence
         auto const amount = 100;
-        auto const rotated_seq = modify::rotate(seq, amount);
+        auto const rotated_seq = std::get<Sequence>(modify::rotate(seq, amount));
 
         // Check that the rotated sequence has the same length
         REQUIRE(rotated_seq.cells.size() == seq.cells.size());
@@ -657,7 +669,7 @@ TEST_CASE("rotate", "[modify]")
         auto const empty_seq = Sequence{};
 
         // Rotate the sequence
-        auto const rotated_seq = modify::rotate(empty_seq, 3);
+        auto const rotated_seq = std::get<Sequence>(modify::rotate(empty_seq, 3));
 
         // Check that the rotated sequence has the same length
         REQUIRE(rotated_seq.cells.size() == empty_seq.cells.size());
@@ -713,7 +725,7 @@ TEST_CASE("swing", "[modify]")
     SECTION("Zero Swing")
     {
         // Swing the sequence
-        auto const swung_seq = modify::swing(seq, 0.f);
+        auto const swung_seq = std::get<Sequence>(modify::swing(seq, 0.f));
 
         // Check that the swung sequence has the same length
         REQUIRE(swung_seq.cells.size() == seq.cells.size());
@@ -726,7 +738,7 @@ TEST_CASE("swing", "[modify]")
     SECTION("0.5 Swing")
     {
         // Swing the sequence
-        auto const swung_seq = modify::swing(seq, 0.5f);
+        auto const swung_seq = std::get<Sequence>(modify::swing(seq, 0.5f));
 
         // Check that the swung sequence has the same length
         REQUIRE(swung_seq.cells.size() == seq.cells.size());
@@ -738,7 +750,7 @@ TEST_CASE("swing", "[modify]")
     SECTION("1.0 Swing")
     {
         // Swing the sequence
-        auto const swung_seq = modify::swing(seq, 1.0f);
+        auto const swung_seq = std::get<Sequence>(modify::swing(seq, 1.0f));
 
         // Check that the swung sequence has the same length
         REQUIRE(swung_seq.cells.size() == seq.cells.size());
@@ -758,7 +770,7 @@ TEST_CASE("swing", "[modify]")
         auto const empty_seq = Sequence{};
 
         // Swing the sequence
-        auto const swung_seq = modify::swing(empty_seq, 0.5f);
+        auto const swung_seq = std::get<Sequence>(modify::swing(empty_seq, 0.5f));
 
         // Check that the swung sequence has the same length
         REQUIRE(swung_seq.cells.size() == empty_seq.cells.size());
@@ -805,7 +817,7 @@ TEST_CASE("swing", "[modify]")
             },
         };
 
-        auto const swung_seq = modify::swing(seqs, 0.25f);
+        auto const swung_seq = std::get<Sequence>(modify::swing(seqs, 0.25f));
         REQUIRE(swung_seq.cells.size() == seqs.cells.size());
 
         check_swing(swung_seq, 0.25f);
@@ -853,7 +865,7 @@ TEST_CASE("quantize", "[modify]")
     SECTION("Quantization")
     {
         // Quantize the sequence
-        auto const quantized_seq = modify::quantize(seq);
+        auto const quantized_seq = std::get<Sequence>(modify::quantize(seq));
 
         // Check that the quantized sequence has the same length
         REQUIRE(quantized_seq.cells.size() == seq.cells.size());
@@ -907,7 +919,7 @@ TEST_CASE("mirror", "[modify]")
     SECTION("Mirror around zero")
     {
         // Mirror the sequence
-        auto const mirrored_seq = modify::mirror(seq, 0);
+        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, 0));
 
         // Check that the mirrored sequence has the same length
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
@@ -923,7 +935,7 @@ TEST_CASE("mirror", "[modify]")
     SECTION("Mirror around +5")
     {
         // Mirror the sequence
-        auto const mirrored_seq = modify::mirror(seq, 5);
+        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, 5));
 
         // Check that the mirrored sequence has the same length
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
@@ -939,7 +951,7 @@ TEST_CASE("mirror", "[modify]")
     SECTION("Mirror around -10")
     {
         // Mirror the sequence
-        auto const mirrored_seq = modify::mirror(seq, -10);
+        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, -10));
 
         // Check that the mirrored sequence has the same length
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
@@ -973,7 +985,7 @@ TEST_CASE("reverse", "[modify]")
     SECTION("Reverse")
     {
         // Reverse the sequence
-        auto const reversed_seq = modify::reverse(seq);
+        auto const reversed_seq = std::get<Sequence>(modify::reverse(seq));
 
         // Check that the reversed sequence has the same length
         REQUIRE(reversed_seq.cells.size() == seq.cells.size());
@@ -993,7 +1005,7 @@ TEST_CASE("reverse", "[modify]")
     SECTION("Reverse Empty Sequence")
     {
         // Reverse the sequence
-        auto const reversed_seq = modify::reverse(Sequence{});
+        auto const reversed_seq = std::get<Sequence>(modify::reverse(Sequence{}));
 
         // Check that the reversed sequence is empty
         REQUIRE(reversed_seq.cells.empty());
@@ -1020,40 +1032,20 @@ TEST_CASE("repeat", "[modify]")
 
     SECTION("Repeat 0 times")
     {
-        auto const repeated_seq = modify::repeat(seq, 0);
+        auto const repeated_seq = std::get<Sequence>(modify::repeat(seq, 0));
         REQUIRE(repeated_seq.cells.empty());
     }
 
     SECTION("Repeat 1 time")
     {
         auto const repeated_seq = modify::repeat(seq, 1);
-        REQUIRE(repeated_seq == seq);
+        REQUIRE(Sequence{{seq}} == repeated_seq);
     }
 
     SECTION("Repeat 5 times")
     {
-        auto const repeated_seq = modify::repeat(seq, 5);
-        REQUIRE(repeated_seq.cells.size() == seq.cells.size() * 5);
-        REQUIRE(repeated_seq.cells[0] == seq.cells[0]);
-        REQUIRE(repeated_seq.cells[1] == seq.cells[1]);
-        REQUIRE(repeated_seq.cells[2] == seq.cells[2]);
-        REQUIRE(repeated_seq.cells[3] == seq.cells[3]);
-        REQUIRE(repeated_seq.cells[4] == seq.cells[0]);
-        REQUIRE(repeated_seq.cells[5] == seq.cells[1]);
-        REQUIRE(repeated_seq.cells[6] == seq.cells[2]);
-        REQUIRE(repeated_seq.cells[7] == seq.cells[3]);
-        REQUIRE(repeated_seq.cells[8] == seq.cells[0]);
-        REQUIRE(repeated_seq.cells[9] == seq.cells[1]);
-        REQUIRE(repeated_seq.cells[10] == seq.cells[2]);
-        REQUIRE(repeated_seq.cells[11] == seq.cells[3]);
-        REQUIRE(repeated_seq.cells[12] == seq.cells[0]);
-        REQUIRE(repeated_seq.cells[13] == seq.cells[1]);
-        REQUIRE(repeated_seq.cells[14] == seq.cells[2]);
-        REQUIRE(repeated_seq.cells[15] == seq.cells[3]);
-        REQUIRE(repeated_seq.cells[16] == seq.cells[0]);
-        REQUIRE(repeated_seq.cells[17] == seq.cells[1]);
-        REQUIRE(repeated_seq.cells[18] == seq.cells[2]);
-        REQUIRE(repeated_seq.cells[19] == seq.cells[3]);
+        auto const repeated_seq = std::get<Sequence>(modify::repeat(seq, 5));
+        REQUIRE(repeated_seq == Sequence{{seq, seq, seq, seq, seq}});
     }
 }
 
@@ -1067,30 +1059,41 @@ TEST_CASE("stretch", "[modify]")
 
     SECTION("Stretch by 0")
     {
-        auto const stretched_seq = modify::stretch(seq, 0);
-        REQUIRE(stretched_seq.cells.empty());
+        auto const stretched_seq = std::get<Sequence>(modify::stretch(seq, 0));
+        REQUIRE(stretched_seq == Sequence{{Sequence{}, Sequence{}, Sequence{}}});
     }
 
     SECTION("Stretch by 1")
     {
         auto const stretched_seq = modify::stretch(seq, 1);
-        REQUIRE(stretched_seq == seq);
+        REQUIRE(stretched_seq == Sequence{{
+                                     Sequence{{Note{0, 1.0f, 0.0f, 0.5f}}},
+                                     Sequence{{Rest{}}},
+                                     Sequence{{Note{1, 1.0f, 0.0f, 0.5f}}},
+                                 }});
     }
 
     SECTION("Stretch by 3")
     {
-        auto const stretched_seq = modify::stretch(seq, 3);
-        REQUIRE(stretched_seq.cells.size() == seq.cells.size() * 3);
+        auto const stretched_seq = std::get<Sequence>(modify::stretch(seq, 3));
 
-        REQUIRE(stretched_seq.cells[0] == seq.cells[0]);
-        REQUIRE(stretched_seq.cells[1] == seq.cells[0]);
-        REQUIRE(stretched_seq.cells[2] == seq.cells[0]);
-        REQUIRE(stretched_seq.cells[3] == seq.cells[1]);
-        REQUIRE(stretched_seq.cells[4] == seq.cells[1]);
-        REQUIRE(stretched_seq.cells[5] == seq.cells[1]);
-        REQUIRE(stretched_seq.cells[6] == seq.cells[2]);
-        REQUIRE(stretched_seq.cells[7] == seq.cells[2]);
-        REQUIRE(stretched_seq.cells[8] == seq.cells[2]);
+        REQUIRE(stretched_seq == Sequence{{
+                                     Sequence{{
+                                         Note{0, 1.0f, 0.0f, 0.5f},
+                                         Note{0, 1.0f, 0.0f, 0.5f},
+                                         Note{0, 1.0f, 0.0f, 0.5f},
+                                     }},
+                                     Sequence{{
+                                         Rest{},
+                                         Rest{},
+                                         Rest{},
+                                     }},
+                                     Sequence{{
+                                         Note{1, 1.0f, 0.0f, 0.5f},
+                                         Note{1, 1.0f, 0.0f, 0.5f},
+                                         Note{1, 1.0f, 0.0f, 0.5f},
+                                     }},
+                                 }});
     }
 }
 
@@ -1118,7 +1121,7 @@ TEST_CASE("compress", "[modify]")
 
     SECTION("Compress by 2")
     {
-        auto const compressed_seq = modify::compress(seq, 2);
+        auto const compressed_seq = std::get<Sequence>(modify::compress(seq, 2));
         REQUIRE(compressed_seq.cells.size() == std::ceil(seq.cells.size() / 2.f));
 
         REQUIRE(compressed_seq.cells[0] == seq.cells[0]);
@@ -1128,7 +1131,7 @@ TEST_CASE("compress", "[modify]")
 
     SECTION("Compress by 4")
     {
-        auto const compressed_seq = modify::compress(seq, 4);
+        auto const compressed_seq = std::get<Sequence>(modify::compress(seq, 4));
         REQUIRE(compressed_seq.cells.size() == std::ceil(seq.cells.size() / 4.f));
 
         REQUIRE(compressed_seq.cells[0] == seq.cells[0]);
@@ -1151,7 +1154,7 @@ TEST_CASE("compress", "[modify]")
             Note{1, 1.0f, 0.0f, 0.5f},
         }};
 
-        auto const compressed_seq = modify::compress(seq2, 2);
+        auto const compressed_seq = std::get<Sequence>(modify::compress(seq2, 2));
         REQUIRE(compressed_seq.cells.size() == std::ceil(seq2.cells.size() / 2.f));
 
         REQUIRE(compressed_seq.cells[0] == seq2.cells[0]);
@@ -1183,14 +1186,14 @@ TEST_CASE("shuffle", "[modify]")
 
     SECTION("shuffle returns a sequence with the same number of cells")
     {
-        auto shuffled_seq = modify::shuffle(seq);
+        auto shuffled_seq = std::get<Sequence>(modify::shuffle(seq));
 
         REQUIRE(shuffled_seq.cells.size() == seq.cells.size());
     }
 
     SECTION("shuffle returns a sequence with the same cells")
     {
-        auto shuffled_seq = modify::shuffle(seq);
+        auto shuffled_seq = std::get<Sequence>(modify::shuffle(seq));
 
         // Checking for variant type counts instead of exact cell equality
         for (auto i = 0u; i < std::variant_size_v<Cell>; ++i)
@@ -1206,7 +1209,7 @@ TEST_CASE("shuffle", "[modify]")
 
     SECTION("shuffle returns a sequence with different cell order")
     {
-        auto shuffled_seq = modify::shuffle(seq);
+        auto shuffled_seq = std::get<Sequence>(modify::shuffle(seq));
 
         REQUIRE_FALSE(std::ranges::equal(seq.cells, shuffled_seq.cells));
     }
@@ -1214,7 +1217,7 @@ TEST_CASE("shuffle", "[modify]")
     SECTION("Subsequence")
     {
         // Warning: This SECTION depends on the order of seq elements.
-        auto shuffled_seq = modify::shuffle(seq);
+        auto shuffled_seq = std::get<Sequence>(modify::shuffle(seq));
 
         for (auto const &cell : shuffled_seq.cells)
         {
@@ -1268,14 +1271,14 @@ TEST_CASE("concat", "[modify]")
 
     SECTION("concat returns a sequence with the total number of cells from each")
     {
-        auto const concated_seq = modify::concat(seq1, seq2);
+        auto const concated_seq = std::get<Sequence>(modify::concat(seq1, seq2));
 
         REQUIRE(concated_seq.cells.size() == (seq1.cells.size() + seq2.cells.size()));
     }
 
     SECTION("concat returns a sequence with the same cells in order seq1, seq2")
     {
-        auto const concated_seq = modify::concat(seq1, seq2);
+        auto const concated_seq = std::get<Sequence>(modify::concat(seq1, seq2));
 
         auto const seq1_cells = seq1.cells;
         auto const seq2_cells = seq2.cells;
@@ -1292,7 +1295,7 @@ TEST_CASE("concat", "[modify]")
     {
         auto const empty_seq = Sequence{};
 
-        auto const concated_seq = modify::concat(seq1, empty_seq);
+        auto const concated_seq = std::get<Sequence>(modify::concat(seq1, empty_seq));
 
         REQUIRE(std::ranges::equal(seq1.cells, concated_seq.cells));
     }
@@ -1301,7 +1304,8 @@ TEST_CASE("concat", "[modify]")
     {
         auto const empty_seq = Sequence{};
 
-        auto const concated_seq = modify::concat(empty_seq, empty_seq);
+        auto const concated_seq =
+            std::get<Sequence>(modify::concat(empty_seq, empty_seq));
 
         REQUIRE(concated_seq.cells.empty());
     }
@@ -1309,8 +1313,9 @@ TEST_CASE("concat", "[modify]")
 /**
  * @brief Merge two Sequences into a new Sequence by interweaving their notes
  *
- * If one Sequence is shorter than the other, it is repeated to be the same length as
- * the longer Sequence. If either Sequence is empty, the other Sequence is returned.
+ * If one Sequence is shorter than the other, it is repeated to be the same length
+ * as the longer Sequence. If either Sequence is empty, the other Sequence is
+ * returned.
  *
  * @param seq_a The first sequence.
  * @param seq_b The second sequence.
@@ -1341,7 +1346,7 @@ TEST_CASE("merge", "[modify]")
 
     SECTION("merge returns a sequence with 2 * max cell count cells")
     {
-        auto const merged_seq = modify::merge(seq1, seq2);
+        auto const merged_seq = std::get<Sequence>(modify::merge(seq1, seq2));
 
         REQUIRE(merged_seq.cells.size() ==
                 (std::max(seq1.cells.size(), seq2.cells.size()) * 2));
@@ -1349,7 +1354,7 @@ TEST_CASE("merge", "[modify]")
 
     SECTION("merge returns a sequence with cells interleaved starting with seq1")
     {
-        auto const merged_seq = modify::merge(seq1, seq2);
+        auto const merged_seq = std::get<Sequence>(modify::merge(seq1, seq2));
 
         for (auto i = 0u; i < merged_seq.cells.size(); ++i)
         {
@@ -1380,13 +1385,13 @@ TEST_CASE("merge", "[modify]")
     {
         auto const empty_seq = Sequence{};
 
-        auto const merged_seq = modify::merge(empty_seq, empty_seq);
+        auto const merged_seq = std::get<Sequence>(modify::merge(empty_seq, empty_seq));
 
         REQUIRE(merged_seq.cells.empty());
     }
 }
 
-TEST_CASE("split", "[modify]")
+TEST_CASE("divide", "[modify]")
 {
     auto const seq = Sequence{{
         Note{0, 1.0f, 0.0f, 0.5f},
@@ -1402,25 +1407,31 @@ TEST_CASE("split", "[modify]")
         Rest{},
     }};
 
-    SECTION("split at index zero returns empty sequence and original sequence")
+    SECTION("divide at index zero returns empty sequence and original sequence")
     {
-        auto const [seq_a, seq_b] = modify::split(seq, 0);
+        auto const x = std::get<Sequence>(modify::divide(seq, 0));
+        auto const seq_a = std::get<Sequence>(x.cells[0]);
+        auto const seq_b = std::get<Sequence>(x.cells[1]);
 
         REQUIRE(seq_a.cells.empty());
         REQUIRE(seq_b == seq);
     }
 
-    SECTION("split at end or beyond returns original sequence and empty sequence")
+    SECTION("divide at end or beyond returns original sequence and empty sequence")
     {
-        auto const [seq_a, seq_b] = modify::split(seq, seq.cells.size());
+        auto const x = std::get<Sequence>(modify::divide(seq, seq.cells.size()));
+        auto const seq_a = std::get<Sequence>(x.cells[0]);
+        auto const seq_b = std::get<Sequence>(x.cells[1]);
 
         REQUIRE(seq_a == seq);
         REQUIRE(seq_b.cells.empty());
     }
 
-    SECTION("split at index 3 returns first 3 cells and remaining cells")
+    SECTION("divide at index 3 returns first 3 cells and remaining cells")
     {
-        auto const [seq_a, seq_b] = modify::split(seq, 3);
+        auto const x = std::get<Sequence>(modify::divide(seq, 3));
+        auto const seq_a = std::get<Sequence>(x.cells[0]);
+        auto const seq_b = std::get<Sequence>(x.cells[1]);
 
         REQUIRE(std::ranges::equal(seq_a.cells, seq.cells | std::views::take(3)));
         REQUIRE(std::ranges::equal(seq_b.cells, seq.cells | std::views::drop(3)));
@@ -1430,7 +1441,9 @@ TEST_CASE("split", "[modify]")
     {
         auto const empty_seq = Sequence{};
 
-        auto const [seq_a, seq_b] = modify::split(empty_seq, 0);
+        auto const x = std::get<Sequence>(modify::divide(empty_seq, 0));
+        auto const seq_a = std::get<Sequence>(x.cells[0]);
+        auto const seq_b = std::get<Sequence>(x.cells[1]);
 
         REQUIRE(seq_a.cells.empty());
         REQUIRE(seq_b.cells.empty());

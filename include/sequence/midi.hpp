@@ -123,15 +123,7 @@ struct MicrotonalNote
     auto const base_midi_note =
         12.f * std::log2(base_frequency / a4_hz) + static_cast<float>(a4);
 
-    auto notes = std::vector<MicrotonalNote>{};
-
-    for (auto const &cell : measure.sequence.cells)
-    {
-        auto const results = create_midi_note_visitor(cell, tuning, base_midi_note);
-        std::copy(std::cbegin(results), std::cend(results), std::back_inserter(notes));
-    }
-
-    return notes;
+    return create_midi_note_visitor(measure.cell, tuning, base_midi_note);
 }
 
 [[nodiscard]] inline auto flatten_and_translate_to_midi_notes(
@@ -151,29 +143,29 @@ struct MicrotonalNote
 }
 
 /**
- * @brief Flattens a sequence into a vector of notes.
+ * @brief Flattens any Cell type into a vector of notes.
  *
  * Only the Notes are returned, including Notes in subsequences, rests are ignored.
  *
- * @param sequence The sequence to flatten.
+ * @param cell The Cell to flatten.
  * @return std::vector<Note>
  */
-[[nodiscard]] inline auto flatten_notes(Sequence const &seq) -> std::vector<Note>
+[[nodiscard]] inline auto flatten_notes(Cell const &cell) -> std::vector<Note>
 {
     auto notes = std::vector<Note>{};
-    for (auto const &cell : seq.cells)
-    {
-        std::visit(utility::overload{
-                       [&](Note const &note) { notes.push_back(note); },
-                       [&](Rest const &) {},
-                       [&](Sequence const &subseq) {
-                           auto const subseq_notes = flatten_notes(subseq);
-                           std::copy(std::cbegin(subseq_notes), std::cend(subseq_notes),
+    std::visit(utility::overload{
+                   [&](Note const &note) { notes.push_back(note); },
+                   [&](Rest const &) {},
+                   [&](Sequence const &seq) {
+                       for (auto const &child : seq.cells)
+                       {
+                           auto const child_notes = flatten_notes(child);
+                           std::copy(std::cbegin(child_notes), std::cend(child_notes),
                                      std::back_inserter(notes));
-                       },
+                       }
                    },
-                   cell);
-    }
+               },
+               cell);
     return notes;
 }
 
@@ -183,7 +175,7 @@ struct MicrotonalNote
 
     for (auto const &measure : phrase)
     {
-        auto const measure_notes = flatten_notes(measure.sequence);
+        auto const measure_notes = flatten_notes(measure.cell);
         std::copy(std::cbegin(measure_notes), std::cend(measure_notes),
                   std::back_inserter(notes));
     }
@@ -209,41 +201,40 @@ struct SampleRange
  * @param offset The offset of the sequence in samples. Float to avoid rounding errors.
  * @return std::vector<SampleRange>
  */
-[[nodiscard]] inline auto note_sample_infos(Sequence const &seq,
+[[nodiscard]] inline auto note_sample_infos(Cell const &cell,
                                             std::uint32_t total_samples,
                                             float offset = 0.f)
     -> std::vector<SampleRange>
 {
-    // This is float to avoid accumulating rounding errors.
-    float const samples_per_cell = (float)(total_samples) / (float)seq.cells.size();
-
-    auto infos = std::vector<SampleRange>{};
-
-    for (auto const &cell : seq.cells)
-    {
-        auto const result = std::visit(
-            utility::overload{
-                [&](Note const &note) {
-                    auto const delay =
-                        static_cast<std::uint32_t>(samples_per_cell * note.delay);
-                    auto const note_samples = static_cast<std::uint32_t>(
-                        (samples_per_cell - (float)delay) * note.gate);
-                    return std::vector{SampleRange{
-                        static_cast<std::uint32_t>(offset + delay),
-                        static_cast<std::uint32_t>(offset + delay + note_samples),
-                    }};
-                },
-                [](Rest const &) { return std::vector<SampleRange>{}; },
-                [&](Sequence const &subseq) {
-                    return note_sample_infos(
-                        subseq, static_cast<std::uint32_t>(samples_per_cell), offset);
-                },
+    return std::visit(
+        utility::overload{
+            [&](Note const &note) {
+                auto const delay =
+                    static_cast<std::uint32_t>((float)total_samples * note.delay);
+                auto const note_samples = static_cast<std::uint32_t>(
+                    ((float)total_samples - (float)delay) * note.gate);
+                return std::vector{SampleRange{
+                    static_cast<std::uint32_t>(offset + delay),
+                    static_cast<std::uint32_t>(offset + delay + note_samples),
+                }};
             },
-            cell);
-        std::copy(std::cbegin(result), std::cend(result), std::back_inserter(infos));
-        offset += samples_per_cell;
-    }
-    return infos;
+            [](Rest const &) { return std::vector<SampleRange>{}; },
+            [&](Sequence const &seq) {
+                float const samples_per_cell =
+                    (float)(total_samples) / (float)seq.cells.size();
+                auto infos = std::vector<SampleRange>{};
+                for (auto const &c : seq.cells)
+                {
+                    auto const result = note_sample_infos(
+                        c, static_cast<std::uint32_t>(samples_per_cell), offset);
+                    std::copy(std::cbegin(result), std::cend(result),
+                              std::back_inserter(infos));
+                    offset += samples_per_cell;
+                }
+                return infos;
+            },
+        },
+        cell);
 }
 
 /**
@@ -268,7 +259,7 @@ struct SampleRange
     {
         auto const samples_per_measure = samples_count(measure, sample_rate, bpm);
         auto const result =
-            note_sample_infos(measure.sequence, samples_per_measure, sample_offset);
+            note_sample_infos(measure.cell, samples_per_measure, sample_offset);
         std::copy(std::cbegin(result), std::cend(result), std::back_inserter(infos));
         sample_offset += samples_per_measure;
     }

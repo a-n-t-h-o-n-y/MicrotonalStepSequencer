@@ -19,6 +19,9 @@ struct overload : Ts...
 template <class... Ts>
 overload(Ts...) -> overload<Ts...>;
 
+// TODO probably remove all calls to visit_cells since they should be operating
+// on Cells directly and the iteration should be in Sequence visitor overload.
+
 /**
  * @brief A helper function for visiting cells in a sequence.
  *

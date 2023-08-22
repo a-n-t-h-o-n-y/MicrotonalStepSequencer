@@ -28,16 +28,20 @@ concept NoteChecker = requires(Fn fn, Note const &note) {
 };
 
 template <NoteChecker Fn>
-auto check_sequence(Sequence const &seq, Fn &&checker) -> void
+auto check_sequence(Cell const &cell, Fn &&checker) -> void
 {
     using namespace sequence::utility;
-    visit_cells(seq, overload{
-                         [&checker](Note const &note) { checker(note); },
-                         [](Rest) {},
-                         [&checker](Sequence const &seq) {
-                             check_sequence(seq, std::forward<Fn>(checker));
-                         },
-                     });
+    std::visit(overload{
+                   [&checker](Note const &note) { checker(note); },
+                   [](Rest) {},
+                   [&checker](Sequence const &seq) {
+                       for (auto const &c : seq.cells)
+                       {
+                           check_sequence(c, checker);
+                       }
+                   },
+               },
+               cell);
 }
 
 template <typename Fn>

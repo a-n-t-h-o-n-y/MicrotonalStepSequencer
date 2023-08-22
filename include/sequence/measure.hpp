@@ -13,10 +13,11 @@ namespace sequence
  * @brief A measure.
  *
  * A measure is a sequence of notes that are played in a specific time signature.
+ * A Cell is used for uniformity and any Cell type can be used, not just a Sequence.
  */
 struct Measure
 {
-    Sequence sequence;
+    Cell cell;
     TimeSignature time_signature;
 };
 

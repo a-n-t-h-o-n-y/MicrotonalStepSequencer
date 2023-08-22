@@ -279,12 +279,12 @@ TEST_CASE("flatten_and_translate_to_midi_notes", "[midi]")
 
     auto const measure = [] {
         auto m = create_measure({4, 4}, 2);
-        for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+        for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
         {
             // if even create a subsequence else create a note
             if (i % 2 == 0)
             {
-                m.sequence.cells[i] = Sequence{{
+                std::get<Sequence>(m.cell).cells[i] = Sequence{{
                     Note{i, 0.75f, 0.f, 1.f},
                     Rest{},
                     Note{i + 2, 0.75f, 0.f, 1.f},
@@ -292,7 +292,7 @@ TEST_CASE("flatten_and_translate_to_midi_notes", "[midi]")
             }
             else
             {
-                m.sequence.cells[i] = Note{i, 0.75f, 0.f, 1.f};
+                std::get<Sequence>(m.cell).cells[i] = Note{i, 0.75f, 0.f, 1.f};
             }
         }
         return m;
@@ -334,6 +334,8 @@ TEST_CASE("flatten_notes", "[midi]")
         Rest{},
         Note{3, 0.5f, 0.f, 1.f},
     }};
+
+    // FIXME This recurses into infinity
     auto const flat = midi::flatten_notes(seq);
 
     REQUIRE(flat.size() == 4);
@@ -355,12 +357,12 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
     {
         auto const measure = [] {
             auto m = create_measure({4, 4}, 2);
-            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
             {
                 // if even create a subsequence else create a note
                 if (i % 2 == 0)
                 {
-                    m.sequence.cells[i] = Sequence{{
+                    std::get<Sequence>(m.cell).cells[i] = Sequence{{
                         Note{i, 0.75f, 0.f, 1.f},
                         Rest{},
                         Note{i + 2, 0.75f, 0.f, 1.f},
@@ -368,7 +370,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
                 }
                 else
                 {
-                    m.sequence.cells[i] = Note{i, 0.75f, 0.f, 1.f};
+                    std::get<Sequence>(m.cell).cells[i] = Note{i, 0.75f, 0.f, 1.f};
                 }
             }
             return m;
@@ -402,12 +404,12 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
     {
         auto const measure = [] {
             auto m = create_measure({4, 4}, 2);
-            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
             {
                 // if even create a subsequence else create a note
                 if (i % 2 == 0)
                 {
-                    m.sequence.cells[i] = Sequence{{
+                    std::get<Sequence>(m.cell).cells[i] = Sequence{{
                         Note{i, 0.75f, 0.f, 0.5f},
                         Rest{},
                         Note{i + 2, 0.75f, 0.f, 0.25f},
@@ -415,7 +417,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
                 }
                 else
                 {
-                    m.sequence.cells[i] = Note{i, 0.75f, 0.f, 0.f};
+                    std::get<Sequence>(m.cell).cells[i] = Note{i, 0.75f, 0.f, 0.f};
                 }
             }
             return m;
@@ -447,12 +449,12 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
     {
         auto const measure = [] {
             auto m = create_measure({4, 4}, 2);
-            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
             {
                 // if even create a subsequence else create a note
                 if (i % 2 == 0)
                 {
-                    m.sequence.cells[i] = Sequence{{
+                    std::get<Sequence>(m.cell).cells[i] = Sequence{{
                         Note{i, 0.75f, 0.5f, 1.f},
                         Rest{},
                         Note{i + 2, 0.75f, 0.25f, 1.f},
@@ -460,7 +462,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
                 }
                 else
                 {
-                    m.sequence.cells[i] = Note{i, 0.75f, 1.f, 1.f};
+                    std::get<Sequence>(m.cell).cells[i] = Note{i, 0.75f, 1.f, 1.f};
                 }
             }
             return m;
@@ -492,12 +494,12 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
     {
         auto const measure = [] {
             auto m = create_measure({4, 4}, 2);
-            for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+            for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
             {
                 // if even create a subsequence else create a note
                 if (i % 2 == 0)
                 {
-                    m.sequence.cells[i] = Sequence{{
+                    std::get<Sequence>(m.cell).cells[i] = Sequence{{
                         Note{i, 0.75f, 0.5f, 0.8f},
                         Rest{},
                         Note{i + 2, 0.75f, 0.25f, 0.1f},
@@ -505,7 +507,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
                 }
                 else
                 {
-                    m.sequence.cells[i] = Note{i, 0.75f, 1.f, 0.1f};
+                    std::get<Sequence>(m.cell).cells[i] = Note{i, 0.75f, 1.f, 0.1f};
                 }
             }
             return m;
@@ -538,12 +540,12 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
 {
     auto const measure1 = [] {
         auto m = create_measure({4, 4}, 2);
-        for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+        for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
         {
             // if even create a subsequence else create a note
             if (i % 2 == 0)
             {
-                m.sequence.cells[i] = Sequence{{
+                std::get<Sequence>(m.cell).cells[i] = Sequence{{
                     Note{i, 0.75f, 0.5f, 0.8f},
                     Rest{},
                     Note{i + 2, 0.75f, 0.25f, 0.1f},
@@ -551,7 +553,7 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
             }
             else
             {
-                m.sequence.cells[i] = Note{i, 0.75f, 1.f, 0.1f};
+                std::get<Sequence>(m.cell).cells[i] = Note{i, 0.75f, 1.f, 0.1f};
             }
         }
         return m;
@@ -559,9 +561,9 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
 
     auto const measure2 = [] {
         auto m = create_measure({3, 4}, 3);
-        for (auto i = 0; i < (int)m.sequence.cells.size(); ++i)
+        for (auto i = 0; i < (int)std::get<Sequence>(m.cell).cells.size(); ++i)
         {
-            m.sequence.cells[i] = Sequence{{
+            std::get<Sequence>(m.cell).cells[i] = Sequence{{
                 Note{i, 0.75f, 0.5f, 0.8f},
                 Rest{},
                 Note{i + 2, 0.75f, 0.25f, 0.1f},

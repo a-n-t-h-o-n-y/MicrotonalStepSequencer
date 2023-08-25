@@ -738,5 +738,43 @@ namespace sequence::modify
         cell);
 }
 
+[[nodiscard]] inline auto note(int interval, float velocity, float delay, float gate)
+    -> Cell
+{
+    return Note{interval, velocity, delay, gate};
+}
+
+[[nodiscard]] inline auto rest() -> Cell
+{
+    return Rest{};
+}
+
+// TODO SequenceBuilders
+[[nodiscard]] inline auto sequence(std::vector<Cell> cells) -> Cell
+{
+    return Sequence{std::move(cells)};
+}
+
+[[nodiscard]] inline auto flip(Cell const &cell, Note n = Note{0, 1.f, 0.f, 1.f})
+    -> Cell
+{
+    using namespace utility;
+
+    return std::visit(overload{
+                          [](Note const &) -> Cell { return Rest{}; },
+                          [=](Rest const &) -> Cell { return n; },
+                          [](Sequence const &seq) -> Cell {
+                              auto result = Sequence{};
+                              result.cells.reserve(seq.cells.size());
+                              std::transform(std::cbegin(seq.cells),
+                                             std::cend(seq.cells),
+                                             std::back_inserter(result.cells),
+                                             [](auto const &c) { return flip(c); });
+                              return result;
+                          },
+                      },
+                      cell);
+}
+
 } // namespace sequence::modify
 #endif // SEQUENCE_MODIFY_HPP

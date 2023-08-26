@@ -1,5 +1,6 @@
 #ifndef SEQUENCE_TIME_SIGNATURE_HPP
 #define SEQUENCE_TIME_SIGNATURE_HPP
+
 namespace sequence
 {
 
@@ -14,8 +15,8 @@ namespace sequence
  */
 struct TimeSignature
 {
-    uint numerator;   // Number of beats per measure
-    uint denominator; // Beat value
+    unsigned numerator;   // Number of beats per measure
+    unsigned denominator; // Beat value
 };
 
 } // namespace sequence

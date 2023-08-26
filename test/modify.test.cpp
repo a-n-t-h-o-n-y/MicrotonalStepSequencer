@@ -925,8 +925,7 @@ TEST_CASE("mirror", "[modify]")
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
 
         // Create expected sequence
-        auto expected = seq;
-        using namespace utility;
+        Cell expected = seq;
         test::helper::modify_notes(expected,
                                    [](Note &note) { note.interval = -note.interval; });
         REQUIRE(mirrored_seq == expected);
@@ -941,8 +940,7 @@ TEST_CASE("mirror", "[modify]")
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
 
         // Create expected sequence
-        auto expected = seq;
-        using namespace utility;
+        Cell expected = seq;
         test::helper::modify_notes(
             expected, [](Note &note) { note.interval = 5 + (5 - note.interval); });
         REQUIRE(mirrored_seq == expected);
@@ -957,8 +955,7 @@ TEST_CASE("mirror", "[modify]")
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
 
         // Create expected sequence
-        auto expected = seq;
-        using namespace utility;
+        Cell expected = seq;
         test::helper::modify_notes(
             expected, [](Note &note) { note.interval = -10 + (-10 - note.interval); });
         REQUIRE(mirrored_seq == expected);

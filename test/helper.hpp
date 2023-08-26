@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <iostream>
+#include <string>
 #include <type_traits>
 #include <variant>
 
@@ -31,6 +32,7 @@ template <NoteChecker Fn>
 auto check_sequence(Cell const &cell, Fn &&checker) -> void
 {
     using namespace sequence::utility;
+
     std::visit(overload{
                    [&checker](Note const &note) { checker(note); },
                    [](Rest) {},
@@ -45,16 +47,21 @@ auto check_sequence(Cell const &cell, Fn &&checker) -> void
 }
 
 template <typename Fn>
-auto modify_notes(Sequence &seq, Fn &&modifier) -> void
+auto modify_notes(Cell &cell, Fn &&modifier) -> void
 {
     using namespace sequence::utility;
-    visit_cells(seq, overload{
-                         [&modifier](Note &note) { modifier(note); },
-                         [](Rest) {},
-                         [&modifier](Sequence &seq) {
-                             modify_notes(seq, std::forward<Fn>(modifier));
-                         },
-                     });
+
+    std::visit(overload{
+                   [&modifier](Note &note) { modifier(note); },
+                   [](Rest) {},
+                   [&modifier](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           modify_notes(c, modifier);
+                       }
+                   },
+               },
+               cell);
 }
 
 /**
@@ -63,24 +70,29 @@ auto modify_notes(Sequence &seq, Fn &&modifier) -> void
  * @param seq The Sequence to print.
  * @param indent The indentation level, used for recursion into sub-Sequences.
  */
-inline auto print_sequence(Sequence const &seq, int indent = 0) -> void
+inline auto print_sequence(Cell const &cell, int indent = 0) -> void
 {
     using namespace sequence::utility;
-    visit_cells(seq, overload{
-                         [&](Note const &note) {
-                             std::cout << std::string(indent * 2, ' ');
-                             std::cout << "Note(interval=" << note.interval
-                                       << ", velocity=" << note.velocity
-                                       << ", delay=" << note.delay
-                                       << ", gate=" << note.gate << ")\n";
-                         },
-                         [](Rest) { std::cout << "Rest\n"; },
-                         [&](Sequence const &seq) {
-                             std::cout << "Sequence(\n";
-                             print_sequence(seq, indent + 1);
-                             std::cout << ")\n";
-                         },
-                     });
+
+    std::visit(overload{
+                   [&](Note const &note) {
+                       std::cout << std::string(indent * 2, ' ');
+                       std::cout << "Note(interval=" << note.interval
+                                 << ", velocity=" << note.velocity
+                                 << ", delay=" << note.delay << ", gate=" << note.gate
+                                 << ")\n";
+                   },
+                   [](Rest) { std::cout << "Rest\n"; },
+                   [&](Sequence const &seq) {
+                       std::cout << "Sequence(\n";
+                       for (auto const &c : seq.cells)
+                       {
+                           print_sequence(c, indent + 1);
+                       }
+                       std::cout << ")\n";
+                   },
+               },
+               cell);
 }
 
 inline auto print_midi_event_timeline(midi::EventTimeline const &timeline) -> void

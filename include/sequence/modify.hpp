@@ -1,6 +1,7 @@
 #ifndef SEQUENCE_MODIFY_HPP
 #define SEQUENCE_MODIFY_HPP
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <numeric>
 #include <random>
@@ -302,6 +303,149 @@ namespace sequence::modify
             },
         },
         cell);
+
+    return cell;
+}
+
+/**
+ * @brief Set the pitch of a note to a constant value.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences.
+ *
+ * @param cell The Cell to set the pitch of.
+ * @param interval The interval to set the pitch to.
+ * @return Cell The pitch set Cell.
+ */
+[[nodiscard]] inline auto set_pitch(Cell cell, int interval) -> Cell
+{
+    using namespace utility;
+
+    std::visit(overload{
+                   [&](Note &note) { note.interval = interval; },
+                   [](Rest) {},
+                   [&](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           c = set_pitch(c, interval);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
+}
+
+[[nodiscard]] inline auto set_octave(Cell cell, int octave, std::size_t tuning_length)
+    -> Cell
+{
+    using namespace utility;
+
+    std::visit(overload{
+                   [&](Note &note) {
+                       int const tuning_length_i = static_cast<int>(tuning_length);
+                       auto degree_in_current_octave =
+                           (note.interval % tuning_length_i + tuning_length_i) %
+                           tuning_length_i;
+
+                       note.interval =
+                           degree_in_current_octave + (octave * tuning_length_i);
+                   },
+                   [](Rest) {},
+                   [&](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           c = set_octave(c, octave, tuning_length);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
+}
+
+/**
+ * @brief Set the velocity of a note to a constant value.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * result to the range [0, 1].
+ *
+ * @param cell The Cell to set the velocity of.
+ * @param velocity The velocity to set the note to.
+ * @return Cell The velocity set Cell.
+ */
+[[nodiscard]] inline auto set_velocity(Cell cell, float velocity) -> Cell
+{
+    using namespace utility;
+
+    std::visit(overload{
+                   [&](Note &note) { note.velocity = std::clamp(velocity, 0.f, 1.f); },
+                   [](Rest) {},
+                   [&](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           c = set_velocity(c, velocity);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
+}
+
+/**
+ * @brief Set the delay of a note to a constant value.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * result to the range [0, 1].
+ *
+ * @param cell The Cell to set the delay of.
+ * @param delay The delay to set the note to.
+ * @return Cell The delay set Cell.
+ */
+[[nodiscard]] inline auto set_delay(Cell cell, float delay) -> Cell
+{
+    using namespace utility;
+
+    std::visit(overload{
+                   [&](Note &note) { note.delay = std::clamp(delay, 0.f, 1.f); },
+                   [](Rest) {},
+                   [&](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           c = set_delay(c, delay);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
+}
+
+/**
+ * @brief Set the gate of a note to a constant value.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * result to the range [0, 1].
+ *
+ * @param cell The Cell to set the gate of.
+ * @param gate The gate to set the note to.
+ * @return Cell The gate set Cell.
+ */
+[[nodiscard]] inline auto set_gate(Cell cell, float gate) -> Cell
+{
+    using namespace utility;
+
+    std::visit(overload{
+                   [&](Note &note) { note.gate = std::clamp(gate, 0.f, 1.f); },
+                   [](Rest) {},
+                   [&](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           c = set_gate(c, gate);
+                       }
+                   },
+               },
+               cell);
 
     return cell;
 }

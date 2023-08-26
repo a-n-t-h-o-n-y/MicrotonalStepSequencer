@@ -216,6 +216,97 @@ namespace sequence::modify
 }
 
 /**
+ * @brief Shift note velocities by a constant amount.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * result to the range [0, 1].
+ *
+ * @param cell The Cell to shift the velocities of.
+ * @param amount The amount to shift by, can be positive, negative or zero.
+ * @return Cell The velocity shifted Cell.
+ */
+[[nodiscard]] inline auto shift_velocity(Cell cell, float amount) -> Cell
+{
+    using namespace utility;
+
+    std::visit(overload{
+                   [&](Note &note) {
+                       note.velocity = std::clamp(note.velocity + amount, 0.f, 1.f);
+                   },
+                   [](Rest) {},
+                   [&](Sequence &seq) {
+                       for (auto &c : seq.cells)
+                       {
+                           c = shift_velocity(c, amount);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
+}
+
+/**
+ * @brief Shift note delays by a constant amount.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * result to the range [0, 1].
+ *
+ * @param cell The Cell to shift the delays of.
+ * @param amount The amount to shift by, can be positive, negative or zero.
+ * @return Cell The delay shifted Cell.
+ */
+[[nodiscard]] inline auto shift_delay(Cell cell, float amount) -> Cell
+{
+    using namespace utility;
+
+    std::visit(
+        overload{
+            [&](Note &note) { note.delay = std::clamp(note.delay + amount, 0.f, 1.f); },
+            [](Rest) {},
+            [&](Sequence &seq) {
+                for (auto &c : seq.cells)
+                {
+                    c = shift_delay(c, amount);
+                }
+            },
+        },
+        cell);
+
+    return cell;
+}
+
+/**
+ * @brief Shift note gates by a constant amount.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * result to the range [0, 1].
+ *
+ * @param cell The Cell to shift the gates of.
+ * @param amount The amount to shift by, can be positive, negative or zero.
+ * @return Cell The gate shifted Cell.
+ */
+[[nodiscard]] inline auto shift_gate(Cell cell, float amount) -> Cell
+{
+    using namespace utility;
+
+    std::visit(
+        overload{
+            [&](Note &note) { note.gate = std::clamp(note.gate + amount, 0.f, 1.f); },
+            [](Rest) {},
+            [&](Sequence &seq) {
+                for (auto &c : seq.cells)
+                {
+                    c = shift_gate(c, amount);
+                }
+            },
+        },
+        cell);
+
+    return cell;
+}
+
+/**
  * @brief Rotate the note order in an existing sequence so the `amount`th note is the
  * new first note. Negative amounts count from the end of the Sequence.
  *
@@ -305,7 +396,7 @@ namespace sequence::modify
                        note.gate = 1.f;
                    },
                    [](Rest) {},
-                   [&](Sequence &seq) {
+                   [](Sequence &seq) {
                        for (auto &c : seq.cells)
                        {
                            c = quantize(c);
@@ -363,7 +454,7 @@ namespace sequence::modify
     std::visit(overload{
                    [](Note &) {},
                    [](Rest &) {},
-                   [&](Sequence &seq) {
+                   [](Sequence &seq) {
                        std::ranges::reverse(seq.cells);
                        for (auto &c : seq.cells)
                        {
@@ -452,9 +543,9 @@ namespace sequence::modify
     }
 
     return std::visit(overload{
-                          [&](Note const &note) { return Cell{note}; },
-                          [&](Rest const &rest) { return Cell{rest}; },
-                          [&](Sequence const &seq) {
+                          [](Note const &note) -> Cell { return note; },
+                          [](Rest const &rest) -> Cell { return rest; },
+                          [&](Sequence const &seq) -> Cell {
                               auto result = Sequence{};
                               result.cells.reserve(seq.cells.size() / amount);
 
@@ -471,6 +562,35 @@ namespace sequence::modify
 }
 
 /**
+ * @brief Extract a single note from a Sequence Cell.
+ *
+ * No-op for Notes and Rests.
+ *
+ * @param cell The Cell to extract from.
+ * @param index The index of the note to extract.
+ * @return Cell The extracted note.
+ *
+ * @throws std::invalid_argument If index is out of bounds.
+ */
+[[nodiscard]] inline auto extract(Cell const &cell, std::size_t index) -> Cell
+{
+    using namespace utility;
+
+    return std::visit(overload{
+                          [](Note const &note) -> Cell { return note; },
+                          [](Rest const &rest) -> Cell { return rest; },
+                          [&](Sequence const &seq) -> Cell {
+                              if (index >= seq.cells.size())
+                              {
+                                  throw std::invalid_argument("index out of bounds");
+                              }
+                              return seq.cells[index];
+                          },
+                      },
+                      cell);
+}
+
+/**
  * @brief Get the first Note or Rest in a Cell.
  *
  * If the Cell is an empty Sequence, this will return a Rest. No-op for Notes
@@ -478,26 +598,12 @@ namespace sequence::modify
  *
  * @param cell The Cell to get the first Note or Rest from.
  * @return Cell The first Note or Rest.
+ *
+ * @throws std::invalid_argument If the Cell is an empty Sequence.
  */
 [[nodiscard]] inline auto first(Cell const &cell) -> Cell
 {
-    using namespace utility;
-
-    return std::visit(overload{
-                          [&](Note const &note) -> Cell { return note; },
-                          [&](Rest const &rest) -> Cell { return rest; },
-                          [&](Sequence const &seq) -> Cell {
-                              if (seq.cells.empty())
-                              {
-                                  return Rest{};
-                              }
-                              else
-                              {
-                                  return seq.cells.front();
-                              }
-                          },
-                      },
-                      cell);
+    return extract(cell, 0u);
 }
 
 /**
@@ -508,18 +614,21 @@ namespace sequence::modify
  *
  * @param cell The Cell to get the last Note or Rest from.
  * @return Cell The last Note or Rest.
+ *
+ * @throws std::invalid_argument If the Cell is an empty Sequence.
  */
 [[nodiscard]] inline auto last(Cell const &cell) -> Cell
 {
+    // Can't easily implement with extract(...) because size is unknown at Cell level
     using namespace utility;
 
     return std::visit(overload{
-                          [&](Note const &note) -> Cell { return note; },
-                          [&](Rest const &rest) -> Cell { return rest; },
-                          [&](Sequence const &seq) -> Cell {
+                          [](Note const &note) -> Cell { return note; },
+                          [](Rest const &rest) -> Cell { return rest; },
+                          [](Sequence const &seq) -> Cell {
                               if (seq.cells.empty())
                               {
-                                  return Rest{};
+                                  throw std::invalid_argument("index out of bounds");
                               }
                               else
                               {
@@ -546,7 +655,7 @@ namespace sequence::modify
     std::visit(overload{
                    [](Note &) {},
                    [](Rest &) {},
-                   [&](Sequence &seq) {
+                   [](Sequence &seq) {
                        std::ranges::shuffle(seq.cells,
                                             std::mt19937{std::random_device{}()});
                        for (auto &c : seq.cells)
@@ -572,39 +681,39 @@ namespace sequence::modify
     using namespace utility;
     return std::visit(
         overload{
-            [&](Note const &note_a, Note const &note_b) {
+            [](Note const &note_a, Note const &note_b) {
                 return Sequence{{note_a, note_b}};
             },
-            [&](Note const &note, Rest const &rest) {
+            [](Note const &note, Rest const &rest) {
                 return Sequence{{note, rest}};
             },
-            [&](Rest const &rest, Note const &note) {
+            [](Rest const &rest, Note const &note) {
                 return Sequence{{rest, note}};
             },
-            [&](Rest const &rest_a, Rest const &rest_b) {
+            [](Rest const &rest_a, Rest const &rest_b) {
                 return Sequence{{rest_a, rest_b}};
             },
-            [&](Note const &note, Sequence const &seq) {
+            [](Note const &note, Sequence const &seq) {
                 auto concat_seq = seq;
                 concat_seq.cells.insert(std::cbegin(concat_seq.cells), note);
                 return concat_seq;
             },
-            [&](Rest const &rest, Sequence const &seq) {
+            [](Rest const &rest, Sequence const &seq) {
                 auto concat_seq = seq;
                 concat_seq.cells.insert(std::cbegin(concat_seq.cells), rest);
                 return concat_seq;
             },
-            [&](Sequence const &seq, Note const &note) {
+            [](Sequence const &seq, Note const &note) {
                 auto concat_seq = seq;
                 concat_seq.cells.push_back(note);
                 return concat_seq;
             },
-            [&](Sequence const &seq, Rest const &rest) {
+            [](Sequence const &seq, Rest const &rest) {
                 auto concat_seq = seq;
                 concat_seq.cells.push_back(rest);
                 return concat_seq;
             },
-            [&](Sequence const &seq_a, Sequence const &seq_b) {
+            [](Sequence const &seq_a, Sequence const &seq_b) {
                 auto concat_seq = seq_a;
                 concat_seq.cells.insert(std::cend(concat_seq.cells),
                                         std::cbegin(seq_b.cells),
@@ -632,19 +741,19 @@ namespace sequence::modify
 
     return std::visit(
         overload{
-            [&](Note const &note_a, Note const &note_b) {
+            [](Note const &note_a, Note const &note_b) {
                 return Sequence{{note_a, note_b}};
             },
-            [&](Note const &note, Rest const &rest) {
+            [](Note const &note, Rest const &rest) {
                 return Sequence{{note, rest}};
             },
-            [&](Rest const &rest, Note const &note) {
+            [](Rest const &rest, Note const &note) {
                 return Sequence{{rest, note}};
             },
-            [&](Rest const &rest_a, Rest const &rest_b) {
+            [](Rest const &rest_a, Rest const &rest_b) {
                 return Sequence{{rest_a, rest_b}};
             },
-            [&](Note const &note, Sequence const &seq) {
+            [](Note const &note, Sequence const &seq) {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
@@ -654,7 +763,7 @@ namespace sequence::modify
                 }
                 return merged_seq;
             },
-            [&](Rest const &rest, Sequence const &seq) {
+            [](Rest const &rest, Sequence const &seq) {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
@@ -664,7 +773,7 @@ namespace sequence::modify
                 }
                 return merged_seq;
             },
-            [&](Sequence const &seq, Note const &note) {
+            [](Sequence const &seq, Note const &note) {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
@@ -674,7 +783,7 @@ namespace sequence::modify
                 }
                 return merged_seq;
             },
-            [&](Sequence const &seq, Rest const &rest) {
+            [](Sequence const &seq, Rest const &rest) {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
@@ -684,7 +793,7 @@ namespace sequence::modify
                 }
                 return merged_seq;
             },
-            [&](Sequence const &seq_a, Sequence const &seq_b) {
+            [](Sequence const &seq_a, Sequence const &seq_b) {
                 if (seq_a.cells.empty())
                 {
                     return seq_b;
@@ -723,8 +832,8 @@ namespace sequence::modify
     using namespace utility;
 
     return std::visit(
-        overload{[&](Note const &note) { return Sequence{{note}}; },
-                 [&](Rest const &rest) { return Sequence{{rest}}; },
+        overload{[](Note const &note) { return Sequence{{note}}; },
+                 [](Rest const &rest) { return Sequence{{rest}}; },
                  [&](Sequence const &seq) {
                      index = std::min(index, seq.cells.size());
                      auto const begin = std::cbegin(seq.cells);
@@ -755,14 +864,13 @@ namespace sequence::modify
     return Sequence{std::move(cells)};
 }
 
-[[nodiscard]] inline auto flip(Cell const &cell, Note n = Note{0, 1.f, 0.f, 1.f})
-    -> Cell
+[[nodiscard]] inline auto flip(Cell const &cell, Note n = Note{}) -> Cell
 {
     using namespace utility;
 
     return std::visit(overload{
                           [](Note const &) -> Cell { return Rest{}; },
-                          [=](Rest const &) -> Cell { return n; },
+                          [&](Rest const &) -> Cell { return n; }, // Returns a copy
                           [](Sequence const &seq) -> Cell {
                               auto result = Sequence{};
                               result.cells.reserve(seq.cells.size());

@@ -1,6 +1,8 @@
 #ifndef SEQUENCE_TIME_SIGNATURE_HPP
 #define SEQUENCE_TIME_SIGNATURE_HPP
 
+#include <ostream>
+
 namespace sequence
 {
 
@@ -18,6 +20,11 @@ struct TimeSignature
     unsigned numerator;   // Number of beats per measure
     unsigned denominator; // Beat value
 };
+
+inline auto operator<<(std::ostream &os, TimeSignature const &ts) -> std::ostream &
+{
+    return os << ts.numerator << "/" << ts.denominator;
+}
 
 } // namespace sequence
 #endif // SEQUENCE_TIME_SIGNATURE_HPP

@@ -707,7 +707,8 @@ auto divide(Cell const &cell, std::size_t index) -> Cell
 
 auto note(int interval, float velocity, float delay, float gate) -> Cell
 {
-    return Note{interval, velocity, delay, gate};
+    return Note{interval, std::clamp(velocity, 0.f, 1.f), std::clamp(delay, 0.f, 1.f),
+                std::clamp(gate, 0.f, 1.f)};
 }
 
 auto rest() -> Cell

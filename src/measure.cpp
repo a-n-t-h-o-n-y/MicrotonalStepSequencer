@@ -31,7 +31,10 @@ auto samples_count(Measure const &measure, std::uint32_t sample_rate, float bpm)
     auto const &time_sig = measure.time_signature;
 
     auto const samples_per_beat = static_cast<float>(sample_rate) * 60.f / bpm;
-    auto const beats_per_measure = static_cast<float>(time_sig.numerator);
+    // 4 beats per whole note; num/den == whole note count;
+    auto const beats_per_measure = (static_cast<float>(time_sig.numerator) /
+                                    static_cast<float>(time_sig.denominator)) *
+                                   4.f;
     return static_cast<std::uint32_t>(samples_per_beat * beats_per_measure);
 }
 

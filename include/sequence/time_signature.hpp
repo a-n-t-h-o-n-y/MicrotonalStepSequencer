@@ -1,7 +1,7 @@
 #ifndef SEQUENCE_TIME_SIGNATURE_HPP
 #define SEQUENCE_TIME_SIGNATURE_HPP
 
-#include <ostream>
+#include <iosfwd>
 
 namespace sequence
 {
@@ -21,10 +21,9 @@ struct TimeSignature
     unsigned denominator; // Beat value
 };
 
-inline auto operator<<(std::ostream &os, TimeSignature const &ts) -> std::ostream &
-{
-    return os << ts.numerator << "/" << ts.denominator;
-}
+auto operator<<(std::ostream &os, TimeSignature const &ts) -> std::ostream &;
+
+auto operator>>(std::istream &is, TimeSignature &ts) -> std::istream &;
 
 } // namespace sequence
 #endif // SEQUENCE_TIME_SIGNATURE_HPP

@@ -26,7 +26,16 @@ target_sources(sequencer
         src/measure.cpp
         src/midi.cpp
         src/modify.cpp
+        src/time_signature.cpp
         src/tuning.cpp
+        include/sequence/generate.hpp
+        include/sequence/measure.hpp
+        include/sequence/midi.hpp
+        include/sequence/modify.hpp
+        include/sequence/sequence.hpp
+        include/sequence/time_signature.hpp
+        include/sequence/tuning.hpp
+        include/sequence/utility.hpp
 )
 
 add_executable(tests

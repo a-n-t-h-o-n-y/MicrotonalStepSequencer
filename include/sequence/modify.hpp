@@ -199,6 +199,8 @@ namespace sequence::modify
  *
  * @param cell The Cell to modify.
  * @param amount The amount to set the note delays to.
+ * @param is_odd If true, odd index notes are set to `amount` and even index notes are
+ * set to zero.
  * @return Cell The cell with the note delays set.
  *
  * @throws std::invalid_argument If amount is less than zero or greater than one.
@@ -395,6 +397,42 @@ namespace sequence::modify
  * @return Cell The flipped Cell.
  */
 [[nodiscard]] auto flip(Cell const &cell, Note n = Note{}) -> Cell;
+
+/**
+ * @brief Humanize the note intervals in a Cell.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. This applies a
+ * random offset between [0, amount] to each note's velocity.
+ *
+ * @param cell The Cell to humanize.
+ * @param amount The amount to humanize by.
+ * @return Cell The humanized Cell.
+ */
+[[nodiscard]] auto humanize_velocity(Cell const &cell, float amount) -> Cell;
+
+/**
+ * @brief Humanize the note delays in a Cell.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. This applies a
+ * random offset between [0, amount] to each note's delay.
+ *
+ * @param cell The Cell to humanize.
+ * @param amount The amount to humanize by.
+ * @return Cell The humanized Cell.
+ */
+[[nodiscard]] auto humanize_delay(Cell const &cell, float amount) -> Cell;
+
+/**
+ * @brief Humanize the note gates in a Cell.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. This applies a
+ * random offset between [0, amount] to each note's gate.
+ *
+ * @param cell The Cell to humanize.
+ * @param amount The amount to humanize by.
+ * @return Cell The humanized Cell.
+ */
+[[nodiscard]] auto humanize_gate(Cell const &cell, float amount) -> Cell;
 
 } // namespace sequence::modify
 #endif // SEQUENCE_MODIFY_HPP

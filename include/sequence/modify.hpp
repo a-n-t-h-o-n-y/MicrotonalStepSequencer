@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <vector>
 
+#include <sequence/pattern.hpp>
 #include <sequence/sequence.hpp>
 #include <sequence/utility.hpp>
 
@@ -408,7 +409,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_velocity(Cell const &cell, float amount) -> Cell;
+[[nodiscard]] auto humanize_velocity(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 /**
  * @brief Humanize the note delays in a Cell.
@@ -420,7 +422,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_delay(Cell const &cell, float amount) -> Cell;
+[[nodiscard]] auto humanize_delay(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 /**
  * @brief Humanize the note gates in a Cell.

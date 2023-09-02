@@ -8,6 +8,8 @@
 #include <variant>
 #include <vector>
 
+#include <sequence/pattern.hpp>
+
 namespace sequence::modify
 {
 
@@ -743,7 +745,7 @@ auto flip(Cell const &cell, Note n) -> Cell
                       cell);
 }
 
-auto humanize_velocity(Cell const &cell, float amount) -> Cell
+auto humanize_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
     using namespace utility;
 
@@ -754,29 +756,29 @@ auto humanize_velocity(Cell const &cell, float amount) -> Cell
 
     auto gen = std::mt19937{std::random_device{}()};
 
-    return std::visit(
-        overload{
-            [&](Note const &note) -> Cell {
-                auto const min = std::clamp(note.velocity - amount, 0.f, 1.f);
-                auto const max = std::clamp(note.velocity + amount, 0.f, 1.f);
-                auto dis = std::uniform_real_distribution{min, max};
-                return Note{note.interval, dis(gen), note.delay, note.gate};
-            },
-            [](Rest const &rest) -> Cell { return rest; },
-            [&](Sequence const &seq) -> Cell {
-                auto result = Sequence{};
-                result.cells.reserve(seq.cells.size());
-                std::transform(std::cbegin(seq.cells), std::cend(seq.cells),
-                               std::back_inserter(result.cells), [&](auto const &c) {
-                                   return humanize_velocity(c, amount);
-                               });
-                return result;
-            },
-        },
-        cell);
+    std::visit(overload{
+                   [&](Note &note) {
+                       auto const min = std::clamp(note.velocity - amount, 0.f, 1.f);
+                       auto const max = std::clamp(note.velocity + amount, 0.f, 1.f);
+                       auto dis = std::uniform_real_distribution{min, max};
+                       note.velocity = dis(gen);
+                   },
+                   [](Rest &) {},
+                   [&](Sequence &seq) {
+                       // TODO maybe clean this up, can a temp patternview be used?
+                       auto view = PatternView{seq.cells, pattern};
+                       for (auto &c : view)
+                       {
+                           c = humanize_velocity(c, pattern, amount);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
 }
 
-auto humanize_delay(Cell const &cell, float amount) -> Cell
+auto humanize_delay(Cell cell, sequence::Pattern const &pattern, float amount) -> Cell
 {
     using namespace utility;
 
@@ -787,26 +789,25 @@ auto humanize_delay(Cell const &cell, float amount) -> Cell
 
     auto gen = std::mt19937{std::random_device{}()};
 
-    return std::visit(
-        overload{
-            [&](Note const &note) -> Cell {
-                auto const min = std::clamp(note.delay - amount, 0.f, 1.f);
-                auto const max = std::clamp(note.delay + amount, 0.f, 1.f);
-                auto dis = std::uniform_real_distribution{min, max};
-                return Note{note.interval, note.velocity, dis(gen), note.gate};
-            },
-            [](Rest const &rest) -> Cell { return rest; },
-            [&](Sequence const &seq) -> Cell {
-                auto result = Sequence{};
-                result.cells.reserve(seq.cells.size());
-                std::transform(std::cbegin(seq.cells), std::cend(seq.cells),
-                               std::back_inserter(result.cells), [&](auto const &c) {
-                                   return humanize_delay(c, amount);
-                               });
-                return result;
-            },
-        },
-        cell);
+    std::visit(overload{
+                   [&](Note &note) {
+                       auto const min = std::clamp(note.delay - amount, 0.f, 1.f);
+                       auto const max = std::clamp(note.delay + amount, 0.f, 1.f);
+                       auto dis = std::uniform_real_distribution{min, max};
+                       note.delay = dis(gen);
+                   },
+                   [](Rest const &) {},
+                   [&](Sequence &seq) {
+                       auto view = PatternView{seq.cells, pattern};
+                       for (auto &c : view)
+                       {
+                           c = humanize_delay(c, pattern, amount);
+                       }
+                   },
+               },
+               cell);
+
+    return cell;
 }
 
 auto humanize_gate(Cell const &cell, float amount) -> Cell

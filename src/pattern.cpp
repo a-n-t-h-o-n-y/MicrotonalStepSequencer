@@ -9,83 +9,123 @@
 #include <string>
 #include <vector>
 
+namespace
+{
+
+/**
+ * @brief Get the pattern string from a given command string.
+ *
+ * This will not check if the pattern is valid and does not extract digits if they are
+ * attached to a command name. This will not work properly if there is no input after
+ * the pattern.
+ *
+ * @param x The command string to extract the pattern from.
+ * @return std::string The extracted pattern.
+ */
+[[nodiscard]] auto get_pattern_str(std::string const &x) -> std::string
+{
+    auto const it = std::find_if_not(std::cbegin(x), std::cend(x), [](char c) {
+        return std::isdigit(c) || c == ' ' || c == '+';
+    });
+
+    auto result = std::string{std::cbegin(x), it};
+
+    auto const r_space_it = std::find(std::crbegin(result), std::crend(result), ' ');
+    if (r_space_it != std::crend(result))
+    {
+        result.erase((r_space_it + 1).base(), std::cend(result));
+    }
+
+    return result;
+}
+
+} // namespace
+
 namespace sequence
 {
 
-auto parse_pattern(std::string const &input) -> std::optional<Pattern>
+auto contains_valid_pattern(std::string const &input) -> bool
 {
-    auto const pattern_str = extract_pattern_str(input);
-    if (pattern_str.empty() || pattern_str.back() != ' ')
+    auto const pattern_str = get_pattern_str(input);
+    auto stream = std::istringstream{pattern_str};
+    auto token = std::string{};
+
+    try
     {
-        return std::nullopt;
+        // Check for Offset
+        if (!pattern_str.empty() && pattern_str[0] == '+')
+        {
+            stream >> token;
+            auto processed = std::size_t{};
+            auto const num = std::stoi(token, &processed);
+            if (processed != token.size() || num < 0)
+            {
+                return false;
+            }
+        }
+
+        // Body of Pattern
+        while (stream >> token)
+        {
+            auto processed = std::size_t{};
+            auto const num = std::stoi(token, &processed);
+            if (processed != token.size() || num <= 0)
+            {
+                return false;
+            }
+        }
+    }
+    catch (std::invalid_argument const &)
+    {
+        return false;
+    }
+    catch (std::out_of_range const &)
+    {
+        return false;
     }
 
+    return true;
+}
+
+auto parse_pattern(std::string const &input) -> Pattern
+{
+    if (!contains_valid_pattern(input))
+    {
+        throw std::invalid_argument{"Does not contain a valid Pattern: " + input};
+    }
+
+    auto const pattern_str = get_pattern_str(input);
     auto iss = std::istringstream{pattern_str};
     auto token = std::string{};
-    auto pattern = Pattern{};
+    auto pattern = Pattern{0, {}};
 
     bool is_offset_checked = false;
     while (iss >> token)
     {
-        try
+        auto const value = std::stoi(token);
+
+        if (!is_offset_checked && token[0] == '+')
         {
-            auto const value = std::stoull(token);
-            if (!is_offset_checked && token[0] == '+')
-            {
-                pattern.offset = value;
-                is_offset_checked = true;
-            }
-            else
-            {
-                is_offset_checked = true;
-                pattern.intervals.push_back(value);
-            }
+            pattern.offset = value;
+            is_offset_checked = true;
         }
-        catch (std::invalid_argument const &e)
+        else
         {
-            throw std::invalid_argument("Invalid pattern string: '" + pattern_str +
-                                        "'");
+            is_offset_checked = true;
+            pattern.intervals.push_back(value);
         }
     }
     if (pattern.intervals.empty())
     {
         pattern.intervals = {1};
     }
-    if (std::ranges::find(pattern.intervals, 0) != std::cend(pattern.intervals))
-    {
-        throw std::invalid_argument("Invalid pattern string: '" + pattern_str +
-                                    "'. Zero interval not allowed.");
-    }
     return pattern;
 }
 
-auto strip_pattern_chars(std::string const &x) -> std::string
+auto pop_pattern_chars(std::string const &x) -> std::string
 {
-
-    if (auto const pattern_str = extract_pattern_str(x); pattern_str.empty())
-    {
-        return x;
-    }
-    auto const it = std::find_if_not(std::cbegin(x), std::cend(x), [](char c) {
-        return std::isdigit(c) || c == ' ' || c == '+';
-    });
-    return std::string{it, std::cend(x)};
+    auto const pattern_str = get_pattern_str(x);
+    return std::string{std::cbegin(x) + pattern_str.size(), std::cend(x)};
 };
-
-auto extract_pattern_str(std::string const &x) -> std::string
-{
-    auto const it = std::find_if_not(std::cbegin(x), std::cend(x), [](char c) {
-        return std::isdigit(c) || c == ' ' || c == '+';
-    });
-    auto const result = std::string{std::cbegin(x), it};
-    if (!result.empty() && result.back() == ' ')
-    {
-        return result;
-    }
-    else
-    {
-        return "";
-    }
-}
 
 } // namespace sequence

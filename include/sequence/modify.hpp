@@ -435,7 +435,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_gate(Cell const &cell, float amount) -> Cell;
+[[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 } // namespace sequence::modify
 #endif // SEQUENCE_MODIFY_HPP

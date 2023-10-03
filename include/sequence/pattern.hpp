@@ -24,30 +24,30 @@ struct Pattern
 };
 
 /**
+ * @brief Check if a command string contains a valid pattern.
+ *
+ * @param input The command string to check.
+ * @return true If the command string contains a valid pattern.
+ */
+[[nodiscard]] auto contains_valid_pattern(std::string const &input) -> bool;
+
+/**
  * @brief Parse a Pattern from a given string.
  *
  * @param input The string to parse.
- * @return Pattern The parsed pattern, or std::nullopt if the pattern input is empty.
+ * @return Pattern The parsed pattern.
  * @exception std::invalid_argument Thrown when the input does not conform to the
  * expected pattern.
  */
-[[nodiscard]] auto parse_pattern(std::string const &input) -> std::optional<Pattern>;
+[[nodiscard]] auto parse_pattern(std::string const &input) -> Pattern;
 
 /**
- * @brief Strip all characters that are not part of a Pattern prefix.
+ * @brief Strip all characters that are part of a Pattern prefix.
  *
  * @param x The string to strip.
- * @return std::string The stripped string.
+ * @return std::string The stripped string without the Pattern prefix.
  */
-[[nodiscard]] auto strip_pattern_chars(std::string const &x) -> std::string;
-
-/**
- * @brief Extract the pattern string from the given string.
- *
- * @param x The string to extract the pattern from.
- * @return std::string The extracted pattern.
- */
-[[nodiscard]] auto extract_pattern_str(std::string const &x) -> std::string;
+[[nodiscard]] auto pop_pattern_chars(std::string const &x) -> std::string;
 
 template <typename T>
 class PatternView

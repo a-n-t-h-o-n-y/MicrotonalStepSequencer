@@ -810,7 +810,8 @@ auto humanize_delay(Cell cell, sequence::Pattern const &pattern, float amount) -
     return cell;
 }
 
-auto humanize_gate(Cell const &cell, float amount) -> Cell
+auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount)
+    -> Cell
 {
     using namespace utility;
 
@@ -821,25 +822,26 @@ auto humanize_gate(Cell const &cell, float amount) -> Cell
 
     auto gen = std::mt19937{std::random_device{}()};
 
-    return std::visit(
+    std::visit(
         overload{
-            [&](Note const &note) -> Cell {
+            [&](Note &note) {
                 auto const min = std::clamp(note.gate - amount, 0.f, 1.f);
                 auto const max = std::clamp(note.gate + amount, 0.f, 1.f);
                 auto dis = std::uniform_real_distribution{min, max};
-                return Note{note.interval, note.velocity, note.delay, dis(gen)};
+                note.gate = dis(gen);
             },
-            [](Rest const &rest) -> Cell { return rest; },
-            [&](Sequence const &seq) -> Cell {
-                auto result = Sequence{};
-                result.cells.reserve(seq.cells.size());
-                std::transform(std::cbegin(seq.cells), std::cend(seq.cells),
-                               std::back_inserter(result.cells),
-                               [&](auto const &c) { return humanize_gate(c, amount); });
-                return result;
+            [](Rest const &) {},
+            [&](Sequence &seq) {
+                auto view = PatternView{seq.cells, pattern};
+                for (auto &c : view)
+                {
+                    c = humanize_gate(c, pattern, amount);
+                }
             },
         },
         cell);
+
+    return cell;
 }
 
 } // namespace sequence::modify

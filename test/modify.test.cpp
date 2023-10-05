@@ -457,7 +457,7 @@ TEST_CASE("randomize_gate", "[modify]")
     }
 }
 
-TEST_CASE("shift_pitch", "[modify]")
+TEST_CASE("shift_interval", "[modify]")
 {
     SECTION("Zero Shift")
     {
@@ -468,13 +468,13 @@ TEST_CASE("shift_pitch", "[modify]")
             Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
-        // Shift the pitch in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, 0));
+        // Shift the interval in the sequence
+        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, 0));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
-        // Check that the shifted sequence has the same pitch
+        // Check that the shifted sequence has the same interval
         for (std::size_t i = 0; i < shifted_seq.cells.size(); ++i)
         {
             auto const &original_cell = seq.cells[i];
@@ -498,13 +498,13 @@ TEST_CASE("shift_pitch", "[modify]")
             Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
-        // Shift the pitch in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, shift));
+        // Shift the interval in the sequence
+        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, shift));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
-        // Check that the shifted sequence has the same pitch
+        // Check that the shifted sequence has the same interval
         for (std::size_t i = 0; i < shifted_seq.cells.size(); ++i)
         {
             auto const &original_cell = seq.cells[i];
@@ -528,13 +528,13 @@ TEST_CASE("shift_pitch", "[modify]")
             Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
-        // Shift the pitch in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, shift));
+        // Shift the interval in the sequence
+        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, shift));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
-        // Check that the shifted sequence has the same pitch
+        // Check that the shifted sequence has the same interval
         for (std::size_t i = 0; i < shifted_seq.cells.size(); ++i)
         {
             auto const &original_cell = seq.cells[i];
@@ -565,8 +565,8 @@ TEST_CASE("shift_pitch", "[modify]")
             },
         };
 
-        // Shift the pitch in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_pitch(seq, 2));
+        // Shift the interval in the sequence
+        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, 2));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());

@@ -5,18 +5,68 @@
 #include <iterator>
 #include <random>
 #include <stdexcept>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
 #include <sequence/pattern.hpp>
 
+namespace
+{
+
+using namespace sequence;
+
+template <typename NoteFn, typename RestFn, typename SequenceFn>
+[[nodiscard]] auto visit_recursive(Cell const &cell, Pattern const &pattern,
+                                   NoteFn const &note_fn, RestFn const &rest_fn,
+                                   SequenceFn const &seq_fn) -> Cell
+{
+    static_assert(std::is_invocable_v<NoteFn, Note const &>,
+                  "NoteFn must be invocable with a Note const&");
+    static_assert(std::is_invocable_v<RestFn, Rest const &>,
+                  "RestFn must be invocable with a Rest const&");
+    static_assert(std::is_invocable_v<SequenceFn, Sequence const &>,
+                  "SequenceFn must be invocable with a Sequence const&");
+
+    return std::visit(utility::overload{
+                          [&](Note const &note) -> Cell { return note_fn(note); },
+                          [&](Rest const &rest) -> Cell { return rest_fn(rest); },
+                          [&](Sequence seq) -> Cell {
+                              seq = seq_fn(seq);
+                              auto view = PatternView{seq.cells, pattern};
+                              for (auto &c : view)
+                              {
+                                  c = visit_recursive(c, pattern, note_fn, rest_fn,
+                                                      seq_fn);
+                              }
+                              return seq;
+                          },
+                      },
+                      cell);
+}
+
+template <typename NoteFn, typename RestFn>
+[[nodiscard]] auto visit_recursive(Cell const &cell, Pattern const &pattern,
+                                   NoteFn const &note_fn, RestFn const &rest_fn) -> Cell
+{
+    return visit_recursive(cell, pattern, note_fn, rest_fn,
+                           [](Sequence s) { return s; });
+}
+
+template <typename NoteFn>
+[[nodiscard]] auto visit_recursive(Cell const &cell, Pattern const &pattern,
+                                   NoteFn const &note_fn) -> Cell
+{
+    return visit_recursive(cell, pattern, note_fn, [](Rest r) { return r; });
+}
+
+} // namespace
+
 namespace sequence::modify
 {
 
-auto randomize_intervals(Cell cell, int min, int max) -> Cell
+auto randomize_intervals(Cell cell, Pattern const &pattern, int min, int max) -> Cell
 {
-    using namespace utility;
-
     if (min > max)
     {
         throw std::invalid_argument("min must be less than or equal to max");
@@ -25,25 +75,14 @@ auto randomize_intervals(Cell cell, int min, int max) -> Cell
     auto gen = std::mt19937{std::random_device{}()};
     auto dis = std::uniform_int_distribution{min, max};
 
-    std::visit(overload{
-                   [&](Note &note) { note.interval = dis(gen); },
-                   [](Rest &) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = randomize_intervals(c, min, max);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.interval = dis(gen);
+        return n;
+    });
 }
 
-auto randomize_velocity(Cell cell, float min, float max) -> Cell
+auto randomize_velocity(Cell cell, Pattern const &pattern, float min, float max) -> Cell
 {
-    using namespace utility;
-
     if (min > max)
     {
         throw std::invalid_argument("min must be less than or equal to max");
@@ -56,25 +95,14 @@ auto randomize_velocity(Cell cell, float min, float max) -> Cell
     auto gen = std::mt19937{std::random_device{}()};
     auto dis = std::uniform_real_distribution{min, max};
 
-    std::visit(overload{
-                   [&](Note &note) { note.velocity = dis(gen); },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = randomize_velocity(c, min, max);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.velocity = dis(gen);
+        return n;
+    });
 }
 
-auto randomize_delay(Cell cell, float min, float max) -> Cell
+auto randomize_delay(Cell cell, Pattern const &pattern, float min, float max) -> Cell
 {
-    using namespace utility;
-
     if (min > max)
     {
         throw std::invalid_argument("min must be less than or equal to max");
@@ -87,25 +115,14 @@ auto randomize_delay(Cell cell, float min, float max) -> Cell
     auto gen = std::mt19937{std::random_device{}()};
     auto dis = std::uniform_real_distribution{min, max};
 
-    std::visit(overload{
-                   [&](Note &note) { note.delay = dis(gen); },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = randomize_delay(c, min, max);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.delay = dis(gen);
+        return n;
+    });
 }
 
-auto randomize_gate(Cell cell, float min, float max) -> Cell
+auto randomize_gate(Cell cell, Pattern const &pattern, float min, float max) -> Cell
 {
-    using namespace utility;
-
     if (min > max)
     {
         throw std::invalid_argument("min must be less than or equal to max");
@@ -118,202 +135,87 @@ auto randomize_gate(Cell cell, float min, float max) -> Cell
     auto gen = std::mt19937{std::random_device{}()};
     auto dis = std::uniform_real_distribution{min, max};
 
-    std::visit(overload{
-                   [&](Note &note) { note.gate = dis(gen); },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = randomize_gate(c, min, max);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.gate = dis(gen);
+        return n;
+    });
 }
 
-auto shift_pitch(Cell cell, int amount) -> Cell
+auto shift_interval(Cell cell, Pattern const &pattern, int amount) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) { note.interval += amount; },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = shift_pitch(c, amount);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.interval += amount;
+        return n;
+    });
 }
 
-auto shift_velocity(Cell cell, float amount) -> Cell
+auto shift_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) {
-                       note.velocity = std::clamp(note.velocity + amount, 0.f, 1.f);
-                   },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = shift_velocity(c, amount);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.velocity = std::clamp(n.velocity + amount, 0.f, 1.f);
+        return n;
+    });
 }
 
-auto shift_delay(Cell cell, float amount) -> Cell
+auto shift_delay(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    using namespace utility;
-
-    std::visit(
-        overload{
-            [&](Note &note) { note.delay = std::clamp(note.delay + amount, 0.f, 1.f); },
-            [](Rest) {},
-            [&](Sequence &seq) {
-                for (auto &c : seq.cells)
-                {
-                    c = shift_delay(c, amount);
-                }
-            },
-        },
-        cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.delay = std::clamp(n.delay + amount, 0.f, 1.f);
+        return n;
+    });
 }
 
-auto shift_gate(Cell cell, float amount) -> Cell
+auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    using namespace utility;
-
-    std::visit(
-        overload{
-            [&](Note &note) { note.gate = std::clamp(note.gate + amount, 0.f, 1.f); },
-            [](Rest) {},
-            [&](Sequence &seq) {
-                for (auto &c : seq.cells)
-                {
-                    c = shift_gate(c, amount);
-                }
-            },
-        },
-        cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.gate = std::clamp(n.gate + amount, 0.f, 1.f);
+        return n;
+    });
 }
 
-auto set_pitch(Cell cell, int interval) -> Cell
+auto set_interval(Cell cell, Pattern const &pattern, int interval) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) { note.interval = interval; },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = set_pitch(c, interval);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.interval = interval;
+        return n;
+    });
 }
 
-auto set_octave(Cell cell, int octave, std::size_t tuning_length) -> Cell
+auto set_octave(Cell cell, Pattern const &pattern, int octave,
+                std::size_t tuning_length) -> Cell
 {
-    using namespace utility;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        auto const tuning_length_i = static_cast<int>(tuning_length);
+        auto degree_in_current_octave =
+            (n.interval % tuning_length_i + tuning_length_i) % tuning_length_i;
 
-    std::visit(overload{
-                   [&](Note &note) {
-                       int const tuning_length_i = static_cast<int>(tuning_length);
-                       auto degree_in_current_octave =
-                           (note.interval % tuning_length_i + tuning_length_i) %
-                           tuning_length_i;
-
-                       note.interval =
-                           degree_in_current_octave + (octave * tuning_length_i);
-                   },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = set_octave(c, octave, tuning_length);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+        n.interval = degree_in_current_octave + (octave * tuning_length_i);
+        return n;
+    });
 }
 
-auto set_velocity(Cell cell, float velocity) -> Cell
+auto set_velocity(Cell cell, Pattern const &pattern, float velocity) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) { note.velocity = std::clamp(velocity, 0.f, 1.f); },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = set_velocity(c, velocity);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.velocity = velocity;
+        return n;
+    });
 }
 
-auto set_delay(Cell cell, float delay) -> Cell
+auto set_delay(Cell cell, Pattern const &pattern, float delay) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) { note.delay = std::clamp(delay, 0.f, 1.f); },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = set_delay(c, delay);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.delay = delay;
+        return n;
+    });
 }
 
-auto set_gate(Cell cell, float gate) -> Cell
+auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) { note.gate = std::clamp(gate, 0.f, 1.f); },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = set_gate(c, gate);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        n.gate = gate;
+        return n;
+    });
 }
 
 auto rotate(Cell cell, int amount) -> Cell
@@ -366,67 +268,32 @@ auto swing(Cell cell, float amount, bool is_odd) -> Cell
     return cell;
 }
 
-auto quantize(Cell cell) -> Cell
+auto quantize(Cell cell, Pattern const &pattern) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [](Note &note) {
-                       note.delay = 0.f;
-                       note.gate = 1.f;
-                   },
-                   [](Rest) {},
-                   [](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = quantize(c);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [](Note n) {
+        n.delay = 0.f;
+        n.gate = 1.f;
+        return n;
+    });
 }
 
-auto mirror(Cell cell, int center_note) -> Cell
+auto mirror(Cell cell, Pattern const &pattern, int center_note) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [&](Note &note) {
-                       auto const diff = center_note - note.interval;
-                       note.interval = center_note + diff;
-                   },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto &c : seq.cells)
-                       {
-                           c = mirror(c, center_note);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        auto const diff = center_note - n.interval;
+        n.interval = center_note + diff;
+        return n;
+    });
 }
 
 auto reverse(Cell cell) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [](Note &) {},
-                   [](Rest &) {},
-                   [](Sequence &seq) {
-                       std::ranges::reverse(seq.cells);
-                       for (auto &c : seq.cells)
-                       {
-                           c = reverse(c);
-                       }
-                   },
-               },
-               cell);
-    return cell;
+    return visit_recursive(
+        cell, {0, {1}}, [](Note n) { return n; }, [](Rest r) { return r; },
+        [](Sequence seq) {
+            std::ranges::reverse(seq.cells);
+            return seq;
+        });
 }
 
 auto repeat(Cell const &cell, std::size_t count) -> Cell
@@ -442,51 +309,28 @@ auto repeat(Cell const &cell, std::size_t count) -> Cell
     return result;
 }
 
-auto stretch(Cell const &cell, std::size_t amount) -> Cell
+auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount) -> Cell
 {
-    using namespace utility;
-
-    return std::visit(overload{
-                          [&](Note const &note) { return repeat(note, amount); },
-                          [&](Rest const &rest) { return repeat(rest, amount); },
-                          [&](Sequence const &seq) {
-                              auto result = Sequence{};
-                              result.cells.reserve(seq.cells.size());
-
-                              for (auto const &c : seq.cells)
-                              {
-                                  result.cells.push_back(stretch(c, amount));
-                              }
-
-                              return Cell{result};
-                          },
-                      },
-                      cell);
+    return visit_recursive(
+        cell, pattern, [&](Note n) { return repeat(n, amount); },
+        [&](Rest r) { return repeat(r, amount); });
 }
 
-auto compress(Cell const &cell, std::size_t amount) -> Cell
+auto compress(Cell const &cell, Pattern const &pattern) -> Cell
 {
     using namespace utility;
-
-    if (amount < 1)
-    {
-        throw std::invalid_argument("count must be greater than or equal to one");
-    }
 
     return std::visit(overload{
                           [](Note const &note) -> Cell { return note; },
                           [](Rest const &rest) -> Cell { return rest; },
                           [&](Sequence const &seq) -> Cell {
                               auto result = Sequence{};
-                              result.cells.reserve(seq.cells.size() / amount);
-
-                              std::copy_if(std::cbegin(seq.cells), std::cend(seq.cells),
-                                           std::back_inserter(result.cells),
-                                           [amount, i = 0u](auto const &) mutable {
-                                               return (i++ % amount) == 0;
-                                           });
-
-                              return Cell{result};
+                              auto view = ConstPatternView{seq.cells, pattern};
+                              for (auto const &c : view)
+                              {
+                                  result.cells.push_back(c);
+                              }
+                              return result;
                           },
                       },
                       cell);
@@ -539,23 +383,12 @@ auto last(Cell const &cell) -> Cell
 
 auto shuffle(Cell cell) -> Cell
 {
-    using namespace utility;
-
-    std::visit(overload{
-                   [](Note &) {},
-                   [](Rest &) {},
-                   [](Sequence &seq) {
-                       std::ranges::shuffle(seq.cells,
-                                            std::mt19937{std::random_device{}()});
-                       for (auto &c : seq.cells)
-                       {
-                           c = shuffle(c);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(
+        cell, {0, {1}}, [](Note n) { return n; }, [](Rest r) { return r; },
+        [](Sequence seq) {
+            std::ranges::shuffle(seq.cells, std::mt19937{std::random_device{}()});
+            return seq;
+        });
 }
 
 auto concat(Cell const &cell_a, Cell const &cell_b) -> Cell
@@ -711,8 +544,19 @@ auto divide(Cell const &cell, std::size_t index) -> Cell
 
 auto note(int interval, float velocity, float delay, float gate) -> Cell
 {
-    return Note{interval, std::clamp(velocity, 0.f, 1.f), std::clamp(delay, 0.f, 1.f),
-                std::clamp(gate, 0.f, 1.f)};
+    if (velocity < 0.f || velocity > 1.f)
+    {
+        throw std::invalid_argument("velocity must be in the range [0.0, 1.0]");
+    }
+    else if (delay < 0.f || delay > 1.f)
+    {
+        throw std::invalid_argument("delay must be in the range [0.0, 1.0]");
+    }
+    else if (gate < 0.f || gate > 1.f)
+    {
+        throw std::invalid_argument("gate must be in the range [0.0, 1.0]");
+    }
+    return Note{interval, velocity, delay, gate};
 }
 
 auto rest() -> Cell
@@ -725,21 +569,20 @@ auto sequence(std::vector<Cell> cells) -> Cell
     return Sequence{std::move(cells)};
 }
 
-auto flip(Cell const &cell, Note n) -> Cell
+auto flip(Cell cell, Pattern const &pattern, Note n) -> Cell
 {
     using namespace utility;
 
     return std::visit(overload{
-                          [](Note const &) -> Cell { return Rest{}; },
-                          [&](Rest const &) -> Cell { return n; }, // Returns a copy
-                          [](Sequence const &seq) -> Cell {
-                              auto result = Sequence{};
-                              result.cells.reserve(seq.cells.size());
-                              std::transform(std::cbegin(seq.cells),
-                                             std::cend(seq.cells),
-                                             std::back_inserter(result.cells),
-                                             [](auto const &c) { return flip(c); });
-                              return result;
+                          [](Note &) -> Cell { return Rest{}; },
+                          [&](Rest &) -> Cell { return n; }, // Returns a copy
+                          [&](Sequence &seq) -> Cell {
+                              auto view = PatternView{seq.cells, pattern};
+                              for (auto &c : view)
+                              {
+                                  c = flip(c, pattern, n);
+                              }
+                              return seq;
                           },
                       },
                       cell);
@@ -747,8 +590,6 @@ auto flip(Cell const &cell, Note n) -> Cell
 
 auto humanize_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    using namespace utility;
-
     if (amount < 0.f || amount > 1.f)
     {
         throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
@@ -756,32 +597,17 @@ auto humanize_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
 
     auto gen = std::mt19937{std::random_device{}()};
 
-    std::visit(overload{
-                   [&](Note &note) {
-                       auto const min = std::clamp(note.velocity - amount, 0.f, 1.f);
-                       auto const max = std::clamp(note.velocity + amount, 0.f, 1.f);
-                       auto dis = std::uniform_real_distribution{min, max};
-                       note.velocity = dis(gen);
-                   },
-                   [](Rest &) {},
-                   [&](Sequence &seq) {
-                       // TODO maybe clean this up, can a temp patternview be used?
-                       auto view = PatternView{seq.cells, pattern};
-                       for (auto &c : view)
-                       {
-                           c = humanize_velocity(c, pattern, amount);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        auto const min = std::clamp(n.velocity - amount, 0.f, 1.f);
+        auto const max = std::clamp(n.velocity + amount, 0.f, 1.f);
+        auto dis = std::uniform_real_distribution{min, max};
+        n.velocity = dis(gen);
+        return n;
+    });
 }
 
 auto humanize_delay(Cell cell, sequence::Pattern const &pattern, float amount) -> Cell
 {
-    using namespace utility;
-
     if (amount < 0.f || amount > 1.f)
     {
         throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
@@ -789,32 +615,17 @@ auto humanize_delay(Cell cell, sequence::Pattern const &pattern, float amount) -
 
     auto gen = std::mt19937{std::random_device{}()};
 
-    std::visit(overload{
-                   [&](Note &note) {
-                       auto const min = std::clamp(note.delay - amount, 0.f, 1.f);
-                       auto const max = std::clamp(note.delay + amount, 0.f, 1.f);
-                       auto dis = std::uniform_real_distribution{min, max};
-                       note.delay = dis(gen);
-                   },
-                   [](Rest const &) {},
-                   [&](Sequence &seq) {
-                       auto view = PatternView{seq.cells, pattern};
-                       for (auto &c : view)
-                       {
-                           c = humanize_delay(c, pattern, amount);
-                       }
-                   },
-               },
-               cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        auto const min = std::clamp(n.delay - amount, 0.f, 1.f);
+        auto const max = std::clamp(n.delay + amount, 0.f, 1.f);
+        auto dis = std::uniform_real_distribution{min, max};
+        n.delay = dis(gen);
+        return n;
+    });
 }
 
-auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount)
-    -> Cell
+auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount) -> Cell
 {
-    using namespace utility;
-
     if (amount < 0.f || amount > 1.f)
     {
         throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
@@ -822,26 +633,13 @@ auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount)
 
     auto gen = std::mt19937{std::random_device{}()};
 
-    std::visit(
-        overload{
-            [&](Note &note) {
-                auto const min = std::clamp(note.gate - amount, 0.f, 1.f);
-                auto const max = std::clamp(note.gate + amount, 0.f, 1.f);
-                auto dis = std::uniform_real_distribution{min, max};
-                note.gate = dis(gen);
-            },
-            [](Rest const &) {},
-            [&](Sequence &seq) {
-                auto view = PatternView{seq.cells, pattern};
-                for (auto &c : view)
-                {
-                    c = humanize_gate(c, pattern, amount);
-                }
-            },
-        },
-        cell);
-
-    return cell;
+    return visit_recursive(cell, pattern, [&](Note n) {
+        auto const min = std::clamp(n.gate - amount, 0.f, 1.f);
+        auto const max = std::clamp(n.gate + amount, 0.f, 1.f);
+        auto dis = std::uniform_real_distribution{min, max};
+        n.gate = dis(gen);
+        return n;
+    });
 }
 
 } // namespace sequence::modify

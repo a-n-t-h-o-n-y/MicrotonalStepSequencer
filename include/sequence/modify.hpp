@@ -298,7 +298,7 @@ namespace sequence::modify
  * @param pattern The Pattern the defines the cells to keep.
  * @return Cell The compressed Sequence.
  */
-[[nodiscard]] auto compress(Cell const &cell, Pattern const& pattern) -> Cell;
+[[nodiscard]] auto compress(Cell const &cell, Pattern const &pattern) -> Cell;
 
 /**
  * @brief Extract a single note from a Sequence Cell.
@@ -462,6 +462,30 @@ namespace sequence::modify
  */
 [[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern, float amount)
     -> Cell;
+
+/**
+ * @brief Fill a Sequence with Notes.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. This fills the
+ * Sequence with Notes, using the Pattern to define which Cells are turned into Notes.
+ *
+ * @param cell The Cell to fill.
+ * @param pattern The Pattern to apply across Sequences.
+ * @param note The Note to fill with.
+ */
+[[nodiscard]] auto notes_fill(Cell cell, Pattern const &pattern, Note note) -> Cell;
+
+/**
+ * @brief Fill a Sequence with Rests.
+ *
+ * If cell is a Sequence, this will recurse into child Sequences. This fills the
+ * Sequence with Rests, using the Pattern to define which Cells are turned into Rests.
+ *
+ * @param cell The Cell to fill.
+ * @param pattern The Pattern to apply across Sequences.
+ * @return Cell The filled Cell.
+ */
+[[nodiscard]] auto rests_fill(Cell cell, Pattern const &pattern) -> Cell;
 
 } // namespace sequence::modify
 #endif // SEQUENCE_MODIFY_HPP

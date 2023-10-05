@@ -31,15 +31,15 @@ template <typename NoteFn, typename RestFn, typename SequenceFn>
     return std::visit(utility::overload{
                           [&](Note const &note) -> Cell { return note_fn(note); },
                           [&](Rest const &rest) -> Cell { return rest_fn(rest); },
-                          [&](Sequence seq) -> Cell {
-                              seq = seq_fn(seq);
-                              auto view = PatternView{seq.cells, pattern};
+                          [&](Sequence const &seq) -> Cell {
+                              auto new_seq = seq_fn(seq);
+                              auto view = PatternView{new_seq.cells, pattern};
                               for (auto &c : view)
                               {
                                   c = visit_recursive(c, pattern, note_fn, rest_fn,
                                                       seq_fn);
                               }
-                              return seq;
+                              return new_seq;
                           },
                       },
                       cell);
@@ -640,6 +640,19 @@ auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount) ->
         n.gate = dis(gen);
         return n;
     });
+}
+
+auto notes_fill(Cell cell, Pattern const &pattern, Note note) -> Cell
+{
+    return visit_recursive(
+        cell, pattern, [&](Note const &) { return note; },
+        [&](Rest const &) { return note; });
+}
+
+auto rests_fill(Cell cell, Pattern const &pattern) -> Cell
+{
+    return visit_recursive(cell, pattern, [](Note const &) { return Rest{}; },
+                           [](Rest const &) { return Rest{}; });
 }
 
 } // namespace sequence::modify

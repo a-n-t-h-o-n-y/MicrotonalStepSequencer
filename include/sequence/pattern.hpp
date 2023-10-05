@@ -72,7 +72,7 @@ class PatternView
      * @param pattern The pattern to use for iteration
      */
     PatternView(std::vector<T> &vec, Pattern const &pattern)
-        : vec_(vec), pattern_(pattern), current_index_(pattern.offset)
+        : vec_{vec}, pattern_{pattern}, offset_index_{pattern.offset}
     {
         if (pattern_.intervals.empty() || vec_.empty())
         {
@@ -94,7 +94,8 @@ class PatternView
          * @param index Initial index in vector based on pattern
          */
         Iterator(PatternView &pattern_view, std::size_t index)
-            : pattern_view_(pattern_view), index_(index), interval_index_(0)
+            : pattern_view_{pattern_view},
+              index_{std::min(index, pattern_view.vec_.size())}, interval_index_{0}
         {
         }
 
@@ -131,7 +132,7 @@ class PatternView
 
     [[nodiscard]] auto begin() -> Iterator
     {
-        return Iterator(*this, current_index_);
+        return Iterator(*this, offset_index_);
     }
 
     [[nodiscard]] auto end() -> Iterator
@@ -142,7 +143,7 @@ class PatternView
   private:
     std::vector<T> &vec_;
     Pattern const &pattern_;
-    std::size_t current_index_;
+    std::size_t offset_index_;
 };
 
 template <typename T>
@@ -154,7 +155,7 @@ class ConstPatternView
      * @param pattern The pattern to use for iteration
      */
     ConstPatternView(std::vector<T> const &vec, Pattern const &pattern)
-        : vec_(vec), pattern_(pattern), current_index_(pattern.offset)
+        : vec_(vec), pattern_(pattern), offset_index_(pattern.offset)
     {
         if (pattern_.intervals.empty() || vec_.empty())
         {
@@ -213,12 +214,12 @@ class ConstPatternView
 
     [[nodiscard]] auto begin() const -> ConstIterator
     {
-        return ConstIterator(*this, current_index_);
+        return ConstIterator(*this, offset_index_);
     }
 
     [[nodiscard]] auto cbegin() const -> ConstIterator
     {
-        return ConstIterator(*this, current_index_);
+        return ConstIterator(*this, offset_index_);
     }
 
     [[nodiscard]] auto end() const -> ConstIterator
@@ -234,7 +235,7 @@ class ConstPatternView
   private:
     std::vector<T> const &vec_;
     Pattern const &pattern_;
-    std::size_t current_index_;
+    std::size_t offset_index_;
 };
 
 } // namespace sequence

@@ -15,7 +15,7 @@ target_compile_features(sequencer
 )
 target_compile_options(sequencer PUBLIC
   $<$<CXX_COMPILER_ID:MSVC>:/W1>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wno-implicit-int-float-conversion>
 )
 
 set_target_properties(sequencer PROPERTIES POSITION_INDEPENDENT_CODE ON)

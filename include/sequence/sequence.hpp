@@ -1,5 +1,6 @@
 #ifndef SEQUENCE_SEQUENCE_HPP
 #define SEQUENCE_SEQUENCE_HPP
+#include <cmath>
 #include <variant>
 #include <vector>
 
@@ -28,10 +29,15 @@ struct Sequence
 /**
  * @brief Compares two Notes for equality.
  */
+#include <cmath>
+
 [[nodiscard]] constexpr auto operator==(Note const &lhs, Note const &rhs) -> bool
 {
-    return lhs.interval == rhs.interval && lhs.velocity == rhs.velocity &&
-           lhs.delay == rhs.delay && lhs.gate == rhs.gate;
+    constexpr float tolerance = 0.0001f; // set a small tolerance value
+    return lhs.interval == rhs.interval &&
+           std::fabs(lhs.velocity - rhs.velocity) < tolerance &&
+           std::fabs(lhs.delay - rhs.delay) < tolerance &&
+           std::fabs(lhs.gate - rhs.gate) < tolerance;
 }
 
 /**

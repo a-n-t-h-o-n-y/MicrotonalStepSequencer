@@ -52,7 +52,7 @@ auto create_midi_note(int interval, Tuning const &tuning, float tuning_base)
     auto const fractional =
         std::modf(std::clamp(fractional_note, 0.f, 127.f), &integral);
     return MicrotonalNote{static_cast<std::uint8_t>(integral),
-                          static_cast<std::uint16_t>((1 + fractional) * 8192)};
+                          static_cast<std::uint16_t>(8'192 + (fractional * 4'096))};
 }
 
 auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning, float tuning_base)

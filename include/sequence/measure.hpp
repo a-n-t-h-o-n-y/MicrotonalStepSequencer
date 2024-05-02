@@ -20,6 +20,9 @@ struct Measure
 {
     Cell cell;
     TimeSignature time_signature;
+
+    auto operator==(Measure const &) const -> bool = default;
+    auto operator!=(Measure const &) const -> bool = default;
 };
 
 using Phrase = std::vector<sequence::Measure>;

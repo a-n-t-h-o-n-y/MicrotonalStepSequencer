@@ -24,6 +24,9 @@ struct Tuning
 
     std::vector<Interval_t> intervals;
     Interval_t octave;
+
+    auto operator==(Tuning const &) const -> bool = default;
+    auto operator!=(Tuning const &) const -> bool = default;
 };
 
 /**

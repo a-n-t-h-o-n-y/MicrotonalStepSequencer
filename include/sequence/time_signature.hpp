@@ -19,6 +19,9 @@ struct TimeSignature
 {
     unsigned numerator;   // Number of beats per measure
     unsigned denominator; // Beat value
+
+    auto operator==(TimeSignature const &) const -> bool = default;
+    auto operator!=(TimeSignature const &) const -> bool = default;
 };
 
 auto operator<<(std::ostream &os, TimeSignature const &ts) -> std::ostream &;

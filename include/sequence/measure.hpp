@@ -18,8 +18,8 @@ namespace sequence
  */
 struct Measure
 {
-    Cell cell;
-    TimeSignature time_signature;
+    Cell cell = Rest{};
+    TimeSignature time_signature = {4, 4};
 
     auto operator==(Measure const &) const -> bool = default;
     auto operator!=(Measure const &) const -> bool = default;

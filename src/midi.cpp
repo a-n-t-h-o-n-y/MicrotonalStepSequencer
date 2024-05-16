@@ -19,8 +19,8 @@
 namespace sequence::midi
 {
 
-auto create_midi_note(int interval, Tuning const &tuning, float tuning_base)
-    -> MicrotonalNote
+auto create_midi_note(int interval, Tuning const &tuning,
+                      float tuning_base) -> MicrotonalNote
 {
     if (tuning.intervals.empty())
     {
@@ -55,8 +55,8 @@ auto create_midi_note(int interval, Tuning const &tuning, float tuning_base)
                           static_cast<std::uint16_t>(8'192 + (fractional * 4'096))};
 }
 
-auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning, float tuning_base)
-    -> std::vector<MicrotonalNote>
+auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning,
+                              float tuning_base) -> std::vector<MicrotonalNote>
 {
     return std::visit(utility::overload{
                           [&](Note const &note) -> std::vector<MicrotonalNote> {
@@ -94,22 +94,6 @@ auto flatten_and_translate_to_midi_notes(Measure const &measure, Tuning const &t
     return create_midi_note_visitor(measure.cell, tuning, base_midi_note);
 }
 
-auto flatten_and_translate_to_midi_notes(Phrase const &phrase, Tuning const &tuning,
-                                         float base_frequency)
-    -> std::vector<MicrotonalNote>
-{
-    auto notes = std::vector<MicrotonalNote>{};
-
-    for (auto const &measure : phrase)
-    {
-        auto const results =
-            flatten_and_translate_to_midi_notes(measure, tuning, base_frequency);
-        std::copy(std::cbegin(results), std::cend(results), std::back_inserter(notes));
-    }
-
-    return notes;
-}
-
 auto flatten_notes(Cell const &cell) -> std::vector<Note>
 {
     auto notes = std::vector<Note>{};
@@ -143,8 +127,8 @@ auto flatten_notes(Phrase const &phrase) -> std::vector<Note>
     return notes;
 }
 
-auto note_sample_infos(Cell const &cell, std::uint32_t total_samples, float offset)
-    -> std::vector<SampleRange>
+auto note_sample_infos(Cell const &cell, std::uint32_t total_samples,
+                       float offset) -> std::vector<SampleRange>
 {
     return std::visit(
         utility::overload{
@@ -177,37 +161,28 @@ auto note_sample_infos(Cell const &cell, std::uint32_t total_samples, float offs
         cell);
 }
 
-auto flatten_and_translate_to_sample_infos(Phrase const &phrase,
-                                           std::uint32_t sample_rate, float bpm)
-    -> std::vector<SampleRange>
+auto flatten_and_translate_to_sample_infos(Measure const &measure,
+                                           std::uint32_t sample_rate,
+                                           float bpm) -> std::vector<SampleRange>
 {
-    auto infos = std::vector<SampleRange>{};
 
-    auto sample_offset = 0.f;
-
-    for (auto const &measure : phrase)
-    {
-        auto const samples_per_measure = samples_count(measure, sample_rate, bpm);
-        auto const result =
-            note_sample_infos(measure.cell, samples_per_measure, sample_offset);
-        std::copy(std::cbegin(result), std::cend(result), std::back_inserter(infos));
-        sample_offset += samples_per_measure;
-    }
-    return infos;
+    auto const samples_per_measure = samples_count(measure, sample_rate, bpm);
+    return note_sample_infos(measure.cell, samples_per_measure, 0);
 }
 
-auto translate_to_midi_timeline(Phrase const &phrase, std::uint32_t sample_rate,
-                                float bpm, Tuning const &tuning, float base_frequency)
-    -> EventTimeline
+auto translate_to_midi_timeline(Measure const &measure, std::uint32_t sample_rate,
+                                float bpm, Tuning const &tuning,
+                                float base_frequency) -> EventTimeline
 {
     auto midi_events = EventTimeline{};
 
-    auto const ranges = flatten_and_translate_to_sample_infos(phrase, sample_rate, bpm);
+    auto const ranges =
+        flatten_and_translate_to_sample_infos(measure, sample_rate, bpm);
 
     auto const midi_notes =
-        flatten_and_translate_to_midi_notes(phrase, tuning, base_frequency);
+        flatten_and_translate_to_midi_notes(measure, tuning, base_frequency);
 
-    auto const notes = flatten_notes(phrase);
+    auto const notes = flatten_notes(measure.cell);
 
     assert(ranges.size() == midi_notes.size());
     assert(ranges.size() == notes.size());

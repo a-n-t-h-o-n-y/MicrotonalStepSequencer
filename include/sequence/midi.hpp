@@ -52,15 +52,13 @@ struct MicrotonalNote
  * what note.interval 0 will be.
  * @return std::vector<MicrotonalNote>
  */
-[[nodiscard]] auto flatten_and_translate_to_midi_notes(Measure const &measure,
-                                                       Tuning const &tuning,
-                                                       float base_frequency = 440.f)
-    -> std::vector<MicrotonalNote>;
+[[nodiscard]] auto flatten_and_translate_to_midi_notes(
+    Measure const &measure, Tuning const &tuning,
+    float base_frequency = 440.f) -> std::vector<MicrotonalNote>;
 
-[[nodiscard]] auto flatten_and_translate_to_midi_notes(Phrase const &phrase,
-                                                       Tuning const &tuning,
-                                                       float base_frequency = 440.f)
-    -> std::vector<MicrotonalNote>;
+[[nodiscard]] auto flatten_and_translate_to_midi_notes(
+    Phrase const &phrase, Tuning const &tuning,
+    float base_frequency = 440.f) -> std::vector<MicrotonalNote>;
 
 /**
  * @brief Flattens any Cell type into a vector of notes.
@@ -105,10 +103,9 @@ struct SampleRange
  * @param measure The measure to flatten.
  * @return std::vector<SampleRange>
  */
-[[nodiscard]] auto flatten_and_translate_to_sample_infos(Phrase const &phrase,
-                                                         std::uint32_t sample_rate,
-                                                         float bpm)
-    -> std::vector<SampleRange>;
+[[nodiscard]] auto flatten_and_translate_to_sample_infos(
+    Phrase const &phrase, std::uint32_t sample_rate,
+    float bpm) -> std::vector<SampleRange>;
 
 struct NoteOn
 {
@@ -132,16 +129,19 @@ using Event = std::variant<NoteOn, NoteOff, PitchBend>;
 using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
 
 /**
- * @brief Flattens a measure into a vector of MIDI events.
+ * Flattens a measure into a vector of MIDI events.
  *
- * Returns a sequence of MIDI events of type NoteOn, NoteOff, or PitchBend, paired with
- * the sample offset of the event.
+ * @details Returns a sequence of MIDI events of type NoteOn, NoteOff, or PitchBend,
+ * paired with the sample offset of the event.
  *
- * @param phrase The measures to create a timeline of.
- *
+ * @param measure The measure to flatten.
+ * @param sample_rate The sample rate of the audio.
+ * @param bpm The beats per minute of the audio.
+ * @param tuning The tuning to use for the MIDI notes.
+ * @param base_frequency The base frequency of the tuning.
  * @return EventTimeline
  */
-[[nodiscard]] auto translate_to_midi_timeline(Phrase const &phrase,
+[[nodiscard]] auto translate_to_midi_timeline(Measure const &measure,
                                               std::uint32_t sample_rate, float bpm,
                                               Tuning const &tuning,
                                               float base_frequency) -> EventTimeline;

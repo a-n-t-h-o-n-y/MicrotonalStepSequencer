@@ -22,8 +22,8 @@ struct Tuning
 {
     using Interval_t = float;
 
-    std::vector<Interval_t> intervals;
-    Interval_t octave;
+    std::vector<Interval_t> intervals{};
+    Interval_t octave{};
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"

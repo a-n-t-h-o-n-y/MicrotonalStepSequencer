@@ -25,11 +25,15 @@ struct Tuning
     std::vector<Interval_t> intervals{};
     Interval_t octave{};
 
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
+#endif
     auto operator==(Tuning const &) const -> bool = default;
     auto operator!=(Tuning const &) const -> bool = default;
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 };
 
 /**

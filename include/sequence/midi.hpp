@@ -28,7 +28,8 @@ struct MicrotonalNote
 /**
  * @brief Creates a MIDI note from a Note, Tuning and base fractional note.
  *
- * @param note The note to use.
+ * @param pitch The pitch value to use, this is the value from Note.pitch, not the midi
+ * note number.
  * @param tuning The tuning to use for the note.
  * @param tuning_base The base note of the tuning, as a floating point value. This is a
  * midi note value but allows for fractional notes that coorespond to any value
@@ -37,8 +38,7 @@ struct MicrotonalNote
  * @return MicrotonalNote
  * @throws std::invalid_argument if the tuning is empty.
  */
-[[nodiscard]] auto create_midi_note(int interval, Tuning const &tuning,
-                                    float tuning_base,
+[[nodiscard]] auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
                                     float pb_range) -> MicrotonalNote;
 
 [[nodiscard]] auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning,
@@ -50,7 +50,7 @@ struct MicrotonalNote
  *
  * @param measure The measure to calculate the MIDI notes for.
  * @param base_frequency The base frequency of the tuning. Defaults to 440 Hz. This is
- * what note.interval 0 will be.
+ * what note.pitch 0 will be.
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return std::vector<MicrotonalNote>
  */

@@ -65,7 +65,7 @@ template <typename NoteFn>
 namespace sequence::modify
 {
 
-auto randomize_intervals(Cell cell, Pattern const &pattern, int min, int max) -> Cell
+auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max) -> Cell
 {
     if (min > max)
     {
@@ -76,7 +76,7 @@ auto randomize_intervals(Cell cell, Pattern const &pattern, int min, int max) ->
     auto dis = std::uniform_int_distribution{min, max};
 
     return visit_recursive(cell, pattern, [&](Note n) {
-        n.interval = dis(gen);
+        n.pitch = dis(gen);
         return n;
     });
 }
@@ -141,10 +141,10 @@ auto randomize_gate(Cell cell, Pattern const &pattern, float min, float max) -> 
     });
 }
 
-auto shift_interval(Cell cell, Pattern const &pattern, int amount) -> Cell
+auto shift_pitch(Cell cell, Pattern const &pattern, int amount) -> Cell
 {
     return visit_recursive(cell, pattern, [&](Note n) {
-        n.interval += amount;
+        n.pitch += amount;
         return n;
     });
 }
@@ -173,10 +173,10 @@ auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell
     });
 }
 
-auto set_interval(Cell cell, Pattern const &pattern, int interval) -> Cell
+auto set_pitch(Cell cell, Pattern const &pattern, int pitch) -> Cell
 {
     return visit_recursive(cell, pattern, [&](Note n) {
-        n.interval = interval;
+        n.pitch = pitch;
         return n;
     });
 }
@@ -187,9 +187,9 @@ auto set_octave(Cell cell, Pattern const &pattern, int octave,
     return visit_recursive(cell, pattern, [&](Note n) {
         auto const tuning_length_i = static_cast<int>(tuning_length);
         auto degree_in_current_octave =
-            (n.interval % tuning_length_i + tuning_length_i) % tuning_length_i;
+            (n.pitch % tuning_length_i + tuning_length_i) % tuning_length_i;
 
-        n.interval = degree_in_current_octave + (octave * tuning_length_i);
+        n.pitch = degree_in_current_octave + (octave * tuning_length_i);
         return n;
     });
 }
@@ -280,8 +280,8 @@ auto quantize(Cell cell, Pattern const &pattern) -> Cell
 auto mirror(Cell cell, Pattern const &pattern, int center_note) -> Cell
 {
     return visit_recursive(cell, pattern, [&](Note n) {
-        auto const diff = center_note - n.interval;
-        n.interval = center_note + diff;
+        auto const diff = center_note - n.pitch;
+        n.pitch = center_note + diff;
         return n;
     });
 }
@@ -399,12 +399,8 @@ auto concat(Cell const &cell_a, Cell const &cell_b) -> Cell
             [](Note const &note_a, Note const &note_b) {
                 return Sequence{{note_a, note_b}};
             },
-            [](Note const &note, Rest const &rest) {
-                return Sequence{{note, rest}};
-            },
-            [](Rest const &rest, Note const &note) {
-                return Sequence{{rest, note}};
-            },
+            [](Note const &note, Rest const &rest) { return Sequence{{note, rest}}; },
+            [](Rest const &rest, Note const &note) { return Sequence{{rest, note}}; },
             [](Rest const &rest_a, Rest const &rest_b) {
                 return Sequence{{rest_a, rest_b}};
             },
@@ -448,12 +444,8 @@ auto merge(Cell const &cell_a, Cell const &cell_b) -> Cell
             [](Note const &note_a, Note const &note_b) {
                 return Sequence{{note_a, note_b}};
             },
-            [](Note const &note, Rest const &rest) {
-                return Sequence{{note, rest}};
-            },
-            [](Rest const &rest, Note const &note) {
-                return Sequence{{rest, note}};
-            },
+            [](Note const &note, Rest const &rest) { return Sequence{{note, rest}}; },
+            [](Rest const &rest, Note const &note) { return Sequence{{rest, note}}; },
             [](Rest const &rest_a, Rest const &rest_b) {
                 return Sequence{{rest_a, rest_b}};
             },
@@ -542,7 +534,7 @@ auto divide(Cell const &cell, std::size_t index) -> Cell
         cell);
 }
 
-auto note(int interval, float velocity, float delay, float gate) -> Cell
+auto note(int pitch, float velocity, float delay, float gate) -> Cell
 {
     if (velocity < 0.f || velocity > 1.f)
     {
@@ -556,7 +548,7 @@ auto note(int interval, float velocity, float delay, float gate) -> Cell
     {
         throw std::invalid_argument("gate must be in the range [0.0, 1.0]");
     }
-    return Note{interval, velocity, delay, gate};
+    return Note{pitch, velocity, delay, gate};
 }
 
 auto rest() -> Cell
@@ -651,8 +643,9 @@ auto notes_fill(Cell cell, Pattern const &pattern, Note note) -> Cell
 
 auto rests_fill(Cell cell, Pattern const &pattern) -> Cell
 {
-    return visit_recursive(cell, pattern, [](Note const &) { return Rest{}; },
-                           [](Rest const &) { return Rest{}; });
+    return visit_recursive(
+        cell, pattern, [](Note const &) { return Rest{}; },
+        [](Rest const &) { return Rest{}; });
 }
 
 } // namespace sequence::modify

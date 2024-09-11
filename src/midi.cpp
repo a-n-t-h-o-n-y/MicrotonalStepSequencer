@@ -19,7 +19,7 @@
 namespace sequence::midi
 {
 
-auto create_midi_note(int interval, Tuning const &tuning, float tuning_base,
+auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
                       float pb_range) -> MicrotonalNote
 {
     if (tuning.intervals.empty())
@@ -31,9 +31,9 @@ auto create_midi_note(int interval, Tuning const &tuning, float tuning_base,
         constexpr auto semitone_cents = 100.f;
         auto const length = (int)tuning.intervals.size();
 
-        auto const octave_offset = (float)(interval / length) * tuning.octave;
+        auto const octave_offset = (float)(pitch / length) * tuning.octave;
         auto const interval_offset = [&] {
-            auto const interval_index = interval % length;
+            auto const interval_index = pitch % length;
             if (interval_index < 0)
             {
                 return tuning.intervals[(std::size_t)(interval_index + length)] -
@@ -62,7 +62,7 @@ auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning, float tuni
     return std::visit(utility::overload{
                           [&](Note const &note) -> std::vector<MicrotonalNote> {
                               return std::vector{create_midi_note(
-                                  note.interval, tuning, tuning_base, pb_range)};
+                                  note.pitch, tuning, tuning_base, pb_range)};
                           },
                           [&](Rest const &) -> std::vector<MicrotonalNote> {
                               return std::vector<MicrotonalNote>{};

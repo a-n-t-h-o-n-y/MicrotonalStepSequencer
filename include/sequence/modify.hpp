@@ -11,7 +11,7 @@ namespace sequence::modify
 {
 
 /**
- * @brief Randomize the note intervals in an existing Cell.
+ * @brief Randomize the note pitches in an existing Cell.
  *
  * This overwrites existings notes, it does not apply an offset to the existing
  * notes.
@@ -26,8 +26,8 @@ namespace sequence::modify
  *
  * @throws std::invalid_argument If min is greater than max.
  */
-[[nodiscard]] auto randomize_intervals(Cell cell, Pattern const &pattern, int min,
-                                       int max) -> Cell;
+[[nodiscard]] auto randomize_pitch(Cell cell, Pattern const &pattern, int min,
+                                   int max) -> Cell;
 
 /**
  * @brief Randomize the note velocities in a given Cell.
@@ -81,17 +81,16 @@ namespace sequence::modify
                                   float max) -> Cell;
 
 /**
- * @brief Shift note interval by a constant amount.
+ * @brief Shift note pitch by a constant amount.
  *
  * If cell is a Sequence, this will recurse into child Sequences.
  *
  * @param cell The Cell to shift the notes of.
  * @param pattern The Pattern to apply across Sequences.
  * @param amount The amount to shift by, can be positive, negative or zero.
- * @return Cell The interval shifted Cell.
+ * @return Cell The pitch shifted Cell.
  */
-[[nodiscard]] auto shift_interval(Cell cell, Pattern const &pattern, int amount)
-    -> Cell;
+[[nodiscard]] auto shift_pitch(Cell cell, Pattern const &pattern, int amount) -> Cell;
 
 /**
  * @brief Shift note velocities by a constant amount.
@@ -104,8 +103,8 @@ namespace sequence::modify
  * @param amount The amount to shift by, can be positive, negative or zero.
  * @return Cell The velocity shifted Cell.
  */
-[[nodiscard]] auto shift_velocity(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+[[nodiscard]] auto shift_velocity(Cell cell, Pattern const &pattern,
+                                  float amount) -> Cell;
 
 /**
  * @brief Shift note delays by a constant amount.
@@ -134,17 +133,16 @@ namespace sequence::modify
 [[nodiscard]] auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell;
 
 /**
- * @brief Set the interval of a note to a constant value.
+ * @brief Set the pitch of a note to a constant value.
  *
  * If cell is a Sequence, this will recurse into child Sequences.
  *
- * @param cell The Cell to set the interval of.
+ * @param cell The Cell to set the pitch of.
  * @param pattern The Pattern to apply across Sequences.
- * @param interval The interval to set the interval to.
- * @return Cell The interval set Cell.
+ * @param pitch The pitch to set the note(s) to.
+ * @return Cell The pitch set Cell.
  */
-[[nodiscard]] auto set_interval(Cell cell, Pattern const &pattern, int interval)
-    -> Cell;
+[[nodiscard]] auto set_pitch(Cell cell, Pattern const &pattern, int pitch) -> Cell;
 
 /**
  * @brief Set the octave of a note to a constant value.
@@ -171,8 +169,8 @@ namespace sequence::modify
  * @param velocity The velocity to set the note to.
  * @return Cell The velocity set Cell.
  */
-[[nodiscard]] auto set_velocity(Cell cell, Pattern const &pattern, float velocity)
-    -> Cell;
+[[nodiscard]] auto set_velocity(Cell cell, Pattern const &pattern,
+                                float velocity) -> Cell;
 
 /**
  * @brief Set the delay of a note to a constant value.
@@ -286,8 +284,8 @@ namespace sequence::modify
  * Sequence.
  * @return Cell The stretched Sequence.
  */
-[[nodiscard]] auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount)
-    -> Cell;
+[[nodiscard]] auto stretch(Cell const &cell, Pattern const &pattern,
+                           std::size_t amount) -> Cell;
 
 /**
  * @brief Compress a Cell by keeping every Cell in the Pattern and skipping the rest.
@@ -386,14 +384,14 @@ namespace sequence::modify
 /**
  * @brief Create a Note.
  *
- * @param interval The interval of the note.
+ * @param pitch The pitch of the note.
  * @param velocity The velocity of the note.
  * @param delay The delay of the note.
  * @param gate The gate of the note.
  * @return Cell The created Note.
  * @throws std::invalid_argument If velocity, delay or gate are not in the range [0, 1].
  */
-[[nodiscard]] auto note(int interval, float velocity, float delay, float gate) -> Cell;
+[[nodiscard]] auto note(int pitch, float velocity, float delay, float gate) -> Cell;
 
 /**
  * @brief Create a Rest.
@@ -422,32 +420,32 @@ namespace sequence::modify
 [[nodiscard]] auto flip(Cell cell, Pattern const &pattern, Note n = Note{}) -> Cell;
 
 /**
- * @brief Humanize the note intervals in a Cell.
+ * @brief Humanize the note velocities in a Cell.
  *
- * If cell is a Sequence, this will recurse into child Sequences. This applies a
- * random offset between [0, amount] to each note's velocity.
+ * @details If cell is a Sequence, this will recurse into child Sequences. This applies
+ * a random offset between [0, amount] to each note's velocity.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_velocity(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+[[nodiscard]] auto humanize_velocity(Cell cell, Pattern const &pattern,
+                                     float amount) -> Cell;
 
 /**
  * @brief Humanize the note delays in a Cell.
  *
- * If cell is a Sequence, this will recurse into child Sequences. This applies a
- * random offset between [0, amount] to each note's delay.
+ * @details If cell is a Sequence, this will recurse into child Sequences. This applies
+ * a random offset between [0, amount] to each note's delay.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_delay(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+[[nodiscard]] auto humanize_delay(Cell cell, Pattern const &pattern,
+                                  float amount) -> Cell;
 
 /**
  * @brief Humanize the note gates in a Cell.
@@ -460,8 +458,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+[[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern,
+                                 float amount) -> Cell;
 
 /**
  * @brief Fill a Sequence with Notes.

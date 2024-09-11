@@ -11,7 +11,7 @@ using Cell = std::variant<struct Note, struct Rest, struct Sequence>;
 
 struct Note
 {
-    int interval = 0;      // 0 is tunings's base note, 1 is tunings's second note, etc.
+    int pitch = 0;         // 0 is tunings's base note, 1 is tunings's second note, etc.
     float velocity = 0.7f; // 0.0 to 1.0, percentage of max velocity
     float delay = 0.f;     // 0.0 to 1.0, percentage of cell length to wait
     float gate = 1.f;      // 0.0 to 1.0, percentage of note length to play
@@ -34,7 +34,7 @@ struct Sequence
 [[nodiscard]] constexpr auto operator==(Note const &lhs, Note const &rhs) -> bool
 {
     constexpr float tolerance = 0.0001f; // set a small tolerance value
-    return lhs.interval == rhs.interval &&
+    return lhs.pitch == rhs.pitch &&
            std::fabs(lhs.velocity - rhs.velocity) < tolerance &&
            std::fabs(lhs.delay - rhs.delay) < tolerance &&
            std::fabs(lhs.gate - rhs.gate) < tolerance;
@@ -58,14 +58,14 @@ struct Sequence
     return !(lhs == rhs);
 }
 
-[[nodiscard]] constexpr auto operator==(Sequence const &lhs, Sequence const &rhs)
-    -> bool
+[[nodiscard]] constexpr auto operator==(Sequence const &lhs,
+                                        Sequence const &rhs) -> bool
 {
     return lhs.cells == rhs.cells;
 }
 
-[[nodiscard]] constexpr auto operator!=(Sequence const &lhs, Sequence const &rhs)
-    -> bool
+[[nodiscard]] constexpr auto operator!=(Sequence const &lhs,
+                                        Sequence const &rhs) -> bool
 {
     return !(lhs == rhs);
 }

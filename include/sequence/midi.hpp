@@ -33,15 +33,16 @@ struct MicrotonalNote
  * @param tuning_base The base note of the tuning, as a floating point value. This is a
  * midi note value but allows for fractional notes that coorespond to any value
  * inbetween midi notes.
+ * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return MicrotonalNote
- *
  * @throws std::invalid_argument if the tuning is empty.
  */
 [[nodiscard]] auto create_midi_note(int interval, Tuning const &tuning,
-                                    float tuning_base) -> MicrotonalNote;
+                                    float tuning_base,
+                                    float pb_range) -> MicrotonalNote;
 
 [[nodiscard]] auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning,
-                                            float tuning_base)
+                                            float tuning_base, float pb_range)
     -> std::vector<MicrotonalNote>;
 
 /**
@@ -50,15 +51,16 @@ struct MicrotonalNote
  * @param measure The measure to calculate the MIDI notes for.
  * @param base_frequency The base frequency of the tuning. Defaults to 440 Hz. This is
  * what note.interval 0 will be.
+ * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return std::vector<MicrotonalNote>
  */
 [[nodiscard]] auto flatten_and_translate_to_midi_notes(
-    Measure const &measure, Tuning const &tuning,
-    float base_frequency = 440.f) -> std::vector<MicrotonalNote>;
+    Measure const &measure, Tuning const &tuning, float base_frequency = 440.f,
+    float pb_range = 48.f) -> std::vector<MicrotonalNote>;
 
 [[nodiscard]] auto flatten_and_translate_to_midi_notes(
-    Phrase const &phrase, Tuning const &tuning,
-    float base_frequency = 440.f) -> std::vector<MicrotonalNote>;
+    Phrase const &phrase, Tuning const &tuning, float base_frequency = 440.f,
+    float pb_range = 48.f) -> std::vector<MicrotonalNote>;
 
 /**
  * @brief Flattens any Cell type into a vector of notes.
@@ -139,12 +141,14 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
  * @param bpm The beats per minute of the audio.
  * @param tuning The tuning to use for the MIDI notes.
  * @param base_frequency The base frequency of the tuning.
+ * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return EventTimeline
  */
 [[nodiscard]] auto translate_to_midi_timeline(Measure const &measure,
                                               std::uint32_t sample_rate, float bpm,
                                               Tuning const &tuning,
-                                              float base_frequency) -> EventTimeline;
+                                              float base_frequency,
+                                              float pb_range) -> EventTimeline;
 
 } // namespace sequence::midi
 #endif // SEQUENCY_MIDI_HPP

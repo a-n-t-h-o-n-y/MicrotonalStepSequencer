@@ -298,6 +298,10 @@ auto reverse(Cell cell) -> Cell
 
 auto repeat(Cell const &cell, std::size_t count) -> Cell
 {
+    if (count == 0)
+    {
+        throw std::invalid_argument{"Invalid count: " + std::to_string(count)};
+    }
     auto result = Sequence{};
     result.cells.reserve(count);
 

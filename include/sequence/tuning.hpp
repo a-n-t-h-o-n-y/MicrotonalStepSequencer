@@ -1,5 +1,6 @@
 #ifndef SEQUENCE_TUNING_HPP
 #define SEQUENCE_TUNING_HPP
+
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -24,12 +25,16 @@ struct Tuning
 
     std::vector<Interval_t> intervals{};
     Interval_t octave{};
+    std::string description{};
 
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
 #endif
-    auto operator==(Tuning const &) const -> bool = default;
+    auto operator==(Tuning const &other) const -> bool
+    {
+        return intervals == other.intervals && octave == other.octave;
+    }
     auto operator!=(Tuning const &) const -> bool = default;
 #if defined(__clang__)
 #pragma clang diagnostic pop
@@ -44,7 +49,6 @@ struct Tuning
  *
  * @param scala_file The Scala file to generate the Tuning from.
  * @return Tuning - The generated tuning.
- *
  * @throws std::runtime_error
  */
 [[nodiscard]] auto from_scala(std::filesystem::path const &scala_file) -> Tuning;
@@ -57,11 +61,9 @@ struct Tuning
  *
  * @param tuning The Tuning to generate the Scala file from.
  * @param file The file to write the Scala file to.
- *
  * @throws std::runtime_error if the file could not be opened.
  */
-auto to_scala(Tuning const &tuning, std::filesystem::path const &file,
-              std::string const &description = "") -> void;
+void to_scala(Tuning const &tuning, std::filesystem::path const &file);
 
 } // namespace sequence
 #endif // SEQUENCE_TUNING_HPP

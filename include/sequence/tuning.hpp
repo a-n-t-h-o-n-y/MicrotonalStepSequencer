@@ -2,6 +2,7 @@
 #define SEQUENCE_TUNING_HPP
 
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -27,18 +28,13 @@ struct Tuning
     Interval_t octave{};
     std::string description{};
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-#endif
     auto operator==(Tuning const &other) const -> bool
     {
-        return intervals == other.intervals && octave == other.octave;
+        // std::ranges::equal_to used to avoid float comparison warning.
+        return intervals == other.intervals &&
+               std::ranges::equal_to{}(octave, other.octave);
     }
     auto operator!=(Tuning const &) const -> bool = default;
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
 };
 
 /**

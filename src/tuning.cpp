@@ -21,6 +21,11 @@ auto from_scala(std::filesystem::path const &scala_file) -> Tuning
         throw std::runtime_error("Could not open file: " + scala_file.string());
     }
 
+    if (std::filesystem::file_size(scala_file) > (128 * 1'024 * 1'024))
+    {
+        throw std::runtime_error{"Scala file size exceeds 128MB"};
+    }
+
     auto tuning = Tuning{};
     auto &intervals = tuning.intervals;
     intervals.push_back(0.f); // The first interval is always 0

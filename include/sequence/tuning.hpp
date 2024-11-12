@@ -24,17 +24,17 @@ struct Tuning
 {
     using Interval_t = float;
 
-    std::vector<Interval_t> intervals{};
-    Interval_t octave{};
-    std::string description{};
+    std::vector<Interval_t> intervals;
+    Interval_t octave;
+    std::string description;
 
-    auto operator==(Tuning const &other) const -> bool
+    [[nodiscard]] auto operator==(Tuning const &other) const -> bool
     {
         // std::ranges::equal_to used to avoid float comparison warning.
         return intervals == other.intervals &&
                std::ranges::equal_to{}(octave, other.octave);
     }
-    auto operator!=(Tuning const &) const -> bool = default;
+    [[nodiscard]] auto operator!=(Tuning const &) const -> bool = default;
 };
 
 /**

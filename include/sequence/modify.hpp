@@ -26,8 +26,8 @@ namespace sequence::modify
  *
  * @throws std::invalid_argument If min is greater than max.
  */
-[[nodiscard]] auto randomize_pitch(Cell cell, Pattern const &pattern, int min,
-                                   int max) -> Cell;
+[[nodiscard]] auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max)
+    -> Cell;
 
 /**
  * @brief Randomize the note velocities in a given Cell.
@@ -103,8 +103,8 @@ namespace sequence::modify
  * @param amount The amount to shift by, can be positive, negative or zero.
  * @return Cell The velocity shifted Cell.
  */
-[[nodiscard]] auto shift_velocity(Cell cell, Pattern const &pattern,
-                                  float amount) -> Cell;
+[[nodiscard]] auto shift_velocity(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 /**
  * @brief Shift note delays by a constant amount.
@@ -169,8 +169,8 @@ namespace sequence::modify
  * @param velocity The velocity to set the note to.
  * @return Cell The velocity set Cell.
  */
-[[nodiscard]] auto set_velocity(Cell cell, Pattern const &pattern,
-                                float velocity) -> Cell;
+[[nodiscard]] auto set_velocity(Cell cell, Pattern const &pattern, float velocity)
+    -> Cell;
 
 /**
  * @brief Set the delay of a note to a constant value.
@@ -284,8 +284,8 @@ namespace sequence::modify
  * Sequence.
  * @return Cell The stretched Sequence.
  */
-[[nodiscard]] auto stretch(Cell const &cell, Pattern const &pattern,
-                           std::size_t amount) -> Cell;
+[[nodiscard]] auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount)
+    -> Cell;
 
 /**
  * @brief Compress a Cell by keeping every Cell in the Pattern and skipping the rest.
@@ -430,8 +430,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_velocity(Cell cell, Pattern const &pattern,
-                                     float amount) -> Cell;
+[[nodiscard]] auto humanize_velocity(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 /**
  * @brief Humanize the note delays in a Cell.
@@ -444,8 +444,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_delay(Cell cell, Pattern const &pattern,
-                                  float amount) -> Cell;
+[[nodiscard]] auto humanize_delay(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 /**
  * @brief Humanize the note gates in a Cell.
@@ -458,8 +458,8 @@ namespace sequence::modify
  * @param amount The amount to humanize by.
  * @return Cell The humanized Cell.
  */
-[[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern,
-                                 float amount) -> Cell;
+[[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern, float amount)
+    -> Cell;
 
 /**
  * @brief Fill a Sequence with Notes.

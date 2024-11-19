@@ -51,7 +51,7 @@ struct Pattern
  * @param input The string to parse.
  * @return Pattern The parsed pattern.
  * @exception std::invalid_argument Thrown when the input does not conform to the
- * expected pattern.
+ * pattern specification.
  */
 [[nodiscard]] auto parse_pattern(std::string const &input) -> Pattern;
 

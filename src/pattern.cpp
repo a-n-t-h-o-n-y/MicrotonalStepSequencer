@@ -24,19 +24,21 @@ namespace
  */
 [[nodiscard]] auto get_pattern_str(std::string const &x) -> std::string
 {
+    auto const strip = [](std::string const &input) -> std::string {
+        auto const begin =
+            std::find_if_not(std::cbegin(input), std::cend(input), ::isspace);
+        auto const end =
+            std::find_if_not(std::crbegin(input), std::crend(input), ::isspace).base();
+        return (end <= begin) ? std::string{} : std::string{begin, end};
+    };
+
     auto const it = std::find_if_not(std::cbegin(x), std::cend(x), [](char c) {
         return std::isdigit(c) || c == ' ' || c == '+';
     });
 
     auto result = std::string{std::cbegin(x), it};
 
-    auto const r_space_it = std::find(std::crbegin(result), std::crend(result), ' ');
-    if (r_space_it != std::crend(result))
-    {
-        result.erase((r_space_it + 1).base(), std::cend(result));
-    }
-
-    return result;
+    return strip(result);
 }
 
 } // namespace

@@ -54,13 +54,17 @@ struct MicrotonalNote
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return std::vector<MicrotonalNote>
  */
-[[nodiscard]] auto flatten_and_translate_to_midi_notes(
-    Measure const &measure, Tuning const &tuning, float base_frequency = 440.f,
-    float pb_range = 48.f) -> std::vector<MicrotonalNote>;
+[[nodiscard]] auto flatten_and_translate_to_midi_notes(Measure const &measure,
+                                                       Tuning const &tuning,
+                                                       float base_frequency = 440.f,
+                                                       float pb_range = 48.f)
+    -> std::vector<MicrotonalNote>;
 
-[[nodiscard]] auto flatten_and_translate_to_midi_notes(
-    Phrase const &phrase, Tuning const &tuning, float base_frequency = 440.f,
-    float pb_range = 48.f) -> std::vector<MicrotonalNote>;
+[[nodiscard]] auto flatten_and_translate_to_midi_notes(Phrase const &phrase,
+                                                       Tuning const &tuning,
+                                                       float base_frequency = 440.f,
+                                                       float pb_range = 48.f)
+    -> std::vector<MicrotonalNote>;
 
 /**
  * @brief Flattens any Cell type into a vector of notes.
@@ -103,11 +107,14 @@ struct SampleRange
  * note delay and gate are used, as well as the Measure's time signature and resolution.
  *
  * @param measure The measure to flatten.
+ * @param sample_rate
+ * @param bpm
  * @return std::vector<SampleRange>
  */
-[[nodiscard]] auto flatten_and_translate_to_sample_infos(
-    Phrase const &phrase, std::uint32_t sample_rate,
-    float bpm) -> std::vector<SampleRange>;
+[[nodiscard]] auto flatten_and_translate_to_sample_infos(Measure const &measure,
+                                                         std::uint32_t sample_rate,
+                                                         float bpm)
+    -> std::vector<SampleRange>;
 
 struct NoteOn
 {
@@ -147,8 +154,8 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
 [[nodiscard]] auto translate_to_midi_timeline(Measure const &measure,
                                               std::uint32_t sample_rate, float bpm,
                                               Tuning const &tuning,
-                                              float base_frequency,
-                                              float pb_range) -> EventTimeline;
+                                              float base_frequency, float pb_range)
+    -> EventTimeline;
 
 } // namespace sequence::midi
 #endif // SEQUENCY_MIDI_HPP

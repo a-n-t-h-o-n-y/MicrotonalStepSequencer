@@ -74,9 +74,9 @@ class PatternView
     PatternView(std::vector<T> &vec, Pattern const &pattern)
         : vec_{vec}, pattern_{pattern}, offset_index_{pattern.offset}
     {
-        if (pattern_.intervals.empty() || vec_.empty())
+        if (pattern_.intervals.empty())
         {
-            throw std::invalid_argument("Pattern or vector should not be empty.");
+            throw std::invalid_argument("PatternView: Pattern should not be empty.");
         }
     }
 
@@ -157,9 +157,10 @@ class ConstPatternView
     ConstPatternView(std::vector<T> const &vec, Pattern const &pattern)
         : vec_(vec), pattern_(pattern), offset_index_(pattern.offset)
     {
-        if (pattern_.intervals.empty() || vec_.empty())
+        if (pattern_.intervals.empty())
         {
-            throw std::invalid_argument("Pattern or vector should not be empty.");
+            throw std::invalid_argument(
+                "ConstPatternView: Pattern should not be empty.");
         }
     }
 

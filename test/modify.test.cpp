@@ -12,7 +12,7 @@
 using namespace sequence;
 using namespace sequence::test::helper;
 
-TEST_CASE("randomize_intervals", "[modify]")
+TEST_CASE("randomize_pitch", "[modify]")
 {
     auto const min = 10;
     auto const max = 20;
@@ -30,18 +30,18 @@ TEST_CASE("randomize_intervals", "[modify]")
         }};
 
         // Randomize the intervals in the sequence
-        auto const randomized_seq = modify::randomize_intervals(seq, min, max);
+        auto const randomized_seq = modify::randomize_pitch(seq, {0, {1}}, min, max);
 
         // Check that the randomized sequence has the same length
         REQUIRE(std::holds_alternative<Sequence>(randomized_seq));
         REQUIRE(std::get<Sequence>(randomized_seq).cells.size() == seq.cells.size());
 
-        // Check that each interval is within the expected range
+        // Check that each pitch is within the expected range
         for (auto const &cell : std::get<Sequence>(randomized_seq).cells)
         {
-            auto const interval = std::get<Note>(cell).interval;
-            REQUIRE(interval >= min);
-            REQUIRE(interval <= max);
+            auto const pitch = std::get<Note>(cell).pitch;
+            REQUIRE(pitch >= min);
+            REQUIRE(pitch <= max);
         }
     }
 
@@ -58,13 +58,13 @@ TEST_CASE("randomize_intervals", "[modify]")
         }};
 
         // Randomize the intervals in the sequence
-        auto const randomized_seq = modify::randomize_intervals(seq, min, max);
+        auto const randomized_seq = modify::randomize_pitch(seq, {0, {1}}, min, max);
 
         // Check that the randomized sequence has the same length
         REQUIRE(std::holds_alternative<Sequence>(randomized_seq));
         REQUIRE(std::get<Sequence>(randomized_seq).cells.size() == seq.cells.size());
 
-        // Check that each interval is within the expected range
+        // Check that each pitch is within the expected range
         for (auto const &cell : std::get<Sequence>(randomized_seq).cells)
         {
             REQUIRE(holds<Rest>(cell));
@@ -78,7 +78,7 @@ TEST_CASE("randomize_intervals", "[modify]")
             Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
-        REQUIRE_THROWS_AS(modify::randomize_intervals(seq, 10, -10),
+        REQUIRE_THROWS_AS(modify::randomize_pitch(seq, {0, {1}}, 10, -10),
                           std::invalid_argument);
     }
 
@@ -101,16 +101,16 @@ TEST_CASE("randomize_intervals", "[modify]")
         };
 
         // Randomize the intervals in the sequence
-        auto const randomized_seq = modify::randomize_intervals(seq, min, max);
+        auto const randomized_seq = modify::randomize_pitch(seq, {0, {1}}, min, max);
 
         // Check that the randomized sequence has the same length
         REQUIRE(std::holds_alternative<Sequence>(randomized_seq));
         REQUIRE(std::get<Sequence>(randomized_seq).cells.size() == seq.cells.size());
 
-        // Check that each interval is within the expected range
+        // Check that each pitch is within the expected range
         test::helper::check_sequence(randomized_seq, [&](Note const &note) {
-            REQUIRE(note.interval >= min);
-            REQUIRE(note.interval <= max);
+            REQUIRE(note.pitch >= min);
+            REQUIRE(note.pitch <= max);
         });
     }
 }
@@ -134,7 +134,7 @@ TEST_CASE("randomize_velocity", "[modify]")
 
         // Randomize the velocity in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_velocity(seq, min, max));
+            std::get<Sequence>(modify::randomize_velocity(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -155,7 +155,7 @@ TEST_CASE("randomize_velocity", "[modify]")
 
         // Randomize the velocity in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_velocity(seq, min, max));
+            std::get<Sequence>(modify::randomize_velocity(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -174,23 +174,23 @@ TEST_CASE("randomize_velocity", "[modify]")
             Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
-        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, 0.7f, 0.2f),
+        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, {0, {1}}, 0.7f, 0.2f),
                           std::invalid_argument);
 
         // min < 0
-        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, -0.5f, 0.4f),
+        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, {0, {1}}, -0.5f, 0.4f),
                           std::invalid_argument);
 
         // min > 1
-        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, 1.5f, 0.4f),
+        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, {0, {1}}, 1.5f, 0.4f),
                           std::invalid_argument);
 
         // max > 1
-        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, 0.2f, 1.5f),
+        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, {0, {1}}, 0.2f, 1.5f),
                           std::invalid_argument);
 
         // max < 0
-        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, 0.2f, -0.5f),
+        REQUIRE_THROWS_AS(modify::randomize_velocity(seq, {0, {1}}, 0.2f, -0.5f),
                           std::invalid_argument);
     }
     SECTION("SubSequences")
@@ -213,7 +213,7 @@ TEST_CASE("randomize_velocity", "[modify]")
 
         // Randomize the velocity in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_velocity(seq, min, max));
+            std::get<Sequence>(modify::randomize_velocity(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -245,7 +245,7 @@ TEST_CASE("randomize_delay", "[modify]")
 
         // Randomize the delay in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_delay(seq, min, max));
+            std::get<Sequence>(modify::randomize_delay(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -273,7 +273,7 @@ TEST_CASE("randomize_delay", "[modify]")
 
         // Randomize the delay in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_delay(seq, min, max));
+            std::get<Sequence>(modify::randomize_delay(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -292,23 +292,23 @@ TEST_CASE("randomize_delay", "[modify]")
             Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
-        REQUIRE_THROWS_AS(modify::randomize_delay(seq, 0.7f, 0.2f),
+        REQUIRE_THROWS_AS(modify::randomize_delay(seq, {0, {1}}, 0.7f, 0.2f),
                           std::invalid_argument);
 
         // min < 0
-        REQUIRE_THROWS_AS(modify::randomize_delay(seq, -0.5f, 0.4f),
+        REQUIRE_THROWS_AS(modify::randomize_delay(seq, {0, {1}}, -0.5f, 0.4f),
                           std::invalid_argument);
 
         // min > 1
-        REQUIRE_THROWS_AS(modify::randomize_delay(seq, 1.5f, 0.4f),
+        REQUIRE_THROWS_AS(modify::randomize_delay(seq, {0, {1}}, 1.5f, 0.4f),
                           std::invalid_argument);
 
         // max > 1
-        REQUIRE_THROWS_AS(modify::randomize_delay(seq, 0.2f, 1.5f),
+        REQUIRE_THROWS_AS(modify::randomize_delay(seq, {0, {1}}, 0.2f, 1.5f),
                           std::invalid_argument);
 
         // max < 0
-        REQUIRE_THROWS_AS(modify::randomize_delay(seq, 0.2f, -0.5f),
+        REQUIRE_THROWS_AS(modify::randomize_delay(seq, {0, {1}}, 0.2f, -0.5f),
                           std::invalid_argument);
     }
 
@@ -332,7 +332,7 @@ TEST_CASE("randomize_delay", "[modify]")
 
         // Randomize the delay in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_delay(seq, min, max));
+            std::get<Sequence>(modify::randomize_delay(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -364,7 +364,7 @@ TEST_CASE("randomize_gate", "[modify]")
 
         // Randomize the gate in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_gate(seq, min, max));
+            std::get<Sequence>(modify::randomize_gate(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -385,7 +385,7 @@ TEST_CASE("randomize_gate", "[modify]")
 
         // Randomize the gate in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_gate(seq, min, max));
+            std::get<Sequence>(modify::randomize_gate(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -404,23 +404,23 @@ TEST_CASE("randomize_gate", "[modify]")
             Sequence{{Note{0, 1.0f, 0.0f, 0.5f}, Rest{}, Note{2, 0.6f, 0.2f, 0.3f}}};
 
         // min > max
-        REQUIRE_THROWS_AS(modify::randomize_gate(seq, 0.7f, 0.2f),
+        REQUIRE_THROWS_AS(modify::randomize_gate(seq, {0, {1}}, 0.7f, 0.2f),
                           std::invalid_argument);
 
         // min < 0
-        REQUIRE_THROWS_AS(modify::randomize_gate(seq, -0.5f, 0.4f),
+        REQUIRE_THROWS_AS(modify::randomize_gate(seq, {0, {1}}, -0.5f, 0.4f),
                           std::invalid_argument);
 
         // min > 1
-        REQUIRE_THROWS_AS(modify::randomize_gate(seq, 1.5f, 0.4f),
+        REQUIRE_THROWS_AS(modify::randomize_gate(seq, {0, {1}}, 1.5f, 0.4f),
                           std::invalid_argument);
 
         // max > 1
-        REQUIRE_THROWS_AS(modify::randomize_gate(seq, 0.2f, 1.5f),
+        REQUIRE_THROWS_AS(modify::randomize_gate(seq, {0, {1}}, 0.2f, 1.5f),
                           std::invalid_argument);
 
         // max < 0
-        REQUIRE_THROWS_AS(modify::randomize_gate(seq, 0.2f, -0.5f),
+        REQUIRE_THROWS_AS(modify::randomize_gate(seq, {0, {1}}, 0.2f, -0.5f),
                           std::invalid_argument);
     }
 
@@ -444,7 +444,7 @@ TEST_CASE("randomize_gate", "[modify]")
 
         // Randomize the gate in the sequence
         auto const randomized_seq =
-            std::get<Sequence>(modify::randomize_gate(seq, min, max));
+            std::get<Sequence>(modify::randomize_gate(seq, {0, {1}}, min, max));
 
         // Check that the randomized sequence has the same length
         REQUIRE(randomized_seq.cells.size() == seq.cells.size());
@@ -457,7 +457,7 @@ TEST_CASE("randomize_gate", "[modify]")
     }
 }
 
-TEST_CASE("shift_interval", "[modify]")
+TEST_CASE("shift_pitch", "[modify]")
 {
     SECTION("Zero Shift")
     {
@@ -468,21 +468,22 @@ TEST_CASE("shift_interval", "[modify]")
             Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
-        // Shift the interval in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, 0));
+        // Shift the pitch in the sequence
+        auto const shifted_seq =
+            std::get<Sequence>(modify::shift_pitch(seq, {0, {1}}, 0));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
-        // Check that the shifted sequence has the same interval
+        // Check that the shifted sequence has the same pitch
         for (std::size_t i = 0; i < shifted_seq.cells.size(); ++i)
         {
             auto const &original_cell = seq.cells[i];
             auto const &shifted_cell = shifted_seq.cells[i];
             if (holds<Note>(shifted_cell))
             {
-                auto const interval = std::get<Note>(shifted_cell).interval;
-                REQUIRE(interval == std::get<Note>(original_cell).interval);
+                auto const pitch = std::get<Note>(shifted_cell).pitch;
+                REQUIRE(pitch == std::get<Note>(original_cell).pitch);
             }
         }
     }
@@ -498,21 +499,22 @@ TEST_CASE("shift_interval", "[modify]")
             Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
-        // Shift the interval in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, shift));
+        // Shift the pitch in the sequence
+        auto const shifted_seq =
+            std::get<Sequence>(modify::shift_pitch(seq, {0, {1}}, shift));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
-        // Check that the shifted sequence has the same interval
+        // Check that the shifted sequence has the same pitch
         for (std::size_t i = 0; i < shifted_seq.cells.size(); ++i)
         {
             auto const &original_cell = seq.cells[i];
             auto const &shifted_cell = shifted_seq.cells[i];
             if (holds<Note>(shifted_cell))
             {
-                auto const interval = std::get<Note>(shifted_cell).interval;
-                REQUIRE(interval == std::get<Note>(original_cell).interval + shift);
+                auto const pitch = std::get<Note>(shifted_cell).pitch;
+                REQUIRE(pitch == std::get<Note>(original_cell).pitch + shift);
             }
         }
     }
@@ -528,21 +530,22 @@ TEST_CASE("shift_interval", "[modify]")
             Note{2, 0.6f, 0.2f, 0.3f},
         }};
 
-        // Shift the interval in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, shift));
+        // Shift the pitch in the sequence
+        auto const shifted_seq =
+            std::get<Sequence>(modify::shift_pitch(seq, {0, {1}}, shift));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
-        // Check that the shifted sequence has the same interval
+        // Check that the shifted sequence has the same pitch
         for (std::size_t i = 0; i < shifted_seq.cells.size(); ++i)
         {
             auto const &original_cell = seq.cells[i];
             auto const &shifted_cell = shifted_seq.cells[i];
             if (holds<Note>(shifted_cell))
             {
-                auto const interval = std::get<Note>(shifted_cell).interval;
-                REQUIRE(interval == std::get<Note>(original_cell).interval + shift);
+                auto const pitch = std::get<Note>(shifted_cell).pitch;
+                REQUIRE(pitch == std::get<Note>(original_cell).pitch + shift);
             }
         }
     }
@@ -565,15 +568,16 @@ TEST_CASE("shift_interval", "[modify]")
             },
         };
 
-        // Shift the interval in the sequence
-        auto const shifted_seq = std::get<Sequence>(modify::shift_interval(seq, 2));
+        // Shift the pitch in the sequence
+        auto const shifted_seq =
+            std::get<Sequence>(modify::shift_pitch(seq, {0, {1}}, 2));
 
         // Check that the shifted sequence has the same length
         REQUIRE(shifted_seq.cells.size() == seq.cells.size());
 
         // Check that each gate is within the expected range
         test::helper::check_sequence(
-            shifted_seq, [&](Note const &note) { REQUIRE(note.interval == (5 + 2)); });
+            shifted_seq, [&](Note const &note) { REQUIRE(note.pitch == (5 + 2)); });
     }
 }
 
@@ -625,7 +629,8 @@ TEST_CASE("rotate", "[modify]")
 
         // Check that the rotated sequence is shifted.
         auto local_rotated = seq;
-        std::rotate(local_rotated.cells.begin(), local_rotated.cells.begin() + 4,
+        auto const shift = seq.cells.size() - (4 % seq.cells.size());
+        std::rotate(local_rotated.cells.begin(), local_rotated.cells.begin() + shift,
                     local_rotated.cells.end());
         REQUIRE(rotated_seq == local_rotated);
     }
@@ -640,8 +645,8 @@ TEST_CASE("rotate", "[modify]")
 
         // Check that the rotated sequence is shifted.
         auto local_rotated = seq;
-        std::rotate(local_rotated.cells.begin(),
-                    local_rotated.cells.begin() + (seq.cells.size() - 5),
+        auto const shift = (seq.cells.size() + 5) % seq.cells.size();
+        std::rotate(local_rotated.cells.begin(), local_rotated.cells.begin() + shift,
                     local_rotated.cells.end());
         REQUIRE(rotated_seq == local_rotated);
     }
@@ -657,7 +662,7 @@ TEST_CASE("rotate", "[modify]")
 
         // Check that the rotated sequence is shifted to the left by amount % seq.size()
         auto local_rotated = seq;
-        auto const shift = amount % seq.cells.size();
+        auto const shift = seq.cells.size() - (amount % seq.cells.size());
         std::rotate(local_rotated.cells.begin(), local_rotated.cells.begin() + shift,
                     local_rotated.cells.end());
         REQUIRE(rotated_seq == local_rotated);
@@ -865,7 +870,7 @@ TEST_CASE("quantize", "[modify]")
     SECTION("Quantization")
     {
         // Quantize the sequence
-        auto const quantized_seq = std::get<Sequence>(modify::quantize(seq));
+        auto const quantized_seq = std::get<Sequence>(modify::quantize(seq, {0, {1}}));
 
         // Check that the quantized sequence has the same length
         REQUIRE(quantized_seq.cells.size() == seq.cells.size());
@@ -919,7 +924,7 @@ TEST_CASE("mirror", "[modify]")
     SECTION("Mirror around zero")
     {
         // Mirror the sequence
-        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, 0));
+        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, {0, {1}}, 0));
 
         // Check that the mirrored sequence has the same length
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
@@ -927,14 +932,14 @@ TEST_CASE("mirror", "[modify]")
         // Create expected sequence
         Cell expected = seq;
         test::helper::modify_notes(expected,
-                                   [](Note &note) { note.interval = -note.interval; });
+                                   [](Note &note) { note.pitch = -note.pitch; });
         REQUIRE(mirrored_seq == expected);
     }
 
     SECTION("Mirror around +5")
     {
         // Mirror the sequence
-        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, 5));
+        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, {0, {1}}, 5));
 
         // Check that the mirrored sequence has the same length
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
@@ -942,14 +947,15 @@ TEST_CASE("mirror", "[modify]")
         // Create expected sequence
         Cell expected = seq;
         test::helper::modify_notes(
-            expected, [](Note &note) { note.interval = 5 + (5 - note.interval); });
+            expected, [](Note &note) { note.pitch = 5 + (5 - note.pitch); });
         REQUIRE(mirrored_seq == expected);
     }
 
     SECTION("Mirror around -10")
     {
         // Mirror the sequence
-        auto const mirrored_seq = std::get<Sequence>(modify::mirror(seq, -10));
+        auto const mirrored_seq =
+            std::get<Sequence>(modify::mirror(seq, {0, {1}}, -10));
 
         // Check that the mirrored sequence has the same length
         REQUIRE(mirrored_seq.cells.size() == seq.cells.size());
@@ -957,7 +963,7 @@ TEST_CASE("mirror", "[modify]")
         // Create expected sequence
         Cell expected = seq;
         test::helper::modify_notes(
-            expected, [](Note &note) { note.interval = -10 + (-10 - note.interval); });
+            expected, [](Note &note) { note.pitch = -10 + (-10 - note.pitch); });
         REQUIRE(mirrored_seq == expected);
     }
 }
@@ -1027,10 +1033,9 @@ TEST_CASE("repeat", "[modify]")
         },
     };
 
-    SECTION("Repeat 0 times")
+    SECTION("Repeat 0 times throws")
     {
-        auto const repeated_seq = std::get<Sequence>(modify::repeat(seq, 0));
-        REQUIRE(repeated_seq.cells.empty());
+        REQUIRE_THROWS_AS(modify::repeat(seq, 0), std::invalid_argument);
     }
 
     SECTION("Repeat 1 time")
@@ -1054,15 +1059,14 @@ TEST_CASE("stretch", "[modify]")
         Note{1, 1.0f, 0.0f, 0.5f},
     }};
 
-    SECTION("Stretch by 0")
+    SECTION("Stretch by 0 throws")
     {
-        auto const stretched_seq = std::get<Sequence>(modify::stretch(seq, 0));
-        REQUIRE(stretched_seq == Sequence{{Sequence{}, Sequence{}, Sequence{}}});
+        REQUIRE_THROWS_AS(modify::stretch(seq, {0, {1}}, 0), std::invalid_argument);
     }
 
     SECTION("Stretch by 1")
     {
-        auto const stretched_seq = modify::stretch(seq, 1);
+        auto const stretched_seq = modify::stretch(seq, {0, {1}}, 1);
         REQUIRE(stretched_seq == Sequence{{
                                      Sequence{{Note{0, 1.0f, 0.0f, 0.5f}}},
                                      Sequence{{Rest{}}},
@@ -1072,7 +1076,8 @@ TEST_CASE("stretch", "[modify]")
 
     SECTION("Stretch by 3")
     {
-        auto const stretched_seq = std::get<Sequence>(modify::stretch(seq, 3));
+        auto const stretched_seq =
+            std::get<Sequence>(modify::stretch(seq, {0, {1}}, 3));
 
         REQUIRE(stretched_seq == Sequence{{
                                      Sequence{{
@@ -1107,18 +1112,18 @@ TEST_CASE("compress", "[modify]")
 
     SECTION("Throws")
     {
-        REQUIRE_THROWS_AS(modify::compress(seq, 0), std::invalid_argument);
+        REQUIRE_THROWS_AS(modify::compress(seq, {0, {}}), std::invalid_argument);
     }
 
     SECTION("Compress by 1")
     {
-        auto const compressed_seq = modify::compress(seq, 1);
+        auto const compressed_seq = modify::compress(seq, {0, {1}});
         REQUIRE(compressed_seq == seq);
     }
 
     SECTION("Compress by 2")
     {
-        auto const compressed_seq = std::get<Sequence>(modify::compress(seq, 2));
+        auto const compressed_seq = std::get<Sequence>(modify::compress(seq, {0, {2}}));
         REQUIRE(compressed_seq.cells.size() == std::ceil(seq.cells.size() / 2.f));
 
         REQUIRE(compressed_seq.cells[0] == seq.cells[0]);
@@ -1128,7 +1133,7 @@ TEST_CASE("compress", "[modify]")
 
     SECTION("Compress by 4")
     {
-        auto const compressed_seq = std::get<Sequence>(modify::compress(seq, 4));
+        auto const compressed_seq = std::get<Sequence>(modify::compress(seq, {0, {4}}));
         REQUIRE(compressed_seq.cells.size() == std::ceil(seq.cells.size() / 4.f));
 
         REQUIRE(compressed_seq.cells[0] == seq.cells[0]);
@@ -1151,7 +1156,8 @@ TEST_CASE("compress", "[modify]")
             Note{1, 1.0f, 0.0f, 0.5f},
         }};
 
-        auto const compressed_seq = std::get<Sequence>(modify::compress(seq2, 2));
+        auto const compressed_seq =
+            std::get<Sequence>(modify::compress(seq2, {0, {2}}));
         REQUIRE(compressed_seq.cells.size() == std::ceil(seq2.cells.size() / 2.f));
 
         REQUIRE(compressed_seq.cells[0] == seq2.cells[0]);

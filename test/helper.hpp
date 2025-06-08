@@ -23,9 +23,7 @@ template <typename T, typename X>
 
 template <typename Fn>
 concept NoteChecker = requires(Fn fn, Note const &note) {
-    {
-        fn(note)
-    } -> std::same_as<void>;
+    { fn(note) } -> std::same_as<void>;
 };
 
 template <NoteChecker Fn>
@@ -77,7 +75,7 @@ inline auto print_sequence(Cell const &cell, int indent = 0) -> void
     std::visit(overload{
                    [&](Note const &note) {
                        std::cout << std::string(indent * 2, ' ');
-                       std::cout << "Note(interval=" << note.interval
+                       std::cout << "Note(pitch=" << note.pitch
                                  << ", velocity=" << note.velocity
                                  << ", delay=" << note.delay << ", gate=" << note.gate
                                  << ")\n";

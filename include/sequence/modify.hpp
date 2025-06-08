@@ -280,8 +280,8 @@ namespace sequence::modify
  *
  * @param cell The Cell to repeat.
  * @param pattern The Pattern to apply across Sequences.
- * @param amount The number of times to repeat each Cell, if zero, returns an empty
- * Sequence.
+ * @param amount The number of times to repeat each Cell.
+ * @throws std::invalid_argument if \p amount is zero.
  * @return Cell The stretched Sequence.
  */
 [[nodiscard]] auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount)

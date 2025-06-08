@@ -14,7 +14,7 @@ TEST_CASE("create_midi_note", "[midi]")
 {
     SECTION("throw if tuning is empty")
     {
-        REQUIRE_THROWS_AS(midi::create_midi_note(0, {}, 0.f), std::invalid_argument);
+        REQUIRE_THROWS_AS(midi::create_midi_note(0, {}, 0.f, 1), std::invalid_argument);
     }
 
     SECTION("12edo (12 equal divisions of the octave)")
@@ -22,12 +22,13 @@ TEST_CASE("create_midi_note", "[midi]")
         auto const tuning = Tuning{
             {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
             1200,
+            "description",
         };
         auto const tuning_base = 60.f;
 
         for (auto i = 0; i < (int)(tuning.intervals.size() + 1); ++i)
         {
-            auto const note = midi::create_midi_note(i, tuning, tuning_base);
+            auto const note = midi::create_midi_note(i, tuning, tuning_base, 1);
             REQUIRE((int)note.note == 60 + i);
             REQUIRE(note.pitch_bend == 8192);
         }
@@ -40,6 +41,7 @@ TEST_CASE("create_midi_note", "[midi]")
              578.080960f, 695.623009f, 795.623009f, 895.623009f, 1013.165056f,
              1086.869026f},
             1200.f,
+            "description",
         };
 
         SECTION("tuning_base = 60")
@@ -47,22 +49,22 @@ TEST_CASE("create_midi_note", "[midi]")
             auto const tuning_base = 60.f;
 
             {
-                auto const note = midi::create_midi_note(0, tuning, tuning_base);
+                auto const note = midi::create_midi_note(0, tuning, tuning_base, 1);
                 REQUIRE(note.note == 60);
                 REQUIRE(note.pitch_bend == 8192);
             }
             {
-                auto const note = midi::create_midi_note(1, tuning, tuning_base);
+                auto const note = midi::create_midi_note(1, tuning, tuning_base, 1);
                 REQUIRE(note.note == 60);
                 REQUIRE(note.pitch_bend == 15308);
             }
             {
-                auto const note = midi::create_midi_note(2, tuning, tuning_base);
+                auto const note = midi::create_midi_note(2, tuning, tuning_base, 1);
                 REQUIRE(note.note == 61);
                 REQUIRE(note.pitch_bend == 16025);
             }
             {
-                auto const note = midi::create_midi_note(12, tuning, tuning_base);
+                auto const note = midi::create_midi_note(12, tuning, tuning_base, 1);
                 REQUIRE(note.note == 72);
                 REQUIRE(note.pitch_bend == 8192);
             }
@@ -72,22 +74,22 @@ TEST_CASE("create_midi_note", "[midi]")
             auto const tuning_base = 10.5f;
 
             {
-                auto const note = midi::create_midi_note(0, tuning, tuning_base);
+                auto const note = midi::create_midi_note(0, tuning, tuning_base, 1);
                 REQUIRE(note.note == 10);
                 REQUIRE(note.pitch_bend == 12288);
             }
             {
-                auto const note = midi::create_midi_note(1, tuning, tuning_base);
+                auto const note = midi::create_midi_note(1, tuning, tuning_base, 1);
                 REQUIRE(note.note == 11);
                 REQUIRE(note.pitch_bend == 11212);
             }
             {
-                auto const note = midi::create_midi_note(2, tuning, tuning_base);
+                auto const note = midi::create_midi_note(2, tuning, tuning_base, 1);
                 REQUIRE(note.note == 12);
                 REQUIRE(note.pitch_bend == 11929);
             }
             {
-                auto const note = midi::create_midi_note(12, tuning, tuning_base);
+                auto const note = midi::create_midi_note(12, tuning, tuning_base, 1);
                 REQUIRE(note.note == 22);
                 REQUIRE(note.pitch_bend == 12288);
             }
@@ -96,17 +98,17 @@ TEST_CASE("create_midi_note", "[midi]")
         {
             auto const tuning_base = 10.5f;
             {
-                auto const note = midi::create_midi_note(13, tuning, tuning_base);
+                auto const note = midi::create_midi_note(13, tuning, tuning_base, 1);
                 REQUIRE(note.note == 23);
                 REQUIRE(note.pitch_bend == 11212);
             }
             {
-                auto const note = midi::create_midi_note(14, tuning, tuning_base);
+                auto const note = midi::create_midi_note(14, tuning, tuning_base, 1);
                 REQUIRE(note.note == 24);
                 REQUIRE(note.pitch_bend == 11929);
             }
             {
-                auto const note = midi::create_midi_note(15, tuning, tuning_base);
+                auto const note = midi::create_midi_note(15, tuning, tuning_base, 1);
                 REQUIRE(note.note == 25);
                 REQUIRE(note.pitch_bend == 12646);
             }
@@ -116,17 +118,17 @@ TEST_CASE("create_midi_note", "[midi]")
         {
             auto const tuning_base = 10.5f;
             {
-                auto const note = midi::create_midi_note(-1, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-1, tuning, tuning_base, 1);
                 REQUIRE((int)note.note == 9);
                 REQUIRE(note.pitch_bend == 11212);
             }
             {
-                auto const note = midi::create_midi_note(-2, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-2, tuning, tuning_base, 1);
                 REQUIRE(note.note == 8);
                 REQUIRE(note.pitch_bend == 13366);
             }
             {
-                auto const note = midi::create_midi_note(-3, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-3, tuning, tuning_base, 1);
                 REQUIRE(note.note == 7);
                 REQUIRE(note.pitch_bend == 11929);
             }
@@ -136,17 +138,17 @@ TEST_CASE("create_midi_note", "[midi]")
         {
             auto const tuning_base = 40.75f;
             {
-                auto const note = midi::create_midi_note(-13, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-13, tuning, tuning_base, 1);
                 REQUIRE(note.note == 27);
                 REQUIRE(note.pitch_bend == 13260);
             }
             {
-                auto const note = midi::create_midi_note(-17, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-17, tuning, tuning_base, 1);
                 REQUIRE(note.note == 23);
                 REQUIRE(note.pitch_bend == 13977);
             }
             {
-                auto const note = midi::create_midi_note(-25, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-25, tuning, tuning_base, 1);
                 REQUIRE(note.note == 15);
                 REQUIRE(note.pitch_bend == 13260);
             }
@@ -156,12 +158,12 @@ TEST_CASE("create_midi_note", "[midi]")
         {
             auto const tuning_base = 10.5f;
             {
-                auto const note = midi::create_midi_note(-11, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-11, tuning, tuning_base, 1);
                 REQUIRE(note.note == 0);
                 REQUIRE(note.pitch_bend == 8192);
             }
             {
-                auto const note = midi::create_midi_note(-100, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-100, tuning, tuning_base, 1);
                 REQUIRE(note.note == 0);
                 REQUIRE(note.pitch_bend == 8192);
             }
@@ -171,12 +173,12 @@ TEST_CASE("create_midi_note", "[midi]")
         {
             auto const tuning_base = 100.f;
             {
-                auto const note = midi::create_midi_note(28, tuning, tuning_base);
+                auto const note = midi::create_midi_note(28, tuning, tuning_base, 1);
                 REQUIRE(note.note == 127);
                 REQUIRE(note.pitch_bend == 8192);
             }
             {
-                auto const note = midi::create_midi_note(156, tuning, tuning_base);
+                auto const note = midi::create_midi_note(156, tuning, tuning_base, 1);
                 REQUIRE(note.note == 127);
                 REQUIRE(note.pitch_bend == 8192);
             }
@@ -184,25 +186,25 @@ TEST_CASE("create_midi_note", "[midi]")
     }
     SECTION("Single Note Tuning")
     {
-        auto const tuning = Tuning{{0.f}, 1200.f};
+        auto const tuning = Tuning{{0.f}, 1200.f, "description"};
         auto const tuning_base = 63.f;
         {
-            auto const note = midi::create_midi_note(0, tuning, tuning_base);
+            auto const note = midi::create_midi_note(0, tuning, tuning_base, 1);
             REQUIRE(note.note == 63);
             REQUIRE(note.pitch_bend == 8192);
         }
         {
-            auto const note = midi::create_midi_note(1, tuning, tuning_base);
+            auto const note = midi::create_midi_note(1, tuning, tuning_base, 1);
             REQUIRE(note.note == 75);
             REQUIRE(note.pitch_bend == 8192);
         }
         {
-            auto const note = midi::create_midi_note(-1, tuning, tuning_base);
+            auto const note = midi::create_midi_note(-1, tuning, tuning_base, 1);
             REQUIRE(note.note == 51);
             REQUIRE(note.pitch_bend == 8192);
         }
         {
-            auto const note = midi::create_midi_note(-2, tuning, tuning_base);
+            auto const note = midi::create_midi_note(-2, tuning, tuning_base, 1);
             REQUIRE(note.note == 39);
             REQUIRE(note.pitch_bend == 8192);
         }
@@ -214,32 +216,33 @@ TEST_CASE("create_midi_note", "[midi]")
             {0.f, 146.3f, 292.6f, 438.9f, 585.2f, 731.5f, 877.8f, 1024.1f, 1170.4f,
              1316.7f, 1463.0f, 1609.3f, 1755.7f},
             1902.f,
+            "description",
         };
         auto const tuning_base = 60.f;
         SECTION("Positive Intervals")
         {
             {
-                auto const note = midi::create_midi_note(0, tuning, tuning_base);
+                auto const note = midi::create_midi_note(0, tuning, tuning_base, 1);
                 REQUIRE(note.note == 60);
                 REQUIRE(note.pitch_bend == 8192);
             }
             {
-                auto const note = midi::create_midi_note(1, tuning, tuning_base);
+                auto const note = midi::create_midi_note(1, tuning, tuning_base, 1);
                 REQUIRE(note.note == 61);
                 REQUIRE(note.pitch_bend == 11984);
             }
             {
-                auto const note = midi::create_midi_note(12, tuning, tuning_base);
+                auto const note = midi::create_midi_note(12, tuning, tuning_base, 1);
                 REQUIRE(note.note == 77);
                 REQUIRE(note.pitch_bend == 12754);
             }
             {
-                auto const note = midi::create_midi_note(13, tuning, tuning_base);
+                auto const note = midi::create_midi_note(13, tuning, tuning_base, 1);
                 REQUIRE(note.note == 79);
                 REQUIRE(note.pitch_bend == 8355);
             }
             {
-                auto const note = midi::create_midi_note(14, tuning, tuning_base);
+                auto const note = midi::create_midi_note(14, tuning, tuning_base, 1);
                 REQUIRE(note.note == 80);
                 REQUIRE(note.pitch_bend == 12148);
             }
@@ -247,22 +250,22 @@ TEST_CASE("create_midi_note", "[midi]")
         SECTION("Negative Intervals")
         {
             {
-                auto const note = midi::create_midi_note(-1, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-1, tuning, tuning_base, 1);
                 REQUIRE(note.note == 58);
                 REQUIRE(note.pitch_bend == 12591);
             }
             {
-                auto const note = midi::create_midi_note(-12, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-12, tuning, tuning_base, 1);
                 REQUIRE(note.note == 42);
                 REQUIRE(note.pitch_bend == 11821);
             }
             {
-                auto const note = midi::create_midi_note(-13, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-13, tuning, tuning_base, 1);
                 REQUIRE(note.note == 40);
                 REQUIRE(note.pitch_bend == 16220);
             }
             {
-                auto const note = midi::create_midi_note(-14, tuning, tuning_base);
+                auto const note = midi::create_midi_note(-14, tuning, tuning_base, 1);
                 REQUIRE(note.note == 39);
                 REQUIRE(note.pitch_bend == 12427);
             }
@@ -275,6 +278,7 @@ TEST_CASE("flatten_and_translate_to_midi_notes", "[midi]")
     auto const tuning = Tuning{
         {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
         1200,
+        "description",
     };
 
     auto const measure = [] {
@@ -351,6 +355,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
     auto const tuning = Tuning{
         {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
         1200,
+        "description",
     };
 
     SECTION("Straight")
@@ -377,7 +382,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }();
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+            midi::flatten_and_translate_to_sample_infos(measure, 44100, 120);
 
         REQUIRE(infos.size() == 12);
 
@@ -424,7 +429,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }();
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+            midi::flatten_and_translate_to_sample_infos(measure, 44100, 120);
 
         REQUIRE(infos[0].begin == 0);
         REQUIRE(infos[0].end == 1'837);
@@ -469,7 +474,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }();
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+            midi::flatten_and_translate_to_sample_infos(measure, 44100, 120);
 
         REQUIRE(infos[0].begin == 1'837);
         REQUIRE(infos[0].end == 3'675);
@@ -514,7 +519,7 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }();
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos({measure}, 44100, 120);
+            midi::flatten_and_translate_to_sample_infos(measure, 44100, 120);
 
         REQUIRE(infos[0].begin == 1'837);
         REQUIRE(infos[0].end == 3'307);
@@ -575,10 +580,16 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
     auto const tuning = Tuning{
         {0, 50, 100, 150, 200},
         1200,
+        "description",
     };
 
-    auto const timeline = midi::translate_to_midi_timeline(
-        std::vector{measure1, measure2}, 44100, 120, tuning, 440.f);
+    auto const timeline =
+        midi::translate_to_midi_timeline(measure1, 44100, 120, tuning, 440.f, 1);
 
     // test::helper::print_midi_event_timeline(timeline);
+
+    auto const timeline2 =
+        midi::translate_to_midi_timeline(measure2, 44100, 120, tuning, 440.f, 1);
+
+    // test::helper::print_midi_event_timeline(timeline2);
 }

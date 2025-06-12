@@ -2,7 +2,10 @@
 
 #include <variant>
 
+#include "helper.hpp"
 #include <sequence/measure.hpp>
+
+using namespace sequence::test::helper;
 
 TEST_CASE("create_measure", "[measure]")
 {
@@ -16,34 +19,34 @@ TEST_CASE("create_measure", "[measure]")
     SECTION("returns a measure with the correct time signature")
     {
         auto const measure = create_measure({4, 4}, 1);
-        REQUIRE(measure.time_signature.numerator == 4);
-        REQUIRE(measure.time_signature.denominator == 4);
+        REQUIRE(measure.time_signature ==
+                TimeSignature{.numerator = 4, .denominator = 4});
     }
 
     SECTION("returns a measure with the correct number of cells")
     {
         auto const measure = create_measure({4, 4}, 1);
-        REQUIRE(std::holds_alternative<Sequence>(measure.cell));
-        REQUIRE(std::get<Sequence>(measure.cell).cells.size() == 4);
+        REQUIRE(holds<Sequence>(measure.cell));
+        REQUIRE(get<Sequence>(measure.cell).cells.size() == 4);
     }
 
     SECTION(
         "returns a measure with the correct number of cells when cell_resolution > 1")
     {
         auto const measure = create_measure({4, 4}, 2);
-        REQUIRE(std::holds_alternative<Sequence>(measure.cell));
-        REQUIRE(std::get<Sequence>(measure.cell).cells.size() == 8);
+        REQUIRE(holds<Sequence>(measure.cell));
+        REQUIRE(get<Sequence>(measure.cell).cells.size() == 8);
     }
 
     SECTION("returns a measure with sequence of Rest cells")
     {
         auto const measure = create_measure({4, 4}, 1);
-        REQUIRE(std::holds_alternative<Sequence>(measure.cell));
-        auto const &cells = std::get<Sequence>(measure.cell).cells;
+        REQUIRE(holds<Sequence>(measure.cell));
+        auto const &cells = get<Sequence>(measure.cell).cells;
 
-        REQUIRE(std::holds_alternative<Rest>(cells[0]));
-        REQUIRE(std::holds_alternative<Rest>(cells[1]));
-        REQUIRE(std::holds_alternative<Rest>(cells[2]));
-        REQUIRE(std::holds_alternative<Rest>(cells[3]));
+        REQUIRE(holds<Rest>(cells[0]));
+        REQUIRE(holds<Rest>(cells[1]));
+        REQUIRE(holds<Rest>(cells[2]));
+        REQUIRE(holds<Rest>(cells[3]));
     }
 }

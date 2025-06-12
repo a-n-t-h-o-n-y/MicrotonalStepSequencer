@@ -16,9 +16,21 @@ namespace sequence::test::helper
 
 /// Shorthand for std::holds_alternative
 template <typename T, typename X>
-[[nodiscard]] inline auto holds(X const &x) -> bool
+[[nodiscard]] auto holds(X const &x) -> bool
 {
-    return std::holds_alternative<T>(x);
+    return std::holds_alternative<T>(x.element);
+}
+
+template <typename T, typename X>
+[[nodiscard]] auto get(X &x) -> T &
+{
+    return std::get<T>(x.element);
+}
+
+template <typename T, typename X>
+[[nodiscard]] auto get(X const &x) -> T const &
+{
+    return std::get<T>(x.element);
 }
 
 template <typename Fn>
@@ -41,7 +53,7 @@ auto check_sequence(Cell const &cell, Fn &&checker) -> void
                        }
                    },
                },
-               cell);
+               cell.element);
 }
 
 template <typename Fn>
@@ -59,7 +71,7 @@ auto modify_notes(Cell &cell, Fn &&modifier) -> void
                        }
                    },
                },
-               cell);
+               cell.element);
 }
 
 /**
@@ -90,7 +102,7 @@ inline auto print_sequence(Cell const &cell, int indent = 0) -> void
                        std::cout << ")\n";
                    },
                },
-               cell);
+               cell.element);
 }
 
 inline auto print_midi_event_timeline(midi::EventTimeline const &timeline) -> void

@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <numeric>
 #include <stdexcept>
 #include <utility>
 #include <variant>
@@ -56,8 +57,9 @@ auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
         static_cast<std::uint16_t>(8'192 + (fractional * 8'192.f / pb_range))};
 }
 
-auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning, float tuning_base,
-                              float pb_range) -> std::vector<MicrotonalNote>
+auto create_midi_note_visitor(MusicElement const &element, Tuning const &tuning,
+                              float tuning_base, float pb_range)
+    -> std::vector<MicrotonalNote>
 {
     return std::visit(utility::overload{
                           [&](Note const &note) -> std::vector<MicrotonalNote> {
@@ -72,19 +74,19 @@ auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning, float tuni
                               for (auto const &subcell : seq.cells)
                               {
                                   auto const results = create_midi_note_visitor(
-                                      subcell, tuning, tuning_base, pb_range);
+                                      subcell.element, tuning, tuning_base, pb_range);
                                   std::copy(std::cbegin(results), std::cend(results),
                                             std::back_inserter(notes));
                               }
                               return notes;
                           },
                       },
-                      cell);
+                      element);
 }
 
 auto flatten_and_translate_to_midi_notes(Measure const &measure, Tuning const &tuning,
-                                         float base_frequency,
-                                         float pb_range) -> std::vector<MicrotonalNote>
+                                         float base_frequency, float pb_range)
+    -> std::vector<MicrotonalNote>
 {
     constexpr auto a4 = 69;       // MIDI note number for A4
     constexpr auto a4_hz = 440.f; // Frequency of A4
@@ -92,10 +94,11 @@ auto flatten_and_translate_to_midi_notes(Measure const &measure, Tuning const &t
     auto const base_midi_note =
         12.f * std::log2(base_frequency / a4_hz) + static_cast<float>(a4);
 
-    return create_midi_note_visitor(measure.cell, tuning, base_midi_note, pb_range);
+    return create_midi_note_visitor(measure.cell.element, tuning, base_midi_note,
+                                    pb_range);
 }
 
-auto flatten_notes(Cell const &cell) -> std::vector<Note>
+auto flatten_notes(MusicElement const &element) -> std::vector<Note>
 {
     auto notes = std::vector<Note>{};
     std::visit(utility::overload{
@@ -104,13 +107,13 @@ auto flatten_notes(Cell const &cell) -> std::vector<Note>
                    [&](Sequence const &seq) {
                        for (auto const &child : seq.cells)
                        {
-                           auto const child_notes = flatten_notes(child);
+                           auto const child_notes = flatten_notes(child.element);
                            std::copy(std::cbegin(child_notes), std::cend(child_notes),
                                      std::back_inserter(notes));
                        }
                    },
                },
-               cell);
+               element);
     return notes;
 }
 
@@ -120,7 +123,7 @@ auto flatten_notes(Phrase const &phrase) -> std::vector<Note>
 
     for (auto const &measure : phrase)
     {
-        auto const measure_notes = flatten_notes(measure.cell);
+        auto const measure_notes = flatten_notes(measure.cell.element);
         std::copy(std::cbegin(measure_notes), std::cend(measure_notes),
                   std::back_inserter(notes));
     }
@@ -128,8 +131,8 @@ auto flatten_notes(Phrase const &phrase) -> std::vector<Note>
     return notes;
 }
 
-auto note_sample_infos(Cell const &cell, std::uint32_t total_samples,
-                       float offset) -> std::vector<SampleRange>
+auto note_sample_infos(Cell const &cell, std::uint32_t total_samples, float offset)
+    -> std::vector<SampleRange>
 {
     return std::visit(
         utility::overload{
@@ -145,30 +148,38 @@ auto note_sample_infos(Cell const &cell, std::uint32_t total_samples,
             },
             [](Rest const &) { return std::vector<SampleRange>{}; },
             [&](Sequence const &seq) {
-                float const samples_per_cell =
-                    (float)(total_samples) / (float)seq.cells.size();
+                auto const sample_count_from_weight = [&seq, total_samples] {
+                    auto const total_weight = std::accumulate(
+                        std::cbegin(seq.cells), std::cend(seq.cells), 0.f,
+                        [](float sum, Cell const &c) { return sum + c.weight; });
+                    return [total_weight, total_samples](float weight) {
+                        return static_cast<std::uint32_t>(
+                            std::round((weight / total_weight) * total_samples));
+                    };
+                }();
+
                 auto infos = std::vector<SampleRange>{};
                 for (auto const &c : seq.cells)
                 {
-                    auto const result = note_sample_infos(
-                        c, static_cast<std::uint32_t>(samples_per_cell), offset);
+                    auto const sample_count = sample_count_from_weight(c.weight);
+                    auto const result = note_sample_infos(c, sample_count, offset);
                     std::copy(std::cbegin(result), std::cend(result),
                               std::back_inserter(infos));
-                    offset += samples_per_cell;
+                    offset += sample_count;
                 }
                 return infos;
             },
         },
-        cell);
+        cell.element);
 }
 
 auto flatten_and_translate_to_sample_infos(Measure const &measure,
-                                           std::uint32_t sample_rate,
-                                           float bpm) -> std::vector<SampleRange>
+                                           std::uint32_t sample_rate, float bpm)
+    -> std::vector<SampleRange>
 {
 
     auto const samples_per_measure = samples_count(measure, sample_rate, bpm);
-    return note_sample_infos(measure.cell, samples_per_measure, 0);
+    return note_sample_infos({measure.cell.element}, samples_per_measure, 0);
 }
 
 auto translate_to_midi_timeline(Measure const &measure, std::uint32_t sample_rate,
@@ -183,7 +194,7 @@ auto translate_to_midi_timeline(Measure const &measure, std::uint32_t sample_rat
     auto const midi_notes =
         flatten_and_translate_to_midi_notes(measure, tuning, base_frequency, pb_range);
 
-    auto const notes = flatten_notes(measure.cell);
+    auto const notes = flatten_notes(measure.cell.element);
 
     assert(ranges.size() == midi_notes.size());
     assert(ranges.size() == notes.size());

@@ -23,6 +23,9 @@ struct MicrotonalNote
 {
     std::uint8_t note = 60;
     std::uint16_t pitch_bend = 8192;
+
+    auto operator==(MicrotonalNote const &) const -> bool = default;
+    auto operator!=(MicrotonalNote const &) const -> bool = default;
 };
 
 /**
@@ -41,8 +44,9 @@ struct MicrotonalNote
 [[nodiscard]] auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
                                     float pb_range) -> MicrotonalNote;
 
-[[nodiscard]] auto create_midi_note_visitor(Cell const &cell, Tuning const &tuning,
-                                            float tuning_base, float pb_range)
+[[nodiscard]] auto create_midi_note_visitor(MusicElement const &element,
+                                            Tuning const &tuning, float tuning_base,
+                                            float pb_range)
     -> std::vector<MicrotonalNote>;
 
 /**
@@ -71,10 +75,10 @@ struct MicrotonalNote
  *
  * Only the Notes are returned, including Notes in subsequences, rests are ignored.
  *
- * @param cell The Cell to flatten.
+ * @param element The MusicElement to flatten.
  * @return std::vector<Note>
  */
-[[nodiscard]] auto flatten_notes(Cell const &cell) -> std::vector<Note>;
+[[nodiscard]] auto flatten_notes(MusicElement const &element) -> std::vector<Note>;
 
 [[nodiscard]] auto flatten_notes(Phrase const &phrase) -> std::vector<Note>;
 
@@ -83,6 +87,9 @@ struct SampleRange
 {
     std::uint32_t begin;
     std::uint32_t end;
+
+    auto operator==(SampleRange const &) const -> bool = default;
+    auto operator!=(SampleRange const &) const -> bool = default;
 };
 
 /**
@@ -120,16 +127,25 @@ struct NoteOn
 {
     std::uint8_t note;
     std::uint8_t velocity;
+
+    auto operator==(NoteOn const &) const -> bool = default;
+    auto operator!=(NoteOn const &) const -> bool = default;
 };
 
 struct NoteOff
 {
     std::uint8_t note;
+
+    auto operator==(NoteOff const &) const -> bool = default;
+    auto operator!=(NoteOff const &) const -> bool = default;
 };
 
 struct PitchBend
 {
     std::uint16_t value;
+
+    auto operator==(PitchBend const &) const -> bool = default;
+    auto operator!=(PitchBend const &) const -> bool = default;
 };
 
 using Event = std::variant<NoteOn, NoteOff, PitchBend>;

@@ -12,22 +12,22 @@ namespace sequence::generate
 
 auto empty(std::size_t size) -> Sequence
 {
-    return Sequence{std::vector<Cell>(size, Rest{})};
+    return Sequence{std::vector<Cell>(size, {Rest{}})};
 }
 
 auto full(std::size_t size, Note note) -> Sequence
 {
-    return Sequence{std::vector<Cell>(size, note)};
+    return Sequence{std::vector<Cell>(size, {note})};
 }
 
 auto interval(std::size_t size, std::size_t interval, std::size_t offset, Note note)
     -> Sequence
 {
-    auto seq = Sequence{std::vector<Cell>(size, Rest{})};
+    auto seq = Sequence{std::vector<Cell>(size, {Rest{}})};
 
     for (auto i = offset; i < size; i += interval)
     {
-        seq.cells[i] = note;
+        seq.cells[i].element = note;
     }
 
     return seq;
@@ -40,7 +40,7 @@ auto random(std::size_t size, float density, Note note) -> Sequence
         throw std::out_of_range("Invalid arguments");
     }
 
-    auto seq = Sequence{std::vector<Cell>(size, Rest{})};
+    auto seq = Sequence{std::vector<Cell>(size, {Rest{}})};
 
     auto rd = std::random_device{};
     auto gen = std::mt19937{rd()};
@@ -50,7 +50,7 @@ auto random(std::size_t size, float density, Note note) -> Sequence
     {
         if (dist(gen) < density)
         {
-            cell = note;
+            cell.element = note;
         }
     }
 

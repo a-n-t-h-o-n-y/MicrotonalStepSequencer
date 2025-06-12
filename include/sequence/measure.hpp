@@ -18,7 +18,7 @@ namespace sequence
  */
 struct Measure
 {
-    Cell cell = Rest{};
+    Cell cell = {.element = Rest{}, .weight = 1.f};
     TimeSignature time_signature = {4, 4};
 
     auto operator==(Measure const &) const -> bool = default;

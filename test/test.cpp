@@ -14,20 +14,20 @@ using namespace sequence::test::helper;
 TEST_CASE("Sequence", "[sequence]")
 {
     auto s = Sequence{};
-    s.cells.push_back(Note{0, 0.5, 0.5, 0.5});
-    s.cells.push_back(Rest{});
-    s.cells.push_back(Rest{});
-    s.cells.push_back(Sequence{});
-    std::get<Sequence>(s.cells[3]).cells.push_back(Note{0, 0.5, 0.5, 0.5});
-    std::get<Sequence>(s.cells[3]).cells.push_back(Rest{});
-    std::get<Sequence>(s.cells[3]).cells.push_back(Rest{});
+    s.cells.push_back({Note{0, 0.5, 0.5, 0.5}});
+    s.cells.push_back({Rest{}});
+    s.cells.push_back({Rest{}});
+    s.cells.push_back({Sequence{}});
+    get<Sequence>(s.cells[3]).cells.push_back({Note{0, 0.5, 0.5, 0.5}});
+    get<Sequence>(s.cells[3]).cells.push_back({Rest{}});
+    get<Sequence>(s.cells[3]).cells.push_back({Rest{}});
     REQUIRE(holds<Note>(s.cells[0]));
     REQUIRE(holds<Rest>(s.cells[1]));
     REQUIRE(holds<Rest>(s.cells[2]));
     REQUIRE(holds<Sequence>(s.cells[3]));
-    REQUIRE(holds<Note>(std::get<Sequence>(s.cells[3]).cells[0]));
-    REQUIRE(holds<Rest>(std::get<Sequence>(s.cells[3]).cells[1]));
-    REQUIRE(holds<Rest>(std::get<Sequence>(s.cells[3]).cells[2]));
+    REQUIRE(holds<Note>(get<Sequence>(s.cells[3]).cells[0]));
+    REQUIRE(holds<Rest>(get<Sequence>(s.cells[3]).cells[1]));
+    REQUIRE(holds<Rest>(get<Sequence>(s.cells[3]).cells[2]));
 }
 
 TEST_CASE("Scala file import", "[sequence]")
@@ -37,22 +37,13 @@ TEST_CASE("Scala file import", "[sequence]")
     auto const file = dir / "12-edo.scl";
     auto const tuning = from_scala(file);
 
-    REQUIRE(tuning.octave == 1200.f);
+    auto const expected = Tuning{
+        {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
+        1200,
+        "",
+    };
 
-    auto &intervals = tuning.intervals;
-    REQUIRE(intervals.size() == 12);
-    REQUIRE(intervals[0] == 0.f);
-    REQUIRE(intervals[1] == 100.f);
-    REQUIRE(intervals[2] == 200.f);
-    REQUIRE(intervals[3] == 300.f);
-    REQUIRE(intervals[4] == 400.f);
-    REQUIRE(intervals[5] == 500.f);
-    REQUIRE(intervals[6] == 600.f);
-    REQUIRE(intervals[7] == 700.f);
-    REQUIRE(intervals[8] == 800.f);
-    REQUIRE(intervals[9] == 900.f);
-    REQUIRE(intervals[10] == 1000.f);
-    REQUIRE(intervals[11] == 1100.f);
+    REQUIRE(tuning == expected);
 }
 
 TEST_CASE("No scl archive files will throw errors", "[sequence]")
@@ -119,7 +110,7 @@ TEST_CASE("Generate Full Sequences", "[sequence]")
 
         for (auto const &cell : s.cells)
         {
-            REQUIRE((holds<Note>(cell) && std::get<Note>(cell) == note));
+            REQUIRE((holds<Note>(cell) && get<Note>(cell) == note));
         }
     }
 }
@@ -157,8 +148,7 @@ TEST_CASE("Generate Interval Sequences", "[sequence]")
             }
             else
             {
-                REQUIRE(
-                    (holds<Note>(s.cells[i]) && std::get<Note>(s.cells[i]) == note));
+                REQUIRE((holds<Note>(s.cells[i]) && get<Note>(s.cells[i]) == note));
             }
         }
     }
@@ -196,7 +186,7 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         {
             if (holds<Note>(cell))
             {
-                REQUIRE(std::get<Note>(cell) == note);
+                REQUIRE(get<Note>(cell) == note);
                 ++note_on_count;
             }
             else if (holds<Rest>(cell))
@@ -229,7 +219,7 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         {
             if (holds<Note>(cell))
             {
-                REQUIRE(std::get<Note>(cell) == note);
+                REQUIRE(get<Note>(cell) == note);
                 ++note_on_count;
             }
             else if (holds<Rest>(cell))
@@ -263,7 +253,7 @@ TEST_CASE("Generate Random Sequences", "[sequence]")
         {
             if (holds<Note>(cell))
             {
-                REQUIRE(std::get<Note>(cell) == note);
+                REQUIRE(get<Note>(cell) == note);
                 ++note_on_count;
             }
             else if (holds<Rest>(cell))

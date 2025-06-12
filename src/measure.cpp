@@ -20,7 +20,7 @@ auto create_measure(TimeSignature const &time_signature, std::size_t cell_resolu
     }
 
     return Measure{
-        generate::empty(time_signature.numerator * cell_resolution),
+        {generate::empty(time_signature.numerator * cell_resolution)},
         time_signature,
     };
 }

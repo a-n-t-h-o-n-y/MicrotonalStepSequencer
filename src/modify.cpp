@@ -28,21 +28,21 @@ template <typename NoteFn, typename RestFn, typename SequenceFn>
     static_assert(std::is_invocable_v<SequenceFn, Sequence const &>,
                   "SequenceFn must be invocable with a Sequence const&");
 
-    return std::visit(utility::overload{
-                          [&](Note const &note) -> Cell { return note_fn(note); },
-                          [&](Rest const &rest) -> Cell { return rest_fn(rest); },
-                          [&](Sequence const &seq) -> Cell {
-                              auto new_seq = seq_fn(seq);
-                              auto view = PatternView{new_seq.cells, pattern};
-                              for (auto &c : view)
-                              {
-                                  c = visit_recursive(c, pattern, note_fn, rest_fn,
-                                                      seq_fn);
-                              }
-                              return new_seq;
-                          },
-                      },
-                      cell);
+    return std::visit(
+        utility::overload{
+            [&](Note const &note) -> Cell { return {note_fn(note), cell.weight}; },
+            [&](Rest const &rest) -> Cell { return {rest_fn(rest), cell.weight}; },
+            [&](Sequence const &seq) -> Cell {
+                auto new_seq = seq_fn(seq);
+                auto view = PatternView{new_seq.cells, pattern};
+                for (auto &c : view)
+                {
+                    c = visit_recursive(c, pattern, note_fn, rest_fn, seq_fn);
+                }
+                return {new_seq, cell.weight};
+            },
+        },
+        cell.element);
 }
 
 template <typename NoteFn, typename RestFn>
@@ -225,7 +225,7 @@ auto rotate(Cell cell, int amount) -> Cell
     amount *= -1;
 
     std::visit(overload{
-                   [](Note) {},
+                   [](Note &) {},
                    [](Rest) {},
                    [&](Sequence &seq) {
                        if (seq.cells.empty())
@@ -238,7 +238,7 @@ auto rotate(Cell cell, int amount) -> Cell
                                    seq.cells.end());
                    },
                },
-               cell);
+               cell.element);
 
     return cell;
 }
@@ -263,7 +263,7 @@ auto swing(Cell cell, float amount, bool is_odd) -> Cell
                        }
                    },
                },
-               cell);
+               cell.element);
 
     return cell;
 }
@@ -302,22 +302,37 @@ auto repeat(Cell const &cell, std::size_t count) -> Cell
     {
         throw std::invalid_argument{"Invalid count: " + std::to_string(count)};
     }
-    auto result = Sequence{};
-    result.cells.reserve(count);
+    auto seq = Sequence{};
+    seq.cells.reserve(count);
 
     for (auto i = std::size_t{0}; i < count; ++i)
     {
-        result.cells.push_back(cell);
+        seq.cells.push_back(cell);
     }
 
-    return result;
+    return {.element = seq, .weight = cell.weight};
 }
 
 auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount) -> Cell
 {
-    return visit_recursive(
-        cell, pattern, [&](Note n) { return repeat(n, amount); },
-        [&](Rest r) { return repeat(r, amount); });
+    return std::visit(
+        utility::overload{
+            [&](Note const &note) -> Cell {
+                return repeat({.element = note, .weight = cell.weight}, amount);
+            },
+            [&](Rest const &rest) -> Cell {
+                return repeat({.element = rest, .weight = cell.weight}, amount);
+            },
+            [&](Sequence seq) -> Cell {
+                auto view = PatternView{seq.cells, pattern};
+                for (auto &c : view)
+                {
+                    c = stretch(c, pattern, amount);
+                }
+                return {.element = seq, .weight = cell.weight};
+            },
+        },
+        cell.element);
 }
 
 auto compress(Cell const &cell, Pattern const &pattern) -> Cell
@@ -325,19 +340,19 @@ auto compress(Cell const &cell, Pattern const &pattern) -> Cell
     using namespace utility;
 
     return std::visit(overload{
-                          [](Note const &note) -> Cell { return note; },
-                          [](Rest const &rest) -> Cell { return rest; },
+                          [&](Note const &note) -> Cell { return {note, cell.weight}; },
+                          [&](Rest const &rest) -> Cell { return {rest, cell.weight}; },
                           [&](Sequence const &seq) -> Cell {
-                              auto result = Sequence{};
+                              auto new_seq = Sequence{};
                               auto view = ConstPatternView{seq.cells, pattern};
                               for (auto const &c : view)
                               {
-                                  result.cells.push_back(c);
+                                  new_seq.cells.push_back(c);
                               }
-                              return result;
+                              return {new_seq, cell.weight};
                           },
                       },
-                      cell);
+                      cell.element);
 }
 
 auto extract(Cell const &cell, std::size_t index) -> Cell
@@ -345,8 +360,8 @@ auto extract(Cell const &cell, std::size_t index) -> Cell
     using namespace utility;
 
     return std::visit(overload{
-                          [](Note const &note) -> Cell { return note; },
-                          [](Rest const &rest) -> Cell { return rest; },
+                          [&](Note const &note) -> Cell { return {note, cell.weight}; },
+                          [&](Rest const &rest) -> Cell { return {rest, cell.weight}; },
                           [&](Sequence const &seq) -> Cell {
                               if (index >= seq.cells.size())
                               {
@@ -355,7 +370,7 @@ auto extract(Cell const &cell, std::size_t index) -> Cell
                               return seq.cells[index];
                           },
                       },
-                      cell);
+                      cell.element);
 }
 
 auto first(Cell const &cell) -> Cell
@@ -369,8 +384,8 @@ auto last(Cell const &cell) -> Cell
     using namespace utility;
 
     return std::visit(overload{
-                          [](Note const &note) -> Cell { return note; },
-                          [](Rest const &rest) -> Cell { return rest; },
+                          [&](Note const &note) -> Cell { return {note, cell.weight}; },
+                          [&](Rest const &rest) -> Cell { return {rest, cell.weight}; },
                           [](Sequence const &seq) -> Cell {
                               if (seq.cells.empty())
                               {
@@ -382,7 +397,7 @@ auto last(Cell const &cell) -> Cell
                               }
                           },
                       },
-                      cell);
+                      cell.element);
 }
 
 auto shuffle(Cell cell) -> Cell
@@ -397,110 +412,174 @@ auto shuffle(Cell cell) -> Cell
 
 auto concat(Cell const &cell_a, Cell const &cell_b) -> Cell
 {
-    using namespace utility;
+    auto const weight_a = cell_a.weight;
+    auto const weight_b = cell_b.weight;
+
     return std::visit(
-        overload{
-            [](Note const &note_a, Note const &note_b) {
-                return Sequence{{note_a, note_b}};
+        utility::overload{
+            [&](Note const &note_a, Note const &note_b) -> Cell {
+                return {
+                    .element = Sequence{{{note_a, weight_a}, {note_b, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Note const &note, Rest const &rest) { return Sequence{{note, rest}}; },
-            [](Rest const &rest, Note const &note) { return Sequence{{rest, note}}; },
-            [](Rest const &rest_a, Rest const &rest_b) {
-                return Sequence{{rest_a, rest_b}};
+            [&](Note const &note, Rest const &rest) -> Cell {
+                return {
+                    .element = Sequence{{{note, weight_a}, {rest, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Note const &note, Sequence const &seq) {
+            [&](Rest const &rest, Note const &note) -> Cell {
+                return {
+                    .element = Sequence{{{rest, weight_a}, {note, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
+            },
+            [&](Rest const &rest_a, Rest const &rest_b) -> Cell {
+                return {
+                    .element = Sequence{{{rest_a, weight_a}, {rest_b, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
+            },
+            [&](Note const &note, Sequence const &seq) -> Cell {
                 auto concat_seq = seq;
-                concat_seq.cells.insert(std::cbegin(concat_seq.cells), note);
-                return concat_seq;
+                concat_seq.cells.insert(std::cbegin(concat_seq.cells),
+                                        Cell{note, weight_a});
+                return {
+                    .element = concat_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Rest const &rest, Sequence const &seq) {
+            [&](Rest const &rest, Sequence const &seq) -> Cell {
                 auto concat_seq = seq;
-                concat_seq.cells.insert(std::cbegin(concat_seq.cells), rest);
-                return concat_seq;
+                concat_seq.cells.insert(std::cbegin(concat_seq.cells),
+                                        Cell{rest, weight_a});
+                return {
+                    .element = concat_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Sequence const &seq, Note const &note) {
+            [&](Sequence const &seq, Note const &note) -> Cell {
                 auto concat_seq = seq;
-                concat_seq.cells.push_back(note);
-                return concat_seq;
+                concat_seq.cells.push_back({note, weight_b});
+                return {
+                    .element = concat_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Sequence const &seq, Rest const &rest) {
+            [&](Sequence const &seq, Rest const &rest) -> Cell {
                 auto concat_seq = seq;
-                concat_seq.cells.push_back(rest);
-                return concat_seq;
+                concat_seq.cells.push_back({rest, weight_b});
+                return {
+                    .element = concat_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Sequence const &seq_a, Sequence const &seq_b) {
+            [&](Sequence const &seq_a, Sequence const &seq_b) -> Cell {
                 auto concat_seq = seq_a;
                 concat_seq.cells.insert(std::cend(concat_seq.cells),
                                         std::cbegin(seq_b.cells),
                                         std::cend(seq_b.cells));
-                return concat_seq;
+                return {
+                    .element = concat_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
         },
-        cell_a, cell_b);
+        cell_a.element, cell_b.element);
 }
 
 auto merge(Cell const &cell_a, Cell const &cell_b) -> Cell
 {
-    using namespace utility;
+    auto const weight_a = cell_a.weight;
+    auto const weight_b = cell_b.weight;
 
     return std::visit(
-        overload{
-            [](Note const &note_a, Note const &note_b) {
-                return Sequence{{note_a, note_b}};
+        utility::overload{
+            [&](Note const &note_a, Note const &note_b) -> Cell {
+                return {
+                    .element = Sequence{{{note_a, weight_a}, {note_b, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Note const &note, Rest const &rest) { return Sequence{{note, rest}}; },
-            [](Rest const &rest, Note const &note) { return Sequence{{rest, note}}; },
-            [](Rest const &rest_a, Rest const &rest_b) {
-                return Sequence{{rest_a, rest_b}};
+            [&](Note const &note, Rest const &rest) -> Cell {
+                return {
+                    .element = Sequence{{{note, weight_a}, {rest, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Note const &note, Sequence const &seq) {
+            [&](Rest const &rest, Note const &note) -> Cell {
+                return {
+                    .element = Sequence{{{rest, weight_a}, {note, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
+            },
+            [&](Rest const &rest_a, Rest const &rest_b) -> Cell {
+                return {
+                    .element = Sequence{{{rest_a, weight_a}, {rest_b, weight_b}}},
+                    .weight = weight_a + weight_b,
+                };
+            },
+            [&](Note const &note, Sequence const &seq) -> Cell {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
                 {
-                    merged_seq.cells.push_back(note);
+                    merged_seq.cells.push_back({note, weight_a});
                     merged_seq.cells.push_back(c);
                 }
-                return merged_seq;
+                return {
+                    .element = merged_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Rest const &rest, Sequence const &seq) {
+            [&](Rest const &rest, Sequence const &seq) -> Cell {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
                 {
-                    merged_seq.cells.push_back(rest);
+                    merged_seq.cells.push_back({rest, weight_a});
                     merged_seq.cells.push_back(c);
                 }
-                return merged_seq;
+                return {
+                    .element = merged_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Sequence const &seq, Note const &note) {
+            [&](Sequence const &seq, Note const &note) -> Cell {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
                 {
                     merged_seq.cells.push_back(c);
-                    merged_seq.cells.push_back(note);
+                    merged_seq.cells.push_back({note, weight_b});
                 }
-                return merged_seq;
+                return {
+                    .element = merged_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Sequence const &seq, Rest const &rest) {
+            [&](Sequence const &seq, Rest const &rest) -> Cell {
                 auto merged_seq = Sequence{};
                 merged_seq.cells.reserve(seq.cells.size() * 2);
                 for (auto const &c : seq.cells)
                 {
                     merged_seq.cells.push_back(c);
-                    merged_seq.cells.push_back(rest);
+                    merged_seq.cells.push_back({rest, weight_b});
                 }
-                return merged_seq;
+                return {
+                    .element = merged_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
-            [](Sequence const &seq_a, Sequence const &seq_b) {
+            [&](Sequence const &seq_a, Sequence const &seq_b) -> Cell {
                 if (seq_a.cells.empty())
                 {
-                    return seq_b;
+                    return {seq_b, weight_b};
                 }
                 if (seq_b.cells.empty())
                 {
-                    return seq_a;
+                    return {seq_a, weight_a};
                 }
                 auto merged_seq = Sequence{};
                 auto const max_size = std::max(seq_a.cells.size(), seq_b.cells.size());
@@ -512,10 +591,13 @@ auto merge(Cell const &cell_a, Cell const &cell_b) -> Cell
                     merged_seq.cells.push_back(seq_b.cells[i % seq_b.cells.size()]);
                 }
 
-                return merged_seq;
+                return {
+                    .element = merged_seq,
+                    .weight = weight_a + weight_b,
+                };
             },
         },
-        cell_a, cell_b);
+        cell_a.element, cell_b.element);
 }
 
 auto divide(Cell const &cell, std::size_t index) -> Cell
@@ -523,19 +605,26 @@ auto divide(Cell const &cell, std::size_t index) -> Cell
     using namespace utility;
 
     return std::visit(
-        overload{[](Note const &note) { return Sequence{{note}}; },
-                 [](Rest const &rest) { return Sequence{{rest}}; },
-                 [&](Sequence const &seq) {
+        overload{[&](Note const &note) -> Cell {
+                     return {Sequence{{{note, cell.weight}}}, cell.weight};
+                 },
+                 [&](Rest const &rest) -> Cell {
+                     return {Sequence{{{rest, cell.weight}}}, cell.weight};
+                 },
+                 [&](Sequence const &seq) -> Cell {
                      index = std::min(index, seq.cells.size());
                      auto const begin = std::cbegin(seq.cells);
                      auto const mid = std::cbegin(seq.cells) + (std::ptrdiff_t)index;
                      auto const end = std::cend(seq.cells);
-                     return Sequence{
-                         std::vector<Cell>{Sequence{std::vector(begin, mid)},
-                                           Sequence{std::vector(mid, end)}},
-                     };
+                     return {.element =
+                                 Sequence{
+                                     std::vector<Cell>{
+                                         {Sequence{std::vector(begin, mid)}, 1.f},
+                                         {Sequence{std::vector(mid, end)}, 1.f}},
+                                 },
+                             .weight = cell.weight};
                  }},
-        cell);
+        cell.element);
 }
 
 auto note(int pitch, float velocity, float delay, float gate) -> Cell
@@ -552,17 +641,17 @@ auto note(int pitch, float velocity, float delay, float gate) -> Cell
     {
         throw std::invalid_argument("gate must be in the range [0.0, 1.0]");
     }
-    return Note{pitch, velocity, delay, gate};
+    return {.element = Note{pitch, velocity, delay, gate}, .weight = 1.f};
 }
 
 auto rest() -> Cell
 {
-    return Rest{};
+    return {.element = Rest{}, .weight = 1.f};
 }
 
 auto sequence(std::vector<Cell> cells) -> Cell
 {
-    return Sequence{std::move(cells)};
+    return {.element = Sequence{std::move(cells)}, .weight = 1.f};
 }
 
 auto flip(Cell cell, Pattern const &pattern, Note n) -> Cell
@@ -570,18 +659,18 @@ auto flip(Cell cell, Pattern const &pattern, Note n) -> Cell
     using namespace utility;
 
     return std::visit(overload{
-                          [](Note &) -> Cell { return Rest{}; },
-                          [&](Rest &) -> Cell { return n; }, // Returns a copy
-                          [&](Sequence &seq) -> Cell {
+                          [&](Note &) -> Cell { return {Rest{}, cell.weight}; },
+                          [&](Rest &) -> Cell { return {n, cell.weight}; },
+                          [&](Sequence seq) -> Cell {
                               auto view = PatternView{seq.cells, pattern};
                               for (auto &c : view)
                               {
                                   c = flip(c, pattern, n);
                               }
-                              return seq;
+                              return {seq, cell.weight};
                           },
                       },
-                      cell);
+                      cell.element);
 }
 
 auto humanize_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell

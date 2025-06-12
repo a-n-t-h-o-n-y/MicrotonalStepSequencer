@@ -7,8 +7,6 @@
 namespace sequence
 {
 
-using Cell = std::variant<struct Note, struct Rest, struct Sequence>;
-
 struct Note
 {
     int pitch = 0;         // 0 is tunings's base note, 1 is tunings's second note, etc.
@@ -19,18 +17,33 @@ struct Note
 
 struct Rest
 {
+    bool operator==(Rest const &) const = default;
+    bool operator!=(Rest const &) const = default;
 };
+
+struct Cell;
 
 struct Sequence
 {
     std::vector<Cell> cells;
+
+    bool operator==(Sequence const &) const = default;
+    bool operator!=(Sequence const &) const = default;
 };
+
+using MusicElement = std::variant<Note, Rest, Sequence>;
+
+struct Cell
+{
+    MusicElement element;
+    float weight = 1.f; // Defines length, in relation to sibling Cells
+};
+
+#include <cmath>
 
 /**
  * @brief Compares two Notes for equality.
  */
-#include <cmath>
-
 [[nodiscard]] constexpr auto operator==(Note const &lhs, Note const &rhs) -> bool
 {
     constexpr float tolerance = 0.0001f; // set a small tolerance value
@@ -48,44 +61,14 @@ struct Sequence
     return !(lhs == rhs);
 }
 
-[[nodiscard]] constexpr auto operator==(Rest const &, Rest const &) -> bool
-{
-    return true;
-}
-
-[[nodiscard]] constexpr auto operator!=(Rest const &lhs, Rest const &rhs) -> bool
-{
-    return !(lhs == rhs);
-}
-
-[[nodiscard]] constexpr auto operator==(Sequence const &lhs,
-                                        Sequence const &rhs) -> bool
-{
-    return lhs.cells == rhs.cells;
-}
-
-[[nodiscard]] constexpr auto operator!=(Sequence const &lhs,
-                                        Sequence const &rhs) -> bool
-{
-    return !(lhs == rhs);
-}
-
 [[nodiscard]] constexpr auto operator==(Cell const &lhs, Cell const &rhs) -> bool
 {
-    return std::visit(
-        [](auto const &l, auto const &r) -> bool {
-            using T = std::decay_t<decltype(l)>;
-            using U = std::decay_t<decltype(r)>;
-            if constexpr (std::is_same_v<T, U>)
-            {
-                return l == r;
-            }
-            else
-            {
-                return false;
-            }
-        },
-        lhs, rhs);
+    return lhs.element == rhs.element && std::fabs(lhs.weight - rhs.weight) < 0.0001f;
+}
+
+[[nodiscard]] constexpr auto operator!=(Cell const &lhs, Cell const &rhs) -> bool
+{
+    return !(lhs == rhs);
 }
 
 } // namespace sequence

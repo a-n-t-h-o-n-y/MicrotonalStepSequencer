@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
+#include <numeric>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -45,6 +46,35 @@ namespace
 
 namespace sequence
 {
+
+auto pattern_contains(Pattern const &pattern, std::size_t index) -> bool
+{
+    if (index < pattern.offset)
+    {
+        return false;
+    }
+
+    index -= pattern.offset;
+
+    auto const pattern_length = std::accumulate(
+        std::cbegin(pattern.intervals), std::cend(pattern.intervals), std::size_t{0});
+
+    index %= pattern_length;
+
+    for (auto const interval : pattern.intervals)
+    {
+        if (index == 0)
+        {
+            return true;
+        }
+        if (index < 0)
+        {
+            return false;
+        }
+        index -= interval;
+    }
+    return index == 0;
+}
 
 auto contains_valid_pattern(std::string const &input) -> bool
 {

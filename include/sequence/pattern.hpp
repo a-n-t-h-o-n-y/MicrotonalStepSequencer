@@ -38,6 +38,11 @@ struct Pattern
 }
 
 /**
+ * Returns true if \p index is a valid position within \p pattern.
+ */
+[[nodiscard]] auto pattern_contains(Pattern const &pattern, std::size_t index) -> bool;
+
+/**
  * @brief Check if a command string contains a valid pattern.
  *
  * @param input The command string to check.
@@ -107,14 +112,10 @@ class PatternView
         auto operator++() -> Iterator &
         {
             auto const interval = pattern_view_.pattern_.intervals[interval_index_];
-            index_ += interval;
-            index_ = std::min(index_, pattern_view_.vec_.size());
+            index_ = std::min(index_ + interval, pattern_view_.vec_.size());
 
-            ++interval_index_;
-            if (interval_index_ >= pattern_view_.pattern_.intervals.size())
-            {
-                interval_index_ = 0;
-            }
+            interval_index_ =
+                (interval_index_ + 1) % pattern_view_.pattern_.intervals.size();
 
             return *this;
         }
@@ -190,14 +191,10 @@ class ConstPatternView
         auto operator++() -> ConstIterator &
         {
             auto const interval = pattern_view_.pattern_.intervals[interval_index_];
-            index_ += interval;
-            index_ = std::min(index_, pattern_view_.vec_.size());
+            index_ = std::min(index_ + interval, pattern_view_.vec_.size());
 
-            ++interval_index_;
-            if (interval_index_ >= pattern_view_.pattern_.intervals.size())
-            {
-                interval_index_ = 0;
-            }
+            interval_index_ =
+                (interval_index_ + 1) % pattern_view_.pattern_.intervals.size();
 
             return *this;
         }

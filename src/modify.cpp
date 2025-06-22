@@ -196,6 +196,7 @@ auto set_octave(Cell cell, Pattern const &pattern, int octave,
 
 auto set_velocity(Cell cell, Pattern const &pattern, float velocity) -> Cell
 {
+    velocity = std::clamp(velocity, 0.f, 1.f);
     return visit_recursive(cell, pattern, [&](Note n) {
         n.velocity = velocity;
         return n;
@@ -204,6 +205,7 @@ auto set_velocity(Cell cell, Pattern const &pattern, float velocity) -> Cell
 
 auto set_delay(Cell cell, Pattern const &pattern, float delay) -> Cell
 {
+    delay = std::clamp(delay, 0.f, 1.f);
     return visit_recursive(cell, pattern, [&](Note n) {
         n.delay = delay;
         return n;
@@ -212,6 +214,7 @@ auto set_delay(Cell cell, Pattern const &pattern, float delay) -> Cell
 
 auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell
 {
+    gate = std::clamp(gate, 0.f, 1.f);
     return visit_recursive(cell, pattern, [&](Note n) {
         n.gate = gate;
         return n;

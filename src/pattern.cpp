@@ -67,7 +67,7 @@ auto pattern_contains(Pattern const &pattern, std::size_t index) -> bool
         {
             return true;
         }
-        if (index < 0)
+        if (index < interval)
         {
             return false;
         }

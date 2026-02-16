@@ -1,10 +1,10 @@
 #include <sequence/generate.hpp>
 
 #include <cstddef>
-#include <random>
 #include <stdexcept>
 #include <vector>
 
+#include <sequence/random.hpp>
 #include <sequence/sequence.hpp>
 
 namespace sequence::generate
@@ -42,8 +42,7 @@ auto random(std::size_t size, float density, Note note) -> Sequence
 
     auto seq = Sequence{std::vector<Cell>(size, {Rest{}})};
 
-    auto rd = std::random_device{};
-    auto gen = std::mt19937{rd()};
+    auto &gen = sequence::random::engine();
     auto dist = std::uniform_real_distribution<float>{0.f, 1.f};
 
     for (auto &cell : seq.cells)

@@ -35,6 +35,7 @@ target_sources(sequencer
         include/sequence/modify.hpp
         include/sequence/sequence.hpp
         include/sequence/time_signature.hpp
+        include/sequence/random.hpp
         include/sequence/tuning.hpp
         include/sequence/utility.hpp
         include/sequence/pattern.hpp

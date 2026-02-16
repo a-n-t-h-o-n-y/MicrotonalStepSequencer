@@ -3,13 +3,13 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
-#include <random>
 #include <stdexcept>
 #include <type_traits>
 #include <variant>
 #include <vector>
 
 #include <sequence/pattern.hpp>
+#include <sequence/random.hpp>
 
 namespace
 {
@@ -72,7 +72,7 @@ auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max) -> Cel
         throw std::invalid_argument("min must be less than or equal to max");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
     auto dis = std::uniform_int_distribution{min, max};
 
     return visit_recursive(cell, pattern, [&](Note n) {
@@ -92,7 +92,7 @@ auto randomize_velocity(Cell cell, Pattern const &pattern, float min, float max)
         throw std::invalid_argument("min and max must be in the range [0, 1]");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
     auto dis = std::uniform_real_distribution{min, max};
 
     return visit_recursive(cell, pattern, [&](Note n) {
@@ -112,7 +112,7 @@ auto randomize_delay(Cell cell, Pattern const &pattern, float min, float max) ->
         throw std::invalid_argument("min and max must be in the range [0, 1]");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
     auto dis = std::uniform_real_distribution{min, max};
 
     return visit_recursive(cell, pattern, [&](Note n) {
@@ -132,7 +132,7 @@ auto randomize_gate(Cell cell, Pattern const &pattern, float min, float max) -> 
         throw std::invalid_argument("min and max must be in the range [0, 1]");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
     auto dis = std::uniform_real_distribution{min, max};
 
     return visit_recursive(cell, pattern, [&](Note n) {
@@ -408,7 +408,7 @@ auto shuffle(Cell cell) -> Cell
     return visit_recursive(
         cell, {0, {1}}, [](Note n) { return n; }, [](Rest r) { return r; },
         [](Sequence seq) {
-            std::ranges::shuffle(seq.cells, std::mt19937{std::random_device{}()});
+            std::ranges::shuffle(seq.cells, sequence::random::engine());
             return seq;
         });
 }
@@ -683,7 +683,7 @@ auto humanize_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
         throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
 
     return visit_recursive(cell, pattern, [&](Note n) {
         auto const min = std::clamp(n.velocity - amount, 0.f, 1.f);
@@ -701,7 +701,7 @@ auto humanize_delay(Cell cell, sequence::Pattern const &pattern, float amount) -
         throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
 
     return visit_recursive(cell, pattern, [&](Note n) {
         auto const min = std::clamp(n.delay - amount, 0.f, 1.f);
@@ -719,7 +719,7 @@ auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount) ->
         throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
     }
 
-    auto gen = std::mt19937{std::random_device{}()};
+    auto &gen = sequence::random::engine();
 
     return visit_recursive(cell, pattern, [&](Note n) {
         auto const min = std::clamp(n.gate - amount, 0.f, 1.f);

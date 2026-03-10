@@ -59,6 +59,7 @@ if(BUILD_TESTING)
         test/measure.test.cpp
         test/midi.test.cpp
         test/modify.test.cpp
+        test/pattern.test.cpp
         test/test.cpp
     )
     target_link_libraries(tests PRIVATE sequence::sequencer)

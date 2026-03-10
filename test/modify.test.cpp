@@ -1175,13 +1175,6 @@ TEST_CASE("shuffle", "[modify]")
         }
     }
 
-    SECTION("shuffle returns a sequence with different cell order")
-    {
-        auto shuffled_seq = get<Sequence>(modify::shuffle({seq}));
-
-        REQUIRE_FALSE(std::ranges::equal(seq.cells, shuffled_seq.cells));
-    }
-
     SECTION("Subsequence")
     {
         // Warning: This SECTION depends on the order of seq elements.
@@ -1207,6 +1200,13 @@ TEST_CASE("shuffle", "[modify]")
                 }
             }
         }
+    }
+
+    SECTION("shuffle is a no-op for non-sequence cells")
+    {
+        REQUIRE(modify::shuffle({Note{3, 0.4f, 0.2f, 0.8f}}) ==
+                Cell{Note{3, 0.4f, 0.2f, 0.8f}});
+        REQUIRE(modify::shuffle({Rest{}}) == Cell{Rest{}});
     }
 }
 
@@ -1404,5 +1404,203 @@ TEST_CASE("divide", "[modify]")
 
         REQUIRE(seq_a.cells.empty());
         REQUIRE(seq_b.cells.empty());
+    }
+}
+
+TEST_CASE("setters", "[modify]")
+{
+    auto const seq = Sequence{{
+        {Note{0, 0.2f, 0.1f, 0.3f}},
+        {Rest{}},
+        {Note{-5, 0.4f, 0.3f, 0.5f}},
+        {Sequence{{
+            {Note{7, 0.6f, 0.7f, 0.8f}},
+            {Rest{}},
+            {Note{-8, 0.9f, 0.2f, 0.1f}},
+        }}},
+    }};
+
+    auto const pattern = Pattern{0, {2}};
+
+    SECTION("set_pitch only changes matching notes")
+    {
+        auto const updated = get<Sequence>(modify::set_pitch({seq}, pattern, 42));
+
+        REQUIRE(get<Note>(updated.cells[0]).pitch == 42);
+        REQUIRE(holds<Rest>(updated.cells[1]));
+        REQUIRE(get<Note>(updated.cells[2]).pitch == 42);
+        REQUIRE(get<Sequence>(updated.cells[3]) == get<Sequence>(seq.cells[3]));
+    }
+
+    SECTION("set_octave keeps degree within tuning length")
+    {
+        auto const updated = get<Sequence>(modify::set_octave({seq}, pattern, 3, 12));
+
+        REQUIRE(get<Note>(updated.cells[0]).pitch == 36);
+        REQUIRE(get<Note>(updated.cells[2]).pitch == 43);
+        REQUIRE(get<Sequence>(updated.cells[3]) == get<Sequence>(seq.cells[3]));
+    }
+
+    SECTION("set_velocity clamps")
+    {
+        auto const high = get<Sequence>(modify::set_velocity({seq}, pattern, 3.f));
+        auto const low = get<Sequence>(modify::set_velocity({seq}, pattern, -1.f));
+
+        REQUIRE(get<Note>(high.cells[0]).velocity == 1.f);
+        REQUIRE(get<Note>(high.cells[2]).velocity == 1.f);
+        REQUIRE(get<Note>(low.cells[0]).velocity == 0.f);
+        REQUIRE(get<Note>(low.cells[2]).velocity == 0.f);
+    }
+
+    SECTION("set_delay clamps")
+    {
+        auto const updated = get<Sequence>(modify::set_delay({seq}, pattern, 2.f));
+
+        REQUIRE(get<Note>(updated.cells[0]).delay == 1.f);
+        REQUIRE(get<Note>(updated.cells[2]).delay == 1.f);
+        REQUIRE(get<Sequence>(updated.cells[3]) == get<Sequence>(seq.cells[3]));
+    }
+
+    SECTION("set_gate clamps")
+    {
+        auto const updated = get<Sequence>(modify::set_gate({seq}, pattern, -0.5f));
+
+        REQUIRE(get<Note>(updated.cells[0]).gate == 0.f);
+        REQUIRE(get<Note>(updated.cells[2]).gate == 0.f);
+        REQUIRE(get<Sequence>(updated.cells[3]) == get<Sequence>(seq.cells[3]));
+    }
+}
+
+TEST_CASE("extract first last", "[modify]")
+{
+    auto const seq = Sequence{{
+        {Note{1, 0.2f, 0.1f, 0.3f}},
+        {Rest{}},
+        {Note{2, 0.4f, 0.5f, 0.6f}},
+    }};
+
+    REQUIRE(modify::extract({Note{4, 0.3f, 0.2f, 0.1f}, 2.f}, 99) ==
+            Cell{Note{4, 0.3f, 0.2f, 0.1f}, 2.f});
+    REQUIRE(modify::extract({Rest{}, 3.f}, 99) == Cell{Rest{}, 3.f});
+    REQUIRE(modify::extract({seq}, 1) == seq.cells[1]);
+    REQUIRE_THROWS_AS(modify::extract({seq}, seq.cells.size()), std::invalid_argument);
+
+    REQUIRE(modify::first({seq}) == seq.cells.front());
+    REQUIRE(modify::first({Note{7, 0.5f, 0.4f, 0.3f}, 4.f}) ==
+            Cell{Note{7, 0.5f, 0.4f, 0.3f}, 4.f});
+
+    REQUIRE(modify::last({seq}) == seq.cells.back());
+    REQUIRE(modify::last({Rest{}, 5.f}) == Cell{Rest{}, 5.f});
+    REQUIRE_THROWS_AS(modify::last({Sequence{}}), std::invalid_argument);
+}
+
+TEST_CASE("cell constructors", "[modify]")
+{
+    REQUIRE(modify::note(7, 0.4f, 0.2f, 0.8f) == Cell{Note{7, 0.4f, 0.2f, 0.8f}});
+    REQUIRE(modify::rest() == Cell{Rest{}});
+    REQUIRE(modify::sequence({{Note{1}}, {Rest{}}}) ==
+            Cell{Sequence{{{Note{1}}, {Rest{}}}}});
+
+    REQUIRE_THROWS_AS(modify::note(0, -0.1f, 0.f, 1.f), std::invalid_argument);
+    REQUIRE_THROWS_AS(modify::note(0, 0.5f, 1.1f, 1.f), std::invalid_argument);
+    REQUIRE_THROWS_AS(modify::note(0, 0.5f, 0.5f, -0.1f), std::invalid_argument);
+}
+
+TEST_CASE("flip", "[modify]")
+{
+    auto const seq = Sequence{{
+        {Note{0, 0.2f, 0.1f, 0.3f}},
+        {Rest{}},
+        {Sequence{{
+            {Rest{}},
+            {Note{4, 0.5f, 0.2f, 0.6f}},
+            {Rest{}},
+        }}},
+    }};
+    auto const fill = Note{9, 0.7f, 0.3f, 0.4f};
+
+    auto const flipped = get<Sequence>(modify::flip({seq}, {0, {2}}, fill));
+
+    REQUIRE(flipped.cells[0] == Cell{Rest{}});
+    REQUIRE(flipped.cells[1] == seq.cells[1]);
+    REQUIRE(holds<Sequence>(flipped.cells[2]));
+    REQUIRE(get<Sequence>(flipped.cells[2]).cells[0] == Cell{fill});
+    REQUIRE(get<Sequence>(flipped.cells[2]).cells[1] == Cell{Note{4, 0.5f, 0.2f, 0.6f}});
+    REQUIRE(get<Sequence>(flipped.cells[2]).cells[2] == Cell{fill});
+}
+
+TEST_CASE("humanize", "[modify]")
+{
+    auto const seq = Sequence{{
+        {Note{0, 0.4f, 0.2f, 0.6f}},
+        {Rest{}},
+        {Note{1, 0.8f, 0.9f, 0.1f}},
+    }};
+
+    SECTION("invalid amount throws")
+    {
+        REQUIRE_THROWS_AS(modify::humanize_velocity({seq}, {0, {1}}, -0.1f),
+                          std::invalid_argument);
+        REQUIRE_THROWS_AS(modify::humanize_delay({seq}, {0, {1}}, 1.1f),
+                          std::invalid_argument);
+        REQUIRE_THROWS_AS(modify::humanize_gate({seq}, {0, {1}}, 1.1f),
+                          std::invalid_argument);
+    }
+
+    SECTION("humanize stays within local clamped range")
+    {
+        auto const velocity =
+            get<Sequence>(modify::humanize_velocity({seq}, {0, {1}}, 0.25f));
+        auto const delay = get<Sequence>(modify::humanize_delay({seq}, {0, {1}}, 0.3f));
+        auto const gate = get<Sequence>(modify::humanize_gate({seq}, {0, {1}}, 0.2f));
+
+        REQUIRE(get<Note>(velocity.cells[0]).velocity >= 0.15f);
+        REQUIRE(get<Note>(velocity.cells[0]).velocity <= 0.65f);
+        REQUIRE(get<Note>(velocity.cells[2]).velocity >= 0.55f);
+        REQUIRE(get<Note>(velocity.cells[2]).velocity <= 1.f);
+
+        REQUIRE(get<Note>(delay.cells[0]).delay >= 0.f);
+        REQUIRE(get<Note>(delay.cells[0]).delay <= 0.5f);
+        REQUIRE(get<Note>(delay.cells[2]).delay >= 0.6f);
+        REQUIRE(get<Note>(delay.cells[2]).delay <= 1.f);
+
+        REQUIRE(get<Note>(gate.cells[0]).gate >= 0.4f);
+        REQUIRE(get<Note>(gate.cells[0]).gate <= 0.8f);
+        REQUIRE(get<Note>(gate.cells[2]).gate >= 0.f);
+        REQUIRE(get<Note>(gate.cells[2]).gate <= 0.3f);
+        REQUIRE(holds<Rest>(gate.cells[1]));
+    }
+}
+
+TEST_CASE("fill operations", "[modify]")
+{
+    auto const seq = Sequence{{
+        {Note{1, 0.2f, 0.1f, 0.3f}},
+        {Rest{}},
+        {Sequence{{
+            {Note{2, 0.4f, 0.2f, 0.5f}},
+            {Rest{}},
+        }}},
+    }};
+
+    SECTION("notes_fill replaces notes and rests in matching positions")
+    {
+        auto const fill = Note{11, 0.9f, 0.8f, 0.7f};
+        auto const updated = get<Sequence>(modify::notes_fill({seq}, {1, {1}}, fill));
+
+        REQUIRE(updated.cells[0] == seq.cells[0]);
+        REQUIRE(updated.cells[1] == Cell{fill});
+        REQUIRE(get<Sequence>(updated.cells[2]).cells[0] == Cell{Note{2, 0.4f, 0.2f, 0.5f}});
+        REQUIRE(get<Sequence>(updated.cells[2]).cells[1] == Cell{fill});
+    }
+
+    SECTION("rests_fill clears matching positions")
+    {
+        auto const updated = get<Sequence>(modify::rests_fill({seq}, {0, {2}}));
+
+        REQUIRE(updated.cells[0] == Cell{Rest{}});
+        REQUIRE(updated.cells[1] == seq.cells[1]);
+        REQUIRE(get<Sequence>(updated.cells[2]).cells[0] == Cell{Rest{}});
+        REQUIRE(get<Sequence>(updated.cells[2]).cells[1] == Cell{Rest{}});
     }
 }

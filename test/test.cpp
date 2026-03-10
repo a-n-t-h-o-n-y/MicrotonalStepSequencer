@@ -117,6 +117,11 @@ TEST_CASE("Generate Full Sequences", "[sequence]")
 
 TEST_CASE("Generate Interval Sequences", "[sequence]")
 {
+    SECTION("Throws when interval is zero")
+    {
+        REQUIRE_THROWS_AS(generate::interval(8, 0), std::invalid_argument);
+    }
+
     SECTION("Zero Cells")
     {
         auto const size = 0;

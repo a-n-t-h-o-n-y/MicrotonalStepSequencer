@@ -19,7 +19,6 @@
 
 namespace sequence::midi
 {
-
 auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
                       float pb_range) -> MicrotonalNote
 {
@@ -61,6 +60,9 @@ auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
         static_cast<std::uint16_t>(8'192 + (fractional * 8'192.f / pb_range))};
 }
 
+namespace
+{
+
 auto create_midi_note_visitor(MusicElement const &element, Tuning const &tuning,
                               float tuning_base, float pb_range)
     -> std::vector<MicrotonalNote>
@@ -87,6 +89,20 @@ auto create_midi_note_visitor(MusicElement const &element, Tuning const &tuning,
                       },
                       element);
 }
+
+[[nodiscard]] auto weighted_sample_count(float total_weight, std::uint32_t total_samples,
+                                         float weight) -> std::uint32_t
+{
+    if (total_weight <= 0.f)
+    {
+        throw std::invalid_argument("sequence total weight must be greater than 0");
+    }
+
+    return static_cast<std::uint32_t>(
+        std::round((weight / total_weight) * total_samples));
+}
+
+} // namespace
 
 auto flatten_and_translate_to_midi_notes(Cell const &cell, Tuning const &tuning,
                                          float base_frequency, float pb_range)
@@ -147,20 +163,17 @@ auto note_sample_infos(Cell const &cell, std::uint32_t total_samples, float offs
             },
             [](Rest const &) { return std::vector<SampleRange>{}; },
             [&](Sequence const &seq) {
-                auto const sample_count_from_weight = [&seq, total_samples] {
-                    auto const total_weight = std::accumulate(
-                        std::cbegin(seq.cells), std::cend(seq.cells), 0.f,
-                        [](float sum, Cell const &c) { return sum + c.weight; });
-                    return [total_weight, total_samples](float weight) {
-                        return static_cast<std::uint32_t>(
-                            std::round((weight / total_weight) * total_samples));
-                    };
-                }();
+                auto const total_weight =
+                    std::accumulate(std::cbegin(seq.cells), std::cend(seq.cells), 0.f,
+                                    [](float sum, Cell const &c) {
+                                        return sum + c.weight;
+                                    });
 
                 auto infos = std::vector<SampleRange>{};
                 for (auto const &c : seq.cells)
                 {
-                    auto const sample_count = sample_count_from_weight(c.weight);
+                    auto const sample_count =
+                        weighted_sample_count(total_weight, total_samples, c.weight);
                     auto const result = note_sample_infos(c, sample_count, offset);
                     std::copy(std::cbegin(result), std::cend(result),
                               std::back_inserter(infos));

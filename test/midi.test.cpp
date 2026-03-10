@@ -479,6 +479,20 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
             REQUIRE(infos == expected);
         }
     }
+
+    SECTION("Throws on zero total weight")
+    {
+        auto const zero_weight = Sequence{{
+            {.element = Note{}, .weight = 0.f},
+            {.element = Note{}, .weight = 0.f},
+        }};
+
+        REQUIRE_THROWS_AS(
+            midi::flatten_and_translate_to_sample_infos(Cell{zero_weight},
+                                                        TimeSignature{4, 4}, 44'100,
+                                                        120.f),
+            std::invalid_argument);
+    }
 }
 
 TEST_CASE("translate_to_midi_timeline", "[midi]")
@@ -547,6 +561,19 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
     };
 
     REQUIRE(timeline == expected);
+
+    SECTION("throws on zero total weight")
+    {
+        auto const zero_weight = Sequence{{
+            {.element = Note{.pitch = 0}, .weight = 0.f},
+            {.element = Note{.pitch = 1}, .weight = 0.f},
+        }};
+
+        REQUIRE_THROWS_AS(midi::translate_to_midi_timeline(
+                              Cell{zero_weight}, TimeSignature{4, 4}, 44'100, 120.f,
+                              tuning, 440.f, 1.f),
+                          std::invalid_argument);
+    }
 }
 
 TEST_CASE("time signature controls top-level duration", "[midi]")

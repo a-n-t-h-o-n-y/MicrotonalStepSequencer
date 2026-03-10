@@ -16,7 +16,8 @@ namespace sequence::modify
  * This overwrites existings notes, it does not apply an offset to the existing
  * notes.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to randomize.
  * @param pattern The Pattern to apply across Sequences.
@@ -32,7 +33,8 @@ namespace sequence::modify
 /**
  * @brief Randomize the note velocities in a given Cell.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to randomize.
  * @param pattern The Pattern to apply across Sequences.
@@ -49,7 +51,8 @@ namespace sequence::modify
 /**
  * @brief Randomize the note delays in a Cell.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to randomize.
  * @param pattern The Pattern to apply across Sequences.
@@ -66,7 +69,8 @@ namespace sequence::modify
 /**
  * @brief Randomize the note gates of a Cell.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to randomize.
  * @param pattern The Pattern to apply across Sequences.
@@ -83,7 +87,8 @@ namespace sequence::modify
 /**
  * @brief Shift note pitch by a constant amount.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to shift the notes of.
  * @param pattern The Pattern to apply across Sequences.
@@ -95,7 +100,9 @@ namespace sequence::modify
 /**
  * @brief Shift note velocities by a constant amount.
  *
- * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * Clamps the
  * result to the range [0, 1].
  *
  * @param cell The Cell to shift the velocities of.
@@ -109,7 +116,9 @@ namespace sequence::modify
 /**
  * @brief Shift note delays by a constant amount.
  *
- * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * Clamps the
  * result to the range [0, 1].
  *
  * @param cell The Cell to shift the delays of.
@@ -122,7 +131,9 @@ namespace sequence::modify
 /**
  * @brief Shift note gates by a constant amount.
  *
- * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * Clamps the
  * result to the range [0, 1].
  *
  * @param cell The Cell to shift the gates of.
@@ -135,7 +146,8 @@ namespace sequence::modify
 /**
  * @brief Set the pitch of a note to a constant value.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to set the pitch of.
  * @param pattern The Pattern to apply across Sequences.
@@ -147,13 +159,16 @@ namespace sequence::modify
 /**
  * @brief Set the octave of a note to a constant value.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to set the octave of.
  * @param pattern The Pattern to apply across Sequences.
  * @param octave The octave to set the note to.
  * @param tuning_length The length of the tuning.
  * @return Cell The octave set Cell.
+ *
+ * @throws std::invalid_argument if \p tuning_length is zero.
  */
 [[nodiscard]] auto set_octave(Cell cell, Pattern const &pattern, int octave,
                               std::size_t tuning_length) -> Cell;
@@ -161,7 +176,9 @@ namespace sequence::modify
 /**
  * @brief Set the velocity of a note to a constant value.
  *
- * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * Clamps the
  * result to the range [0, 1].
  *
  * @param cell The Cell to set the velocity of.
@@ -175,7 +192,9 @@ namespace sequence::modify
 /**
  * @brief Set the delay of a note to a constant value.
  *
- * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * Clamps the
  * result to the range [0, 1].
  *
  * @param cell The Cell to set the delay of.
@@ -188,7 +207,9 @@ namespace sequence::modify
 /**
  * @brief Set the gate of a note to a constant value.
  *
- * If cell is a Sequence, this will recurse into child Sequences. Clamps the
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * Clamps the
  * result to the range [0, 1].
  *
  * @param cell The Cell to set the gate of.
@@ -216,7 +237,8 @@ namespace sequence::modify
 /**
  * @brief Set delay of even index notes to zero and odd index notes to `amount`.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to modify.
  * @param amount The amount to set the note delays to.
@@ -231,7 +253,8 @@ namespace sequence::modify
 /**
  * @brief Quantize the notes in an existing sequence zero delay and full gate.
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to quantize.
  * @param pattern The Pattern to apply across Sequences.
@@ -242,7 +265,8 @@ namespace sequence::modify
 /**
  * @brief Swap the notes in a Cell around a center note.
 
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to mirror.
  * @param pattern The Pattern to apply across Sequences.
@@ -254,7 +278,8 @@ namespace sequence::modify
 /**
  * @brief Reverse the notes in a Cell
  *
- * If cell is a Sequence, this will recurse into child Sequences.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
  *
  * @param cell The Cell to reverse.
  * @return Cell The reversed Cell.
@@ -422,9 +447,10 @@ namespace sequence::modify
 /**
  * @brief Humanize the note velocities in a Cell.
  *
- * @details If cell is a Sequence, this will recurse into child Sequences. This applies
- * a random value within the clamped range [velocity - amount, velocity + amount] to
- * each note's velocity.
+ * @details Pattern matching is evaluated independently at each Sequence level.
+ * Recursion only continues through child Sequence cells selected by the current
+ * level's Pattern. This applies a random value within the clamped range
+ * [velocity - amount, velocity + amount] to each note's velocity.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
@@ -437,9 +463,10 @@ namespace sequence::modify
 /**
  * @brief Humanize the note delays in a Cell.
  *
- * @details If cell is a Sequence, this will recurse into child Sequences. This applies
- * a random value within the clamped range [delay - amount, delay + amount] to each
- * note's delay.
+ * @details Pattern matching is evaluated independently at each Sequence level.
+ * Recursion only continues through child Sequence cells selected by the current
+ * level's Pattern. This applies a random value within the clamped range
+ * [delay - amount, delay + amount] to each note's delay.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
@@ -452,9 +479,10 @@ namespace sequence::modify
 /**
  * @brief Humanize the note gates in a Cell.
  *
- * If cell is a Sequence, this will recurse into child Sequences. This applies a
- * random value within the clamped range [gate - amount, gate + amount] to each
- * note's gate.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * This applies a random value within the clamped range [gate - amount, gate + amount]
+ * to each note's gate.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
@@ -467,8 +495,9 @@ namespace sequence::modify
 /**
  * @brief Fill a Sequence with Notes.
  *
- * If cell is a Sequence, this will recurse into child Sequences. This fills the
- * Sequence with Notes, using the Pattern to define which Cells are turned into Notes.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * This fills matching Cells with Notes.
  *
  * @param cell The Cell to fill.
  * @param pattern The Pattern to apply across Sequences.
@@ -479,8 +508,9 @@ namespace sequence::modify
 /**
  * @brief Fill a Sequence with Rests.
  *
- * If cell is a Sequence, this will recurse into child Sequences. This fills the
- * Sequence with Rests, using the Pattern to define which Cells are turned into Rests.
+ * Pattern matching is evaluated independently at each Sequence level. Recursion only
+ * continues through child Sequence cells selected by the current level's Pattern.
+ * This fills matching Cells with Rests.
  *
  * @param cell The Cell to fill.
  * @param pattern The Pattern to apply across Sequences.

@@ -184,6 +184,11 @@ auto set_pitch(Cell cell, Pattern const &pattern, int pitch) -> Cell
 auto set_octave(Cell cell, Pattern const &pattern, int octave,
                 std::size_t tuning_length) -> Cell
 {
+    if (tuning_length == 0)
+    {
+        throw std::invalid_argument("tuning_length must be greater than 0");
+    }
+
     return visit_recursive(cell, pattern, [&](Note n) {
         auto const tuning_length_i = static_cast<int>(tuning_length);
         auto degree_in_current_octave =

@@ -38,6 +38,7 @@ namespace sequence::generate
  * @param note The note to duplicate.
  * @return Sequence
  *
+ * @throws std::invalid_argument if \p interval is zero.
  */
 [[nodiscard]] auto interval(std::size_t size, std::size_t interval,
                             std::size_t offset = 0, Note note = {0, 0.8f, 0.f, 1.f})

@@ -1,5 +1,5 @@
-#ifndef SEQUENCY_MIDI_HPP
-#define SEQUENCY_MIDI_HPP
+#ifndef SEQUENCE_MIDI_HPP
+#define SEQUENCE_MIDI_HPP
 #include <cstdint>
 #include <utility>
 #include <variant>
@@ -44,11 +44,6 @@ struct MicrotonalNote
  */
 [[nodiscard]] auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
                                     float pb_range) -> MicrotonalNote;
-
-[[nodiscard]] auto create_midi_note_visitor(MusicElement const &element,
-                                            Tuning const &tuning, float tuning_base,
-                                            float pb_range)
-    -> std::vector<MicrotonalNote>;
 
 /**
  * @brief Calculates the MIDI notes for a cell.
@@ -96,10 +91,13 @@ struct SampleRange
  * This will recurse into subsequences. Only returns sample counts for Notes, Rests are
  * ignored.
  *
- * @param seq The sequence to calculate the sample counts for.
+ * @param cell The Cell to calculate sample ranges for.
  * @param total_samples The total number of samples for the sequence.
  * @param offset The offset of the sequence in samples. Float to avoid rounding errors.
  * @return std::vector<SampleRange>
+ *
+ * @throws std::invalid_argument if any visited Sequence has a total child weight that
+ * is not greater than zero.
  */
 [[nodiscard]] auto note_sample_infos(Cell const &cell, std::uint32_t total_samples,
                                      float offset = 0.f) -> std::vector<SampleRange>;
@@ -117,8 +115,8 @@ struct SampleRange
  * @param bpm The beats per minute of the audio.
  * @return std::vector<SampleRange>
  *
- * @throws std::invalid_argument if the timing inputs are invalid. See
- * sequence::samples_count.
+ * @throws std::invalid_argument if the timing inputs are invalid or if any visited
+ * Sequence has a total child weight that is not greater than zero.
  */
 [[nodiscard]] auto flatten_and_translate_to_sample_infos(Cell const &cell,
                                                          TimeSignature const &time_signature,
@@ -172,8 +170,9 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
  * @return EventTimeline
  *
  * @throws std::invalid_argument if the timing inputs are invalid, if \p tuning is
- * empty, if \p base_frequency is not greater than zero, or if \p pb_range is not
- * greater than zero.
+ * empty, if \p base_frequency is not greater than zero, if \p pb_range is not greater
+ * than zero, or if any visited Sequence has a total child weight that is not greater
+ * than zero.
  */
 [[nodiscard]] auto translate_to_midi_timeline(Cell const &cell,
                                               TimeSignature const &time_signature,
@@ -183,4 +182,4 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
     -> EventTimeline;
 
 } // namespace sequence::midi
-#endif // SEQUENCY_MIDI_HPP
+#endif // SEQUENCE_MIDI_HPP

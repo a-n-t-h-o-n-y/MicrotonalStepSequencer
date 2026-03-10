@@ -16,9 +16,14 @@ target_link_libraries(your_target PRIVATE sequence::sequencer)
 
 - `sequence::Note`: pitch, velocity, delay, and gate for one note event.
 - `sequence::Rest`: an empty step.
-- `sequence::Sequence`: a nested list of `Cell`s.
-- `sequence::Cell`: wraps a `Note`, `Rest`, or nested `Sequence` plus a relative weight.
+- `sequence::MusicElement`: the variant payload stored inside a `Cell`; it holds a
+  `Note`, `Rest`, or nested `Sequence`.
+- `sequence::Cell`: the weighted wrapper around a `MusicElement`.
+- `sequence::Sequence`: a nested collection of `Cell`s.
 - `sequence::Tuning`: microtonal scale intervals and octave size.
+
+`Cell` is the unit most APIs operate on. A `Sequence` is recursive because each child is
+itself a `Cell`, which means a child can be another `Sequence`.
 
 ## Example
 
@@ -57,6 +62,35 @@ int main()
 
     return timeline.empty() ? 1 : 0;
 }
+```
+
+## Pattern Semantics
+
+Most `sequence::modify` operations accept a `Pattern` to decide which child cells are
+changed at each `Sequence` level.
+
+- Pattern matching happens independently per `Sequence`.
+- Recursion only continues through child `Sequence` cells selected by the current
+  level's `Pattern`.
+- A nested `Sequence` skipped by the parent pattern is left unchanged.
+
+For example, with `Pattern{0, {2}}`, a transform visits child indices `0`, `2`, `4`,
+and so on at each visited `Sequence` level:
+
+```cpp
+using namespace sequence;
+
+auto cell = Cell{Sequence{{
+    {Note{0, 0.8f, 0.0f, 1.0f}},
+    {Sequence{{{Note{1, 0.8f, 0.0f, 1.0f}}}}},
+    {Sequence{{{Note{2, 0.8f, 0.0f, 1.0f}}}}},
+}}};
+
+auto shifted = modify::shift_pitch(cell, Pattern{0, {2}}, 12);
+
+// Child 0 is modified.
+// Child 1 is skipped entirely, including its nested note.
+// Child 2 is visited, and the nested note inside it is modified.
 ```
 
 ## Main Entry Points

@@ -1441,6 +1441,12 @@ TEST_CASE("setters", "[modify]")
         REQUIRE(get<Sequence>(updated.cells[3]) == get<Sequence>(seq.cells[3]));
     }
 
+    SECTION("set_octave throws if tuning length is zero")
+    {
+        REQUIRE_THROWS_AS(modify::set_octave({seq}, pattern, 3, 0),
+                          std::invalid_argument);
+    }
+
     SECTION("set_velocity clamps")
     {
         auto const high = get<Sequence>(modify::set_velocity({seq}, pattern, 3.f));
@@ -1603,4 +1609,23 @@ TEST_CASE("fill operations", "[modify]")
         REQUIRE(get<Sequence>(updated.cells[2]).cells[0] == Cell{Rest{}});
         REQUIRE(get<Sequence>(updated.cells[2]).cells[1] == Cell{Rest{}});
     }
+}
+
+TEST_CASE("pattern recursion semantics", "[modify]")
+{
+    auto const seq = Sequence{{
+        {Note{0, 0.5f, 0.0f, 1.0f}},
+        {Sequence{{
+            {Note{1, 0.5f, 0.0f, 1.0f}},
+        }}},
+        {Sequence{{
+            {Note{2, 0.5f, 0.0f, 1.0f}},
+        }}},
+    }};
+
+    auto const shifted = get<Sequence>(modify::shift_pitch({seq}, {0, {2}}, 12));
+
+    REQUIRE(get<Note>(shifted.cells[0]).pitch == 12);
+    REQUIRE(get<Note>(get<Sequence>(shifted.cells[1]).cells[0]).pitch == 1);
+    REQUIRE(get<Note>(get<Sequence>(shifted.cells[2]).cells[0]).pitch == 14);
 }

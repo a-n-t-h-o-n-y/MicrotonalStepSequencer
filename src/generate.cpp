@@ -23,6 +23,11 @@ auto full(std::size_t size, Note note) -> Sequence
 auto interval(std::size_t size, std::size_t interval, std::size_t offset, Note note)
     -> Sequence
 {
+    if (interval == 0)
+    {
+        throw std::invalid_argument("interval must be greater than 0");
+    }
+
     auto seq = Sequence{std::vector<Cell>(size, {Rest{}})};
 
     for (auto i = offset; i < size; i += interval)

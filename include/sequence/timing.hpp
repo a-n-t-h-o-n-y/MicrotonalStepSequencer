@@ -30,6 +30,9 @@ namespace sequence
  * @param sample_rate The sample rate of the audio.
  * @param bpm The beats per minute of the audio.
  * @return std::uint32_t - The number of samples in the cell.
+ *
+ * @throws std::invalid_argument if \p time_signature.denominator is zero, if
+ * \p sample_rate is zero, or if \p bpm is not greater than zero.
  */
 [[nodiscard]] auto samples_count(Cell const &cell,
                                  TimeSignature const &time_signature,

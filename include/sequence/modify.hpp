@@ -268,8 +268,10 @@ namespace sequence::modify
  * does not recurse into child Sequences.
  *
  * @param cell The Cell to duplicate.
- * @param count The number of copies to make, if zero, returns an empty Sequence.
+ * @param count The number of copies to make. Must be greater than zero.
  * @return Cell The repeated sequence as a Cell.
+ *
+ * @throws std::invalid_argument if \p count is zero.
  */
 [[nodiscard]] auto repeat(Cell const &cell, std::size_t count) -> Cell;
 
@@ -299,39 +301,37 @@ namespace sequence::modify
 [[nodiscard]] auto compress(Cell const &cell, Pattern const &pattern) -> Cell;
 
 /**
- * @brief Extract a single note from a Sequence Cell.
+ * @brief Extract a single child Cell from a Sequence Cell.
  *
  * No-op for Notes and Rests.
  *
  * @param cell The Cell to extract from.
- * @param index The index of the note to extract.
- * @return Cell The extracted note.
+ * @param index The index of the child Cell to extract.
+ * @return Cell The extracted Cell.
  *
  * @throws std::invalid_argument If index is out of bounds.
  */
 [[nodiscard]] auto extract(Cell const &cell, std::size_t index) -> Cell;
 
 /**
- * @brief Get the first Note or Rest in a Cell.
+ * @brief Get the first child Cell in a Sequence, or return the input Cell unchanged.
  *
- * If the Cell is an empty Sequence, this will return a Rest. No-op for Notes
- * and Rests.
+ * No-op for Notes and Rests.
  *
  * @param cell The Cell to get the first Note or Rest from.
- * @return Cell The first Note or Rest.
+ * @return Cell The first child Cell, or the input Cell for Notes and Rests.
  *
  * @throws std::invalid_argument If the Cell is an empty Sequence.
  */
 [[nodiscard]] auto first(Cell const &cell) -> Cell;
 
 /**
- * @brief Get the last Note or Rest in a Cell.
+ * @brief Get the last child Cell in a Sequence, or return the input Cell unchanged.
  *
- * If the Cell is an empty Sequence, this will return a Rest. No-op for Notes
- * and Rests.
+ * No-op for Notes and Rests.
  *
  * @param cell The Cell to get the last Note or Rest from.
- * @return Cell The last Note or Rest.
+ * @return Cell The last child Cell, or the input Cell for Notes and Rests.
  *
  * @throws std::invalid_argument If the Cell is an empty Sequence.
  */
@@ -423,7 +423,8 @@ namespace sequence::modify
  * @brief Humanize the note velocities in a Cell.
  *
  * @details If cell is a Sequence, this will recurse into child Sequences. This applies
- * a random offset between [0, amount] to each note's velocity.
+ * a random value within the clamped range [velocity - amount, velocity + amount] to
+ * each note's velocity.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
@@ -437,7 +438,8 @@ namespace sequence::modify
  * @brief Humanize the note delays in a Cell.
  *
  * @details If cell is a Sequence, this will recurse into child Sequences. This applies
- * a random offset between [0, amount] to each note's delay.
+ * a random value within the clamped range [delay - amount, delay + amount] to each
+ * note's delay.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.
@@ -451,7 +453,8 @@ namespace sequence::modify
  * @brief Humanize the note gates in a Cell.
  *
  * If cell is a Sequence, this will recurse into child Sequences. This applies a
- * random offset between [0, amount] to each note's gate.
+ * random value within the clamped range [gate - amount, gate + amount] to each
+ * note's gate.
  *
  * @param cell The Cell to humanize.
  * @param pattern The Pattern to apply across Sequences.

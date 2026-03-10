@@ -13,7 +13,6 @@ namespace sequence::generate
  * @param size The number of cells to generate.
  * @return Sequence
  *
- * @throws std::out_of_range if size < 0.
  */
 [[nodiscard]] auto empty(std::size_t size) -> Sequence;
 
@@ -24,12 +23,11 @@ namespace sequence::generate
  * @param note The note to duplicate.
  * @return Sequence
  *
- * @throws std::out_of_range if size < 0.
  */
 [[nodiscard]] auto full(std::size_t size, Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence;
 
 /**
- * @brief Generates a sequence of cells, each of which is either a Notee or Rest in an
+ * @brief Generates a sequence of cells, each of which is either a Note or Rest in an
  * evenly spaced pattern.
  *
  * @param size The number of cells to generate.
@@ -40,7 +38,6 @@ namespace sequence::generate
  * @param note The note to duplicate.
  * @return Sequence
  *
- * @throws std::out_of_range if size < 0, interval < 1, or offset < 0.
  */
 [[nodiscard]] auto interval(std::size_t size, std::size_t interval,
                             std::size_t offset = 0, Note note = {0, 0.8f, 0.f, 1.f})
@@ -54,7 +51,7 @@ namespace sequence::generate
  * @param note The note to duplicate.
  * @return Sequence
  *
- * @throws std::out_of_range if size < 0, density < 0, or density > 1.
+ * @throws std::out_of_range if density is outside the range [0, 1].
  */
 [[nodiscard]] auto random(std::size_t size, float density = 0.6f,
                           Note note = {0, 0.8f, 0.f, 1.f}) -> Sequence;

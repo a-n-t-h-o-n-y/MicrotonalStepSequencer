@@ -27,6 +27,10 @@ auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
     {
         throw std::invalid_argument("Tuning must not be empty");
     }
+    if (pb_range <= 0.f)
+    {
+        throw std::invalid_argument("pb_range must be greater than 0");
+    }
 
     auto const fractional_note = tuning_base + [&] {
         constexpr auto semitone_cents = 100.f;
@@ -88,6 +92,11 @@ auto flatten_and_translate_to_midi_notes(Cell const &cell, Tuning const &tuning,
                                          float base_frequency, float pb_range)
     -> std::vector<MicrotonalNote>
 {
+    if (base_frequency <= 0.f)
+    {
+        throw std::invalid_argument("base_frequency must be greater than 0");
+    }
+
     constexpr auto a4 = 69;       // MIDI note number for A4
     constexpr auto a4_hz = 440.f; // Frequency of A4
 

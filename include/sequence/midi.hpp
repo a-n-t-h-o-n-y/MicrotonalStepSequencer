@@ -35,11 +35,12 @@ struct MicrotonalNote
  * note number.
  * @param tuning The tuning to use for the note.
  * @param tuning_base The base note of the tuning, as a floating point value. This is a
- * midi note value but allows for fractional notes that coorespond to any value
- * inbetween midi notes.
+ * MIDI note value but allows for fractional notes that correspond to any value
+ * in between MIDI notes.
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return MicrotonalNote
- * @throws std::invalid_argument if the tuning is empty.
+ * @throws std::invalid_argument if the tuning is empty or if \p pb_range is not
+ * greater than zero.
  */
 [[nodiscard]] auto create_midi_note(int pitch, Tuning const &tuning, float tuning_base,
                                     float pb_range) -> MicrotonalNote;
@@ -53,10 +54,14 @@ struct MicrotonalNote
  * @brief Calculates the MIDI notes for a cell.
  *
  * @param cell The cell to calculate the MIDI notes for.
+ * @param tuning The tuning to use for note translation.
  * @param base_frequency The base frequency of the tuning. Defaults to 440 Hz. This is
  * what note.pitch 0 will be.
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return std::vector<MicrotonalNote>
+ *
+ * @throws std::invalid_argument if \p base_frequency is not greater than zero, if
+ * \p pb_range is not greater than zero, or if \p tuning is empty.
  */
 [[nodiscard]] auto flatten_and_translate_to_midi_notes(Cell const &cell,
                                                        Tuning const &tuning,
@@ -108,9 +113,12 @@ struct SampleRange
  *
  * @param cell The cell to flatten.
  * @param time_signature The top-level time signature for the cell.
- * @param sample_rate
- * @param bpm
+ * @param sample_rate The sample rate of the audio.
+ * @param bpm The beats per minute of the audio.
  * @return std::vector<SampleRange>
+ *
+ * @throws std::invalid_argument if the timing inputs are invalid. See
+ * sequence::samples_count.
  */
 [[nodiscard]] auto flatten_and_translate_to_sample_infos(Cell const &cell,
                                                          TimeSignature const &time_signature,
@@ -162,6 +170,10 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
  * @param base_frequency The base frequency of the tuning.
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return EventTimeline
+ *
+ * @throws std::invalid_argument if the timing inputs are invalid, if \p tuning is
+ * empty, if \p base_frequency is not greater than zero, or if \p pb_range is not
+ * greater than zero.
  */
 [[nodiscard]] auto translate_to_midi_timeline(Cell const &cell,
                                               TimeSignature const &time_signature,

@@ -19,6 +19,15 @@ TEST_CASE("create_midi_note", "[midi]")
         REQUIRE_THROWS_AS(midi::create_midi_note(0, {}, 0.f, 1), std::invalid_argument);
     }
 
+    SECTION("throw if pitch bend range is not positive")
+    {
+        auto const tuning = Tuning{{0.f}, 1200.f, "description"};
+        REQUIRE_THROWS_AS(midi::create_midi_note(0, tuning, 60.f, 0.f),
+                          std::invalid_argument);
+        REQUIRE_THROWS_AS(midi::create_midi_note(0, tuning, 60.f, -1.f),
+                          std::invalid_argument);
+    }
+
     SECTION("12edo (12 equal divisions of the octave)")
     {
         auto const tuning = Tuning{
@@ -225,6 +234,23 @@ TEST_CASE("flatten_and_translate_to_midi_notes", "[midi]")
     };
 
     REQUIRE(notes == expected);
+
+    SECTION("throws if base frequency is not positive")
+    {
+        REQUIRE_THROWS_AS(
+            midi::flatten_and_translate_to_midi_notes(Cell{seq}, tuning, 0.f, 48.f),
+            std::invalid_argument);
+        REQUIRE_THROWS_AS(
+            midi::flatten_and_translate_to_midi_notes(Cell{seq}, tuning, -440.f, 48.f),
+            std::invalid_argument);
+    }
+
+    SECTION("throws if pitch bend range is not positive")
+    {
+        REQUIRE_THROWS_AS(
+            midi::flatten_and_translate_to_midi_notes(Cell{seq}, tuning, 440.f, 0.f),
+            std::invalid_argument);
+    }
 }
 
 TEST_CASE("flatten_notes", "[midi]")

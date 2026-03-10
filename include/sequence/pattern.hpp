@@ -6,6 +6,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace sequence
@@ -76,8 +77,8 @@ class PatternView
      * @param vec Vector of elements to apply pattern on
      * @param pattern The pattern to use for iteration
      */
-    PatternView(std::vector<T> &vec, Pattern const &pattern)
-        : vec_{vec}, pattern_{pattern}, offset_index_{pattern.offset}
+    PatternView(std::vector<T> &vec, Pattern pattern)
+        : vec_{vec}, pattern_{std::move(pattern)}, offset_index_{pattern_.offset}
     {
         if (pattern_.intervals.empty())
         {
@@ -143,7 +144,7 @@ class PatternView
 
   private:
     std::vector<T> &vec_;
-    Pattern const &pattern_;
+    Pattern pattern_;
     std::size_t offset_index_;
 };
 
@@ -155,8 +156,8 @@ class ConstPatternView
      * @param vec Vector of elements to apply pattern on
      * @param pattern The pattern to use for iteration
      */
-    ConstPatternView(std::vector<T> const &vec, Pattern const &pattern)
-        : vec_(vec), pattern_(pattern), offset_index_(pattern.offset)
+    ConstPatternView(std::vector<T> const &vec, Pattern pattern)
+        : vec_(vec), pattern_(std::move(pattern)), offset_index_(pattern_.offset)
     {
         if (pattern_.intervals.empty())
         {
@@ -232,7 +233,7 @@ class ConstPatternView
 
   private:
     std::vector<T> const &vec_;
-    Pattern const &pattern_;
+    Pattern pattern_;
     std::size_t offset_index_;
 };
 

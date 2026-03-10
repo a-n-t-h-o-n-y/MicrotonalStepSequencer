@@ -5,9 +5,9 @@
 #include <map>
 
 #include "helper.hpp"
-#include <sequence/measure.hpp>
 #include <sequence/midi.hpp>
 #include <sequence/sequence.hpp>
+#include <sequence/timing.hpp>
 #include <sequence/time_signature.hpp>
 
 using namespace sequence;
@@ -213,7 +213,7 @@ TEST_CASE("flatten_and_translate_to_midi_notes", "[midi]")
         {Note{7, 0.75f, 0.f, 1.f}},
     }};
 
-    auto const notes = midi::flatten_and_translate_to_midi_notes(Measure{seq}, tuning);
+    auto const notes = midi::flatten_and_translate_to_midi_notes(Cell{seq}, tuning);
 
     auto const expected = std::vector<midi::MicrotonalNote>{
         {.note = 69, .pitch_bend = 8'192}, {.note = 71, .pitch_bend = 8'192},
@@ -280,7 +280,8 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }};
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos(Measure{seq}, 44100, 240);
+            midi::flatten_and_translate_to_sample_infos(Cell{seq}, TimeSignature{4, 4},
+                                                        44100, 240);
 
         auto const expected = std::vector<midi::SampleRange>{
             {.begin = 0, .end = 3'675},       {.begin = 7'350, .end = 11'025},
@@ -309,7 +310,8 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }};
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos(Measure{seq}, 44100, 240);
+            midi::flatten_and_translate_to_sample_infos(Cell{seq}, TimeSignature{4, 4},
+                                                        44100, 240);
 
         auto const expected = std::vector<midi::SampleRange>{
             {.begin = 0, .end = 1'837},       {.begin = 7'350, .end = 8'268},
@@ -338,7 +340,8 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }};
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos(Measure{seq}, 44100, 240);
+            midi::flatten_and_translate_to_sample_infos(Cell{seq}, TimeSignature{4, 4},
+                                                        44100, 240);
 
         auto const expected = std::vector<midi::SampleRange>{
             {.begin = 1'837, .end = 3'675},   {.begin = 8'268, .end = 11'025},
@@ -379,7 +382,8 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
         }};
 
         auto const infos =
-            midi::flatten_and_translate_to_sample_infos(Measure{seq}, 44100, 120);
+            midi::flatten_and_translate_to_sample_infos(Cell{seq}, TimeSignature{4, 4},
+                                                        44100, 120);
 
         auto const expected = std::vector<midi::SampleRange>{
             {.begin = 1'837, .end = 3'307},   {.begin = 8'268, .end = 8'543},
@@ -403,7 +407,9 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
             }};
 
             auto const infos =
-                midi::flatten_and_translate_to_sample_infos(Measure{seq}, 44100, 120);
+                midi::flatten_and_translate_to_sample_infos(Cell{seq},
+                                                            TimeSignature{4, 4}, 44100,
+                                                            120);
 
             auto const expected = std::vector<midi::SampleRange>{
                 {.begin = 0, .end = 22'050},
@@ -430,7 +436,9 @@ TEST_CASE("flatten_and_translate_to_sample_infos", "[midi]")
             }};
 
             auto const infos =
-                midi::flatten_and_translate_to_sample_infos(Measure{seq}, 44100, 120);
+                midi::flatten_and_translate_to_sample_infos(Cell{seq},
+                                                            TimeSignature{4, 4}, 44100,
+                                                            120);
 
             auto const expected = std::vector<midi::SampleRange>{
                 {.begin = 0, .end = 14'700},
@@ -488,7 +496,8 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
     }};
 
     auto const timeline =
-        midi::translate_to_midi_timeline(Measure{seq}, 44100, 120, tuning, 440.f, 1);
+        midi::translate_to_midi_timeline(Cell{seq}, TimeSignature{4, 4}, 44100, 120,
+                                         tuning, 440.f, 1);
 
     auto const expected = midi::EventTimeline{
         {midi::PitchBend{8'192}, 0},
@@ -512,4 +521,25 @@ TEST_CASE("translate_to_midi_timeline", "[midi]")
     };
 
     REQUIRE(timeline == expected);
+}
+
+TEST_CASE("time signature controls top-level duration", "[midi]")
+{
+    auto const cell = Cell{Sequence{{{Note{}}, {Note{}}}}};
+
+    auto const four_four =
+        midi::flatten_and_translate_to_sample_infos(cell, TimeSignature{4, 4}, 44'100,
+                                                    120.f);
+    auto const three_four =
+        midi::flatten_and_translate_to_sample_infos(cell, TimeSignature{3, 4}, 44'100,
+                                                    120.f);
+
+    REQUIRE(four_four == std::vector<midi::SampleRange>{
+                             {.begin = 0, .end = 44'100},
+                             {.begin = 44'100, .end = 88'200},
+                         });
+    REQUIRE(three_four == std::vector<midi::SampleRange>{
+                              {.begin = 0, .end = 33'075},
+                              {.begin = 33'075, .end = 66'150},
+                          });
 }

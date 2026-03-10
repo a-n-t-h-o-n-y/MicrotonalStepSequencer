@@ -23,17 +23,17 @@ set_target_properties(sequencer PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_sources(sequencer
     PRIVATE
         src/generate.cpp
-        src/measure.cpp
         src/midi.cpp
         src/modify.cpp
+        src/timing.cpp
         src/time_signature.cpp
         src/tuning.cpp
         src/pattern.cpp
         include/sequence/generate.hpp
-        include/sequence/measure.hpp
         include/sequence/midi.hpp
         include/sequence/modify.hpp
         include/sequence/sequence.hpp
+        include/sequence/timing.hpp
         include/sequence/time_signature.hpp
         include/sequence/random.hpp
         include/sequence/tuning.hpp

@@ -5,8 +5,8 @@
 #include <variant>
 #include <vector>
 
-#include <sequence/measure.hpp>
 #include <sequence/sequence.hpp>
+#include <sequence/timing.hpp>
 #include <sequence/tuning.hpp>
 
 namespace sequence::midi
@@ -50,21 +50,15 @@ struct MicrotonalNote
     -> std::vector<MicrotonalNote>;
 
 /**
- * @brief Calculates the MIDI notes for a measure.
+ * @brief Calculates the MIDI notes for a cell.
  *
- * @param measure The measure to calculate the MIDI notes for.
+ * @param cell The cell to calculate the MIDI notes for.
  * @param base_frequency The base frequency of the tuning. Defaults to 440 Hz. This is
  * what note.pitch 0 will be.
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return std::vector<MicrotonalNote>
  */
-[[nodiscard]] auto flatten_and_translate_to_midi_notes(Measure const &measure,
-                                                       Tuning const &tuning,
-                                                       float base_frequency = 440.f,
-                                                       float pb_range = 48.f)
-    -> std::vector<MicrotonalNote>;
-
-[[nodiscard]] auto flatten_and_translate_to_midi_notes(Phrase const &phrase,
+[[nodiscard]] auto flatten_and_translate_to_midi_notes(Cell const &cell,
                                                        Tuning const &tuning,
                                                        float base_frequency = 440.f,
                                                        float pb_range = 48.f)
@@ -79,8 +73,7 @@ struct MicrotonalNote
  * @return std::vector<Note>
  */
 [[nodiscard]] auto flatten_notes(MusicElement const &element) -> std::vector<Note>;
-
-[[nodiscard]] auto flatten_notes(Phrase const &phrase) -> std::vector<Note>;
+[[nodiscard]] auto flatten_notes(Cell const &cell) -> std::vector<Note>;
 
 /// Stores the starting and ending audio sample for a note.
 struct SampleRange
@@ -107,18 +100,20 @@ struct SampleRange
                                      float offset = 0.f) -> std::vector<SampleRange>;
 
 /**
- * @brief Flattens a measure into a vector of SampleRange objects.
+ * @brief Flattens a timed cell into a vector of SampleRange objects.
  *
  * Only the Notes are returned, including Notes in subsequences, rests do not have an
- * entry. The sample counts are calculated from the measure's sample rate and bpm, and
- * note delay and gate are used, as well as the Measure's time signature and resolution.
+ * entry. The sample counts are calculated from the cell's sample rate and bpm, and
+ * note delay and gate are used, as well as the provided time signature.
  *
- * @param measure The measure to flatten.
+ * @param cell The cell to flatten.
+ * @param time_signature The top-level time signature for the cell.
  * @param sample_rate
  * @param bpm
  * @return std::vector<SampleRange>
  */
-[[nodiscard]] auto flatten_and_translate_to_sample_infos(Measure const &measure,
+[[nodiscard]] auto flatten_and_translate_to_sample_infos(Cell const &cell,
+                                                         TimeSignature const &time_signature,
                                                          std::uint32_t sample_rate,
                                                          float bpm)
     -> std::vector<SampleRange>;
@@ -154,12 +149,13 @@ using Event = std::variant<NoteOn, NoteOff, PitchBend>;
 using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
 
 /**
- * Flattens a measure into a vector of MIDI events.
+ * Flattens a timed cell into a vector of MIDI events.
  *
  * @details Returns a sequence of MIDI events of type NoteOn, NoteOff, or PitchBend,
  * paired with the sample offset of the event.
  *
- * @param measure The measure to flatten.
+ * @param cell The cell to flatten.
+ * @param time_signature The top-level time signature for the cell.
  * @param sample_rate The sample rate of the audio.
  * @param bpm The beats per minute of the audio.
  * @param tuning The tuning to use for the MIDI notes.
@@ -167,7 +163,8 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
  * @return EventTimeline
  */
-[[nodiscard]] auto translate_to_midi_timeline(Measure const &measure,
+[[nodiscard]] auto translate_to_midi_timeline(Cell const &cell,
+                                              TimeSignature const &time_signature,
                                               std::uint32_t sample_rate, float bpm,
                                               Tuning const &tuning,
                                               float base_frequency, float pb_range)

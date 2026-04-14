@@ -29,10 +29,10 @@ itself a `Cell`, which means a child can be another `Sequence`.
 
 ```cpp
 #include <cstdint>
-#include <sequence/generate.hpp>
 #include <sequence/midi.hpp>
 #include <sequence/modify.hpp>
 #include <sequence/pattern.hpp>
+#include <sequence/timing.hpp>
 #include <sequence/time_signature.hpp>
 #include <sequence/tuning.hpp>
 
@@ -102,6 +102,7 @@ auto shifted = modify::shift_pitch(cell, Pattern{0, {2}}, 12);
 
 - `sequence::modify`: transform existing material by pattern.
 - `sequence::from_scala`: load a tuning from a Scala `.scl` file.
+- `sequence::samples_count`: derive total duration in samples from a cell and time signature.
 - `sequence::midi::translate_to_midi_timeline`: convert a timed cell into MIDI events.
 
 Tests in [`test/`](/Users/anthony/Documents/code/MicrotonalStepSequencer/test) show more

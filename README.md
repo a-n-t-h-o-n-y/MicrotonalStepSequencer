@@ -40,7 +40,12 @@ int main()
 {
     using namespace sequence;
 
-    auto seq = generate::interval(16, 2, 0, Note{0, 0.8f, 0.0f, 0.9f});
+    auto seq = Cell{Sequence{{
+        {Note{0, 0.8f, 0.0f, 1.0f}},
+        {Note{2, 0.8f, 0.0f, 1.0f}},
+        {Note{4, 0.8f, 0.0f, 1.0f}},
+        {Note{5, 0.8f, 0.0f, 1.0f}},
+    }}};
     auto pattern = Pattern{0, {2}};
     auto cell = modify::shift_pitch(Cell{seq}, pattern, 7);
 
@@ -95,10 +100,8 @@ auto shifted = modify::shift_pitch(cell, Pattern{0, {2}}, 12);
 
 ## Main Entry Points
 
-- `sequence::generate`: create empty, full, interval, or random patterns.
 - `sequence::modify`: transform existing material by pattern.
 - `sequence::from_scala`: load a tuning from a Scala `.scl` file.
-- `sequence::create_cell` / `sequence::samples_count`: derive timing from a time signature.
 - `sequence::midi::translate_to_midi_timeline`: convert a timed cell into MIDI events.
 
 Tests in [`test/`](/Users/anthony/Documents/code/MicrotonalStepSequencer/test) show more

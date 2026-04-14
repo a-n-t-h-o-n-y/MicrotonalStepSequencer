@@ -30,7 +30,6 @@ set_target_properties(sequencer PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_sources(sequencer
     PRIVATE
-        src/generate.cpp
         src/midi.cpp
         src/modify.cpp
         src/pattern.cpp
@@ -41,7 +40,6 @@ target_sources(sequencer
         FILE_SET HEADERS
         BASE_DIRS include
         FILES
-            include/sequence/generate.hpp
             include/sequence/midi.hpp
             include/sequence/modify.hpp
             include/sequence/pattern.hpp

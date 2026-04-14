@@ -5,7 +5,6 @@
 #include <ranges>
 
 #include "helper.hpp"
-#include <sequence/generate.hpp>
 #include <sequence/modify.hpp>
 #include <sequence/sequence.hpp>
 
@@ -1531,7 +1530,8 @@ TEST_CASE("flip", "[modify]")
     REQUIRE(flipped.cells[1] == seq.cells[1]);
     REQUIRE(holds<Sequence>(flipped.cells[2]));
     REQUIRE(get<Sequence>(flipped.cells[2]).cells[0] == Cell{fill});
-    REQUIRE(get<Sequence>(flipped.cells[2]).cells[1] == Cell{Note{4, 0.5f, 0.2f, 0.6f}});
+    REQUIRE(get<Sequence>(flipped.cells[2]).cells[1] ==
+            Cell{Note{4, 0.5f, 0.2f, 0.6f}});
     REQUIRE(get<Sequence>(flipped.cells[2]).cells[2] == Cell{fill});
 }
 
@@ -1596,7 +1596,8 @@ TEST_CASE("fill operations", "[modify]")
 
         REQUIRE(updated.cells[0] == seq.cells[0]);
         REQUIRE(updated.cells[1] == Cell{fill});
-        REQUIRE(get<Sequence>(updated.cells[2]).cells[0] == Cell{Note{2, 0.4f, 0.2f, 0.5f}});
+        REQUIRE(get<Sequence>(updated.cells[2]).cells[0] ==
+                Cell{Note{2, 0.4f, 0.2f, 0.5f}});
         REQUIRE(get<Sequence>(updated.cells[2]).cells[1] == Cell{fill});
     }
 

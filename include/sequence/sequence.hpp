@@ -1,5 +1,5 @@
-#ifndef SEQUENCE_SEQUENCE_HPP
-#define SEQUENCE_SEQUENCE_HPP
+#pragma once
+
 #include <cmath>
 #include <variant>
 #include <vector>
@@ -72,4 +72,3 @@ struct Cell
 }
 
 } // namespace sequence
-#endif // SEQUENCE_SEQUENCE_HPP

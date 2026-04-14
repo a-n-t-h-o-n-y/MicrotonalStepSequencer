@@ -1,5 +1,4 @@
-#ifndef SEQUENCE_TUNING_HPP
-#define SEQUENCE_TUNING_HPP
+#pragma once
 
 #include <filesystem>
 #include <functional>
@@ -62,4 +61,3 @@ struct Tuning
 void to_scala(Tuning const &tuning, std::filesystem::path const &file);
 
 } // namespace sequence
-#endif // SEQUENCE_TUNING_HPP

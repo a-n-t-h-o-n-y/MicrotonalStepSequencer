@@ -1,5 +1,5 @@
-#ifndef SEQUENCE_MODIFY_HPP
-#define SEQUENCE_MODIFY_HPP
+#pragma once
+
 #include <cstddef>
 #include <vector>
 
@@ -519,4 +519,3 @@ namespace sequence::modify
 [[nodiscard]] auto rests_fill(Cell cell, Pattern const &pattern) -> Cell;
 
 } // namespace sequence::modify
-#endif // SEQUENCE_MODIFY_HPP

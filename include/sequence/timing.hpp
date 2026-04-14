@@ -1,5 +1,4 @@
-#ifndef SEQUENCE_TIMING_HPP
-#define SEQUENCE_TIMING_HPP
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
@@ -26,5 +25,3 @@ namespace sequence
                                  std::uint32_t sample_rate, float bpm) -> std::uint32_t;
 
 } // namespace sequence
-
-#endif // SEQUENCE_TIMING_HPP

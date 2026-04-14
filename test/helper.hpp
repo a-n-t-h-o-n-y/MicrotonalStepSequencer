@@ -1,5 +1,4 @@
-#ifndef SEQUENCE_TEST_HELPER_HPP
-#define SEQUENCE_TEST_HELPER_HPP
+#pragma once
 
 #include <concepts>
 #include <iostream>
@@ -117,4 +116,3 @@ inline auto print_midi_timeline(std::vector<midi::TimedMidiNote> const &timeline
 }
 
 } // namespace sequence::test::helper
-#endif // SEQUENCE_TEST_HELPER_HPP

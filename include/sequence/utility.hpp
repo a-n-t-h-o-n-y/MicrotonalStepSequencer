@@ -1,5 +1,4 @@
-#ifndef SEQUENCE_UTILITY_HPP
-#define SEQUENCE_UTILITY_HPP
+#pragma once
 
 namespace sequence::utility
 {
@@ -19,4 +18,3 @@ template <class... Ts>
 overload(Ts...) -> overload<Ts...>;
 
 } // namespace sequence::utility
-#endif // SEQUENCE_UTILITY_HPP

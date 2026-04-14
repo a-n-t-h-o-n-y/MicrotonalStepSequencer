@@ -1,5 +1,4 @@
-#ifndef SEQUENCE_RANDOM_HPP
-#define SEQUENCE_RANDOM_HPP
+#pragma once
 
 #include <cstdint>
 #include <limits>
@@ -83,5 +82,3 @@ inline auto clear_seed() -> void
 }
 
 } // namespace sequence::random
-
-#endif // SEQUENCE_RANDOM_HPP

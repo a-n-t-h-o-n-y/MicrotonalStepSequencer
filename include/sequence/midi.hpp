@@ -1,5 +1,5 @@
-#ifndef SEQUENCE_MIDI_HPP
-#define SEQUENCE_MIDI_HPP
+#pragma once
+
 #include <cstdint>
 #include <utility>
 #include <variant>
@@ -162,4 +162,3 @@ struct TimedMidiNote
     -> std::vector<TimedMidiNote>;
 
 } // namespace sequence::midi
-#endif // SEQUENCE_MIDI_HPP

@@ -105,27 +105,14 @@ inline auto print_sequence(Cell const &cell, int indent = 0) -> void
                cell.element);
 }
 
-inline auto print_midi_event_timeline(midi::EventTimeline const &timeline) -> void
+inline auto print_midi_timeline(std::vector<midi::TimedMidiNote> const &timeline) -> void
 {
-    using namespace sequence::utility;
-    for (auto const &[event, offset] : timeline)
+    for (auto const &note : timeline)
     {
-        using namespace utility;
-        std::cout << "Event: ";
-        visit(overload{
-                  [&](midi::NoteOn const &note_on) {
-                      std::cout << "NoteOn(note=" << (int)note_on.note
-                                << ", velocity=" << (int)note_on.velocity << ")";
-                  },
-                  [&](midi::NoteOff const &note_off) {
-                      std::cout << "NoteOff(note=" << (int)note_off.note << ")";
-                  },
-                  [&](midi::PitchBend const &pitch_bend) {
-                      std::cout << "PitchBend(amount=" << (int)pitch_bend.value << ")";
-                  },
-              },
-              event);
-        std::cout << " | offset=" << offset << "\n";
+        std::cout << "TimedMidiNote(begin=" << note.begin << ", end=" << note.end
+                  << ", note=" << (int)note.note
+                  << ", velocity=" << (int)note.velocity
+                  << ", pitch_bend=" << note.pitch_bend << ")\n";
     }
 }
 

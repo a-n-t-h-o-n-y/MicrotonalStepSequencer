@@ -198,9 +198,9 @@ auto translate_to_midi_timeline(Cell const &cell,
                                 TimeSignature const &time_signature,
                                 std::uint32_t sample_rate, float bpm,
                                 Tuning const &tuning, float base_frequency,
-                                float pb_range) -> EventTimeline
+                                float pb_range) -> std::vector<TimedMidiNote>
 {
-    auto midi_events = EventTimeline{};
+    auto timed_midi_notes = std::vector<TimedMidiNote>{};
 
     auto const ranges =
         flatten_and_translate_to_sample_infos(cell, time_signature, sample_rate, bpm);
@@ -213,7 +213,7 @@ auto translate_to_midi_timeline(Cell const &cell,
     assert(ranges.size() == midi_notes.size());
     assert(ranges.size() == notes.size());
 
-    // create a midi event for each entry
+    timed_midi_notes.reserve(ranges.size());
     for (auto i = 0u; i < ranges.size(); ++i)
     {
         auto const [begin, end] = ranges[i];
@@ -221,12 +221,16 @@ auto translate_to_midi_timeline(Cell const &cell,
         std::uint8_t const velocity =
             static_cast<std::uint8_t>(notes[i].velocity * 127);
 
-        midi_events.emplace_back(PitchBend{pitch_bend}, begin);
-        midi_events.emplace_back(NoteOn{note, velocity}, begin);
-        midi_events.emplace_back(NoteOff{note}, end);
+        timed_midi_notes.emplace_back(TimedMidiNote{
+            .begin = begin,
+            .end = end,
+            .note = note,
+            .velocity = velocity,
+            .pitch_bend = pitch_bend,
+        });
     }
 
-    return midi_events;
+    return timed_midi_notes;
 }
 
 } // namespace sequence::midi

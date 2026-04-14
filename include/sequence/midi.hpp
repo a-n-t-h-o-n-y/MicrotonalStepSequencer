@@ -118,47 +118,27 @@ struct SampleRange
  * @throws std::invalid_argument if the timing inputs are invalid or if any visited
  * Sequence has a total child weight that is not greater than zero.
  */
-[[nodiscard]] auto flatten_and_translate_to_sample_infos(Cell const &cell,
-                                                         TimeSignature const &time_signature,
-                                                         std::uint32_t sample_rate,
-                                                         float bpm)
-    -> std::vector<SampleRange>;
+[[nodiscard]] auto flatten_and_translate_to_sample_infos(
+    Cell const &cell, TimeSignature const &time_signature, std::uint32_t sample_rate,
+    float bpm) -> std::vector<SampleRange>;
 
-struct NoteOn
+struct TimedMidiNote
 {
+    std::uint32_t begin;
+    std::uint32_t end;
     std::uint8_t note;
     std::uint8_t velocity;
+    std::uint16_t pitch_bend;
 
-    auto operator==(NoteOn const &) const -> bool = default;
-    auto operator!=(NoteOn const &) const -> bool = default;
+    auto operator==(TimedMidiNote const &) const -> bool = default;
+    auto operator!=(TimedMidiNote const &) const -> bool = default;
 };
-
-struct NoteOff
-{
-    std::uint8_t note;
-
-    auto operator==(NoteOff const &) const -> bool = default;
-    auto operator!=(NoteOff const &) const -> bool = default;
-};
-
-struct PitchBend
-{
-    std::uint16_t value;
-
-    auto operator==(PitchBend const &) const -> bool = default;
-    auto operator!=(PitchBend const &) const -> bool = default;
-};
-
-using Event = std::variant<NoteOn, NoteOff, PitchBend>;
-
-/// A MIDI Event paired with a sample offset.
-using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
 
 /**
- * Flattens a timed cell into a vector of MIDI events.
+ * Flattens a timed cell into a vector of complete MIDI note instances.
  *
- * @details Returns a sequence of MIDI events of type NoteOn, NoteOff, or PitchBend,
- * paired with the sample offset of the event.
+ * @details Returns one entry per sounding note with its timing, velocity, translated
+ * MIDI note number, and pitch bend. This does not assign MIDI channels.
  *
  * @param cell The cell to flatten.
  * @param time_signature The top-level time signature for the cell.
@@ -167,7 +147,7 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
  * @param tuning The tuning to use for the MIDI notes.
  * @param base_frequency The base frequency of the tuning.
  * @param pb_range The amount of note pitch bend range expected by the midi receiver.
- * @return EventTimeline
+ * @return std::vector<TimedMidiNote>
  *
  * @throws std::invalid_argument if the timing inputs are invalid, if \p tuning is
  * empty, if \p base_frequency is not greater than zero, if \p pb_range is not greater
@@ -179,7 +159,7 @@ using EventTimeline = std::vector<std::pair<Event, std::uint32_t>>;
                                               std::uint32_t sample_rate, float bpm,
                                               Tuning const &tuning,
                                               float base_frequency, float pb_range)
-    -> EventTimeline;
+    -> std::vector<TimedMidiNote>;
 
 } // namespace sequence::midi
 #endif // SEQUENCE_MIDI_HPP

@@ -23,7 +23,8 @@ namespace
  * @param x The command string to extract the pattern from.
  * @return std::string The extracted pattern.
  */
-[[nodiscard]] auto get_pattern_str(std::string const &x) -> std::string
+[[nodiscard]]
+auto get_pattern_str(std::string const &x) -> std::string
 {
     auto const strip = [](std::string const &input) -> std::string {
         auto const begin =

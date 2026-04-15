@@ -10,512 +10,191 @@
 namespace sequence::modify
 {
 
-/**
- * @brief Randomize the note pitches in an existing Cell.
- *
- * This overwrites existings notes, it does not apply an offset to the existing
- * notes.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to randomize.
- * @param pattern The Pattern to apply across Sequences.
- * @param min The minimum note value to use, inclusive.
- * @param max The maximum note value to use, inclusive.
- * @return Cell The randomized cell.
- *
- * @throws std::invalid_argument If min is greater than max.
- */
-[[nodiscard]] auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max)
+/// Randomizes note pitches in the selected target. For sequences, pattern matching is
+/// evaluated independently at each sequence level. Throws if min > max.
+[[nodiscard]]
+auto randomize_pitch(MusicElement element, Pattern const &pattern, int min, int max)
+    -> MusicElement;
+
+[[nodiscard]]
+auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max) -> Cell;
+
+/// Randomizes note velocities in the selected target. Pattern matching is evaluated
+/// independently at each sequence level. Throws if min > max or either bound is
+/// outside [0, 1].
+[[nodiscard]]
+auto randomize_velocity(MusicElement element,
+                        Pattern const &pattern,
+                        float min,
+                        float max) -> MusicElement;
+
+[[nodiscard]]
+auto randomize_velocity(Cell cell, Pattern const &pattern, float min, float max)
     -> Cell;
 
-/**
- * @brief Randomize the note velocities in a given Cell.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to randomize.
- * @param pattern The Pattern to apply across Sequences.
- * @param min The minimum velocity value to use, inclusive.
- * @param max The maximum velocity value to use, inclusive.
- * @return Cell The randomized cell.
- *
- * @throws std::invalid_argument If min is greater than max, or if min or max are not in
- * the range [0, 1].
- */
-[[nodiscard]] auto randomize_velocity(Cell cell, Pattern const &pattern, float min,
-                                      float max) -> Cell;
+/// Randomizes note delays in the selected target. Pattern matching is evaluated
+/// independently at each sequence level. Throws if min > max or either bound is
+/// outside [0, 1].
+[[nodiscard]]
+auto randomize_delay(MusicElement element, Pattern const &pattern, float min, float max)
+    -> MusicElement;
 
-/**
- * @brief Randomize the note delays in a Cell.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to randomize.
- * @param pattern The Pattern to apply across Sequences.
- * @param min The minimum delay value to use, inclusive.
- * @param max The maximum delay value to use, inclusive.
- * @return Cell The randomized Cell.
- *
- * @throws std::invalid_argument If min is greater than max, or if min or max are not in
- * the range [0, 1].
- */
-[[nodiscard]] auto randomize_delay(Cell cell, Pattern const &pattern, float min,
-                                   float max) -> Cell;
+[[nodiscard]]
+auto randomize_delay(Cell cell, Pattern const &pattern, float min, float max) -> Cell;
 
-/**
- * @brief Randomize the note gates of a Cell.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to randomize.
- * @param pattern The Pattern to apply across Sequences.
- * @param min The minimum gate value to use, inclusive.
- * @param max The maximum gate value to use, inclusive.
- * @return Cell The randomized cell.
- *
- * @throws std::invalid_argument If min is greater than max, or if min or max are not in
- * the range [0, 1].
- */
-[[nodiscard]] auto randomize_gate(Cell cell, Pattern const &pattern, float min,
-                                  float max) -> Cell;
+/// Randomizes note gates in the selected target. Pattern matching is evaluated
+/// independently at each sequence level. Throws if min > max or either bound is
+/// outside [0, 1].
+[[nodiscard]]
+auto randomize_gate(MusicElement element, Pattern const &pattern, float min, float max)
+    -> MusicElement;
 
-/**
- * @brief Shift note pitch by a constant amount.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to shift the notes of.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to shift by, can be positive, negative or zero.
- * @return Cell The pitch shifted Cell.
- */
-[[nodiscard]] auto shift_pitch(Cell cell, Pattern const &pattern, int amount) -> Cell;
+[[nodiscard]]
+auto randomize_gate(Cell cell, Pattern const &pattern, float min, float max) -> Cell;
 
-/**
- * @brief Shift note velocities by a constant amount.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * Clamps the
- * result to the range [0, 1].
- *
- * @param cell The Cell to shift the velocities of.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to shift by, can be positive, negative or zero.
- * @return Cell The velocity shifted Cell.
- */
-[[nodiscard]] auto shift_velocity(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+/// Shifts note pitch by a constant amount. Pattern matching is evaluated
+/// independently at each sequence level.
+[[nodiscard]]
+auto shift_pitch(MusicElement element, Pattern const &pattern, int amount)
+    -> MusicElement;
 
-/**
- * @brief Shift note delays by a constant amount.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * Clamps the
- * result to the range [0, 1].
- *
- * @param cell The Cell to shift the delays of.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to shift by, can be positive, negative or zero.
- * @return Cell The delay shifted Cell.
- */
-[[nodiscard]] auto shift_delay(Cell cell, Pattern const &pattern, float amount) -> Cell;
+[[nodiscard]]
+auto shift_pitch(Cell cell, Pattern const &pattern, int amount) -> Cell;
 
-/**
- * @brief Shift note gates by a constant amount.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * Clamps the
- * result to the range [0, 1].
- *
- * @param cell The Cell to shift the gates of.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to shift by, can be positive, negative or zero.
- * @return Cell The gate shifted Cell.
- */
-[[nodiscard]] auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell;
+/// Shifts note velocities by a constant amount, clamped to [0, 1]. Pattern matching is
+/// evaluated independently at each sequence level.
+[[nodiscard]]
+auto shift_velocity(MusicElement element, Pattern const &pattern, float amount)
+    -> MusicElement;
 
-/**
- * @brief Set the pitch of a note to a constant value.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to set the pitch of.
- * @param pattern The Pattern to apply across Sequences.
- * @param pitch The pitch to set the note(s) to.
- * @return Cell The pitch set Cell.
- */
-[[nodiscard]] auto set_pitch(Cell cell, Pattern const &pattern, int pitch) -> Cell;
+[[nodiscard]]
+auto shift_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell;
 
-/**
- * @brief Set the octave of a note to a constant value.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to set the octave of.
- * @param pattern The Pattern to apply across Sequences.
- * @param octave The octave to set the note to.
- * @param tuning_length The length of the tuning.
- * @return Cell The octave set Cell.
- *
- * @throws std::invalid_argument if \p tuning_length is zero.
- */
-[[nodiscard]] auto set_octave(Cell cell, Pattern const &pattern, int octave,
-                              std::size_t tuning_length) -> Cell;
+/// Shifts note delays by a constant amount, clamped to [0, 1]. Pattern matching is
+/// evaluated independently at each sequence level.
+[[nodiscard]]
+auto shift_delay(MusicElement element, Pattern const &pattern, float amount)
+    -> MusicElement;
 
-/**
- * @brief Set the velocity of a note to a constant value.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * Clamps the
- * result to the range [0, 1].
- *
- * @param cell The Cell to set the velocity of.
- * @param pattern The Pattern to apply across Sequences.
- * @param velocity The velocity to set the note to.
- * @return Cell The velocity set Cell.
- */
-[[nodiscard]] auto set_velocity(Cell cell, Pattern const &pattern, float velocity)
-    -> Cell;
+[[nodiscard]]
+auto shift_delay(Cell cell, Pattern const &pattern, float amount) -> Cell;
 
-/**
- * @brief Set the delay of a note to a constant value.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * Clamps the
- * result to the range [0, 1].
- *
- * @param cell The Cell to set the delay of.
- * @param pattern The Pattern to apply across Sequences.
- * @param delay The delay to set the note to.
- * @return Cell The delay set Cell.
- */
-[[nodiscard]] auto set_delay(Cell cell, Pattern const &pattern, float delay) -> Cell;
+/// Shifts note gates by a constant amount, clamped to [0, 1]. Pattern matching is
+/// evaluated independently at each sequence level.
+[[nodiscard]]
+auto shift_gate(MusicElement element, Pattern const &pattern, float amount)
+    -> MusicElement;
 
-/**
- * @brief Set the gate of a note to a constant value.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * Clamps the
- * result to the range [0, 1].
- *
- * @param cell The Cell to set the gate of.
- * @param pattern The Pattern to apply across Sequences.
- * @param gate The gate to set the note to.
- * @return Cell The gate set Cell.
- */
-[[nodiscard]] auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell;
+[[nodiscard]]
+auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell;
 
-/**
- * @brief Rotate the note order in an existing sequence so the `amount`th note is the
- * new first note. Negative amounts count from the end of the Sequence.
- *
- * If amount is greater than the size of the Sequence, it shifts by the remainder.
- *
- * No-op for Note and Rest.
- *
- * @param Cell The Cell to rotate.
- * @param amount The amount to rotate by, can be positive, negative or zero. Positive is
- * a right shift and negative a left shift, zero returns original Sequence.
- * @return Cell The rotated Cell.
- */
-[[nodiscard]] auto rotate(Cell cell, int amount) -> Cell;
+/// Sets note pitch to a constant value. Pattern matching is evaluated independently at
+/// each sequence level.
+[[nodiscard]]
+auto set_pitch(MusicElement element, Pattern const &pattern, int pitch) -> MusicElement;
 
-/**
- * @brief Set delay of even index notes to zero and odd index notes to `amount`.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to modify.
- * @param amount The amount to set the note delays to.
- * @param is_odd If true, odd index notes are set to `amount` and even index notes are
- * set to zero.
- * @return Cell The cell with the note delays set.
- *
- * @throws std::invalid_argument If amount is less than zero or greater than one.
- */
-[[nodiscard]] auto swing(Cell cell, float amount, bool is_odd = false) -> Cell;
+[[nodiscard]]
+auto set_pitch(Cell cell, Pattern const &pattern, int pitch) -> Cell;
 
-/**
- * @brief Quantize the notes in an existing sequence zero delay and full gate.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to quantize.
- * @param pattern The Pattern to apply across Sequences.
- * @return Cell The quantized Cell.
- */
-[[nodiscard]] auto quantize(Cell cell, Pattern const &pattern) -> Cell;
+/// Sets note octave while preserving degree within the tuning length. Pattern matching
+/// is evaluated independently at each sequence level. Throws if tuning_length is zero.
+[[nodiscard]]
+auto set_octave(MusicElement element,
+                Pattern const &pattern,
+                int octave,
+                std::size_t tuning_length) -> MusicElement;
 
-/**
- * @brief Swap the notes in a Cell around a center note.
+[[nodiscard]]
+auto set_octave(Cell cell,
+                Pattern const &pattern,
+                int octave,
+                std::size_t tuning_length) -> Cell;
 
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to mirror.
- * @param pattern The Pattern to apply across Sequences.
- * @param center_note The note to mirror around.
- * @return Cell The mirrored Cell.
- */
-[[nodiscard]] auto mirror(Cell cell, Pattern const &pattern, int center_note) -> Cell;
+/// Sets note velocity to a constant value, clamped to [0, 1]. Pattern matching is
+/// evaluated independently at each sequence level.
+[[nodiscard]]
+auto set_velocity(MusicElement element, Pattern const &pattern, float velocity)
+    -> MusicElement;
 
-/**
- * @brief Reverse the notes in a Cell
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- *
- * @param cell The Cell to reverse.
- * @return Cell The reversed Cell.
- */
-[[nodiscard]] auto reverse(Cell cell) -> Cell;
+[[nodiscard]]
+auto set_velocity(Cell cell, Pattern const &pattern, float velocity) -> Cell;
 
-/**
- * @brief Create `count` copies of the provided Cell as a new Cell.
- *
- * The returned Cell is always a Sequence. This is also known as 'split'. This
- * does not recurse into child Sequences.
- *
- * @param cell The Cell to duplicate.
- * @param count The number of copies to make. Must be greater than zero.
- * @return Cell The repeated sequence as a Cell.
- *
- * @throws std::invalid_argument if \p count is zero.
- */
-[[nodiscard]] auto repeat(Cell const &cell, std::size_t count) -> Cell;
+/// Sets note delay to a constant value, clamped to [0, 1]. Pattern matching is
+/// evaluated independently at each sequence level.
+[[nodiscard]]
+auto set_delay(MusicElement element, Pattern const &pattern, float delay)
+    -> MusicElement;
 
-/**
- * @brief Repeat each note in the sequence `amount` times in a row.
- *
- * The returned Cell is always a Sequence. This recurses into child Sequences.
- *
- * @param cell The Cell to repeat.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The number of times to repeat each Cell.
- * @throws std::invalid_argument if \p amount is zero.
- * @return Cell The stretched Sequence.
- */
-[[nodiscard]] auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount)
-    -> Cell;
+[[nodiscard]]
+auto set_delay(Cell cell, Pattern const &pattern, float delay) -> Cell;
 
-/**
- * @brief Compress a Cell by keeping every Cell in the Pattern and skipping the rest.
- *
- * This does not recurse into child Sequences. No-op for Notes and Rests.
- *
- * @param seq The Cell to compress.
- * @param pattern The Pattern the defines the cells to keep.
- * @return Cell The compressed Sequence.
- */
-[[nodiscard]] auto compress(Cell const &cell, Pattern const &pattern) -> Cell;
+/// Sets note gate to a constant value, clamped to [0, 1]. Pattern matching is
+/// evaluated independently at each sequence level.
+[[nodiscard]]
+auto set_gate(MusicElement element, Pattern const &pattern, float gate) -> MusicElement;
 
-/**
- * @brief Extract a single child Cell from a Sequence Cell.
- *
- * No-op for Notes and Rests.
- *
- * @param cell The Cell to extract from.
- * @param index The index of the child Cell to extract.
- * @return Cell The extracted Cell.
- *
- * @throws std::invalid_argument If index is out of bounds.
- */
-[[nodiscard]] auto extract(Cell const &cell, std::size_t index) -> Cell;
+[[nodiscard]]
+auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell;
 
-/**
- * @brief Get the first child Cell in a Sequence, or return the input Cell unchanged.
- *
- * No-op for Notes and Rests.
- *
- * @param cell The Cell to get the first Note or Rest from.
- * @return Cell The first child Cell, or the input Cell for Notes and Rests.
- *
- * @throws std::invalid_argument If the Cell is an empty Sequence.
- */
-[[nodiscard]] auto first(Cell const &cell) -> Cell;
+/// Rotates sequence cell order. Positive values shift right, negative values shift
+/// left. Non-sequence cells are unchanged.
+[[nodiscard]]
+auto rotate(MusicElement element, int amount) -> MusicElement;
 
-/**
- * @brief Get the last child Cell in a Sequence, or return the input Cell unchanged.
- *
- * No-op for Notes and Rests.
- *
- * @param cell The Cell to get the last Note or Rest from.
- * @return Cell The last child Cell, or the input Cell for Notes and Rests.
- *
- * @throws std::invalid_argument If the Cell is an empty Sequence.
- */
-[[nodiscard]] auto last(Cell const &cell) -> Cell;
+[[nodiscard]]
+auto rotate(Cell cell, int amount) -> Cell;
 
-/**
- * @brief Shuffle the notes in a Cell into a random order.
- *
- * Each note remains in the Sequence, but in a (potentially) new order. Sub-Sequences
- * are recursed into but notes are only shuffled within their own Sequence.
- *
- * @param cell The Cell to shuffle.
- * @return Cell The shuffled Cell.
- */
-[[nodiscard]] auto shuffle(Cell cell) -> Cell;
+/// Mirrors note pitch around center_note. Pattern matching is evaluated independently
+/// at each sequence level.
+[[nodiscard]]
+auto mirror(MusicElement element, Pattern const &pattern, int center_note)
+    -> MusicElement;
 
-/**
- * @brief Concatenate two Cells into a new Cell.
- *
- * @param cell_a The first Cell.
- * @param cell_b The second Cell.
- * @return Cell The concatenated Cell as a Sequence.
- */
-[[nodiscard]] auto concat(Cell const &cell_a, Cell const &cell_b) -> Cell;
+[[nodiscard]]
+auto mirror(Cell cell, Pattern const &pattern, int center_note) -> Cell;
 
-/**
- * @brief Merge two Cell into a new Cell by interleaving their notes
- *
- * If one Sequence is shorter than the other, it is repeated to be the same length as
- * the longer Sequence. If either Sequence is empty, the other Sequence is returned.
- * Does not recurse into subsequences.
- *
- * @param cell_a The first Cell.
- * @param cell_b The second Cell.
- * @return Cell The merged Cell as a Sequence.
- */
-[[nodiscard]] auto merge(Cell const &cell_a, Cell const &cell_b) -> Cell;
+/// Reverses sequence cell order recursively through nested sequences.
+[[nodiscard]]
+auto reverse(MusicElement element) -> MusicElement;
 
-/**
- * @brief Divide a Sequence into two Sequences at the provided index.
- *
- * If index is out of bounds, the second Sequence will be empty.
- *
- * @param seq The sequence to divide.
- * @param index The index to split at, this element is included in the second Sequence.
- * @return Cell The split Cell as a new Sequence.
- */
-[[nodiscard]] auto divide(Cell const &cell, std::size_t index) -> Cell;
+[[nodiscard]]
+auto reverse(Cell cell) -> Cell;
 
-/**
- * @brief Create a Note.
- *
- * @param pitch The pitch of the note.
- * @param velocity The velocity of the note.
- * @param delay The delay of the note.
- * @param gate The gate of the note.
- * @return Cell The created Note.
- * @throws std::invalid_argument If velocity, delay or gate are not in the range [0, 1].
- */
-[[nodiscard]] auto note(int pitch, float velocity, float delay, float gate) -> Cell;
+/// Returns a sequence containing count copies of the selected target. Does not recurse
+/// into child sequences. Throws if count is zero.
+[[nodiscard]]
+auto repeat(MusicElement element, std::size_t count) -> MusicElement;
 
-/**
- * @brief Create a Rest.
- *
- * @return Cell The created Rest.
- */
-[[nodiscard]] auto rest() -> Cell;
+[[nodiscard]]
+auto repeat(Cell cell, std::size_t count) -> Cell;
 
-/**
- * @brief Create a Sequence from a vector of Cells.
- *
- * @param cells The Cells to create the Sequence from.
- * @return Cell The created Sequence.
- */
-[[nodiscard]] auto sequence(std::vector<Cell> cells) -> Cell;
+/// Repeats each selected cell amount times in a row. Returns a sequence and recurses
+/// into child sequences. Throws if amount is zero.
+[[nodiscard]]
+auto stretch(MusicElement element, Pattern const &pattern, std::size_t amount)
+    -> MusicElement;
 
-/**
- * @brief Flip a Rest to a Note and a Note to a Rest.
- *
- * If cell is a Sequence, this will recurse into child Sequences.
- *
- * @param cell The Cell to flip.
- * @param n The Note to flip to.
- * @return Cell The flipped Cell.
- */
-[[nodiscard]] auto flip(Cell cell, Pattern const &pattern, Note n = Note{}) -> Cell;
+[[nodiscard]]
+auto stretch(Cell cell, Pattern const &pattern, std::size_t amount) -> Cell;
 
-/**
- * @brief Humanize the note velocities in a Cell.
- *
- * @details Pattern matching is evaluated independently at each Sequence level.
- * Recursion only continues through child Sequence cells selected by the current
- * level's Pattern. This applies a random value within the clamped range
- * [velocity - amount, velocity + amount] to each note's velocity.
- *
- * @param cell The Cell to humanize.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to humanize by.
- * @return Cell The humanized Cell.
- */
-[[nodiscard]] auto humanize_velocity(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+/// Keeps only cells selected by pattern in any selected sequence target. Does not
+/// recurse into child sequences. Non-sequence targets are unchanged.
+[[nodiscard]]
+auto compress(MusicElement element, Pattern const &pattern) -> MusicElement;
 
-/**
- * @brief Humanize the note delays in a Cell.
- *
- * @details Pattern matching is evaluated independently at each Sequence level.
- * Recursion only continues through child Sequence cells selected by the current
- * level's Pattern. This applies a random value within the clamped range
- * [delay - amount, delay + amount] to each note's delay.
- *
- * @param cell The Cell to humanize.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to humanize by.
- * @return Cell The humanized Cell.
- */
-[[nodiscard]] auto humanize_delay(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+[[nodiscard]]
+auto compress(Cell cell, Pattern const &pattern) -> Cell;
 
-/**
- * @brief Humanize the note gates in a Cell.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * This applies a random value within the clamped range [gate - amount, gate + amount]
- * to each note's gate.
- *
- * @param cell The Cell to humanize.
- * @param pattern The Pattern to apply across Sequences.
- * @param amount The amount to humanize by.
- * @return Cell The humanized Cell.
- */
-[[nodiscard]] auto humanize_gate(Cell cell, Pattern const &pattern, float amount)
-    -> Cell;
+/// Shuffles sequence cell order recursively. Simultaneous cell elements are not
+/// reordered.
+[[nodiscard]]
+auto shuffle(MusicElement element) -> MusicElement;
 
-/**
- * @brief Fill a Sequence with Notes.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * This fills matching Cells with Notes.
- *
- * @param cell The Cell to fill.
- * @param pattern The Pattern to apply across Sequences.
- * @param note The Note to fill with.
- */
-[[nodiscard]] auto notes_fill(Cell cell, Pattern const &pattern, Note note) -> Cell;
+[[nodiscard]]
+auto shuffle(Cell cell) -> Cell;
 
-/**
- * @brief Fill a Sequence with Rests.
- *
- * Pattern matching is evaluated independently at each Sequence level. Recursion only
- * continues through child Sequence cells selected by the current level's Pattern.
- * This fills matching Cells with Rests.
- *
- * @param cell The Cell to fill.
- * @param pattern The Pattern to apply across Sequences.
- * @return Cell The filled Cell.
- */
-[[nodiscard]] auto rests_fill(Cell cell, Pattern const &pattern) -> Cell;
+/// Creates a note as a MusicElement. Throws if vel, delay, or gate is outside [0, 1].
+[[nodiscard]]
+auto note(int pitch, float velocity, float delay, float gate) -> MusicElement;
 
 } // namespace sequence::modify

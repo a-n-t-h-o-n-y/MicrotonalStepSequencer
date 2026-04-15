@@ -16,48 +16,44 @@ namespace
 
 using namespace sequence;
 
-template <typename NoteFn, typename RestFn, typename SequenceFn>
-[[nodiscard]] auto visit_recursive(Cell const &cell, Pattern const &pattern,
-                                   NoteFn const &note_fn, RestFn const &rest_fn,
-                                   SequenceFn const &seq_fn) -> Cell
+template <typename NoteFn, typename SequenceFn>
+[[nodiscard]]
+auto visit_recursive(MusicElement const &element,
+                     Pattern const &pattern,
+                     NoteFn const &note_fn,
+                     SequenceFn const &seq_fn) -> MusicElement
 {
     static_assert(std::is_invocable_v<NoteFn, Note const &>,
                   "NoteFn must be invocable with a Note const&");
-    static_assert(std::is_invocable_v<RestFn, Rest const &>,
-                  "RestFn must be invocable with a Rest const&");
     static_assert(std::is_invocable_v<SequenceFn, Sequence const &>,
                   "SequenceFn must be invocable with a Sequence const&");
 
     return std::visit(
         utility::overload{
-            [&](Note const &note) -> Cell { return {note_fn(note), cell.weight}; },
-            [&](Rest const &rest) -> Cell { return {rest_fn(rest), cell.weight}; },
-            [&](Sequence const &seq) -> Cell {
+            [&](Note const &note) -> MusicElement { return note_fn(note); },
+            [&](Sequence const &seq) -> MusicElement {
                 auto new_seq = seq_fn(seq);
                 auto view = PatternView{new_seq.cells, pattern};
                 for (auto &c : view)
                 {
-                    c = visit_recursive(c, pattern, note_fn, rest_fn, seq_fn);
+                    for (auto &elem : c.elements)
+                    {
+                        elem = visit_recursive(elem, pattern, note_fn, seq_fn);
+                    }
                 }
-                return {new_seq, cell.weight};
+                return new_seq;
             },
         },
-        cell.element);
-}
-
-template <typename NoteFn, typename RestFn>
-[[nodiscard]] auto visit_recursive(Cell const &cell, Pattern const &pattern,
-                                   NoteFn const &note_fn, RestFn const &rest_fn) -> Cell
-{
-    return visit_recursive(cell, pattern, note_fn, rest_fn,
-                           [](Sequence s) { return s; });
+        element);
 }
 
 template <typename NoteFn>
-[[nodiscard]] auto visit_recursive(Cell const &cell, Pattern const &pattern,
-                                   NoteFn const &note_fn) -> Cell
+[[nodiscard]]
+auto visit_recursive(MusicElement const &element,
+                     Pattern const &pattern,
+                     NoteFn const &note_fn) -> MusicElement
 {
-    return visit_recursive(cell, pattern, note_fn, [](Rest r) { return r; });
+    return visit_recursive(element, pattern, note_fn, [](Sequence s) { return s; });
 }
 
 } // namespace
@@ -65,7 +61,8 @@ template <typename NoteFn>
 namespace sequence::modify
 {
 
-auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max) -> Cell
+auto randomize_pitch(MusicElement element, Pattern const &pattern, int min, int max)
+    -> MusicElement
 {
     if (min > max)
     {
@@ -75,14 +72,56 @@ auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max) -> Cel
     auto &gen = sequence::random::engine();
     auto dis = std::uniform_int_distribution{min, max};
 
-    return visit_recursive(cell, pattern, [&](Note n) {
+    return visit_recursive(element, pattern, [&](Note n) {
         n.pitch = dis(gen);
+        return n;
+    });
+}
+
+auto randomize_pitch(Cell cell, Pattern const &pattern, int min, int max) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = randomize_pitch(elem, pattern, min, max);
+    }
+    return cell;
+}
+
+auto randomize_velocity(MusicElement element,
+                        Pattern const &pattern,
+                        float min,
+                        float max) -> MusicElement
+{
+    if (min > max)
+    {
+        throw std::invalid_argument("min must be less than or equal to max");
+    }
+    else if (min < 0.f || min > 1.f || max < 0.f || max > 1.f)
+    {
+        throw std::invalid_argument("min and max must be in the range [0, 1]");
+    }
+
+    auto &gen = sequence::random::engine();
+    auto dis = std::uniform_real_distribution{min, max};
+
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.velocity = dis(gen);
         return n;
     });
 }
 
 auto randomize_velocity(Cell cell, Pattern const &pattern, float min, float max) -> Cell
 {
+    for (auto &elem : cell.elements)
+    {
+        elem = randomize_velocity(elem, pattern, min, max);
+    }
+    return cell;
+}
+
+auto randomize_delay(MusicElement element, Pattern const &pattern, float min, float max)
+    -> MusicElement
+{
     if (min > max)
     {
         throw std::invalid_argument("min must be less than or equal to max");
@@ -95,14 +134,24 @@ auto randomize_velocity(Cell cell, Pattern const &pattern, float min, float max)
     auto &gen = sequence::random::engine();
     auto dis = std::uniform_real_distribution{min, max};
 
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.velocity = dis(gen);
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.delay = dis(gen);
         return n;
     });
 }
 
 auto randomize_delay(Cell cell, Pattern const &pattern, float min, float max) -> Cell
 {
+    for (auto &elem : cell.elements)
+    {
+        elem = randomize_delay(elem, pattern, min, max);
+    }
+    return cell;
+}
+
+auto randomize_gate(MusicElement element, Pattern const &pattern, float min, float max)
+    -> MusicElement
+{
     if (min > max)
     {
         throw std::invalid_argument("min must be less than or equal to max");
@@ -115,81 +164,121 @@ auto randomize_delay(Cell cell, Pattern const &pattern, float min, float max) ->
     auto &gen = sequence::random::engine();
     auto dis = std::uniform_real_distribution{min, max};
 
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.delay = dis(gen);
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.gate = dis(gen);
         return n;
     });
 }
 
 auto randomize_gate(Cell cell, Pattern const &pattern, float min, float max) -> Cell
 {
-    if (min > max)
+    for (auto &elem : cell.elements)
     {
-        throw std::invalid_argument("min must be less than or equal to max");
+        elem = randomize_gate(elem, pattern, min, max);
     }
-    else if (min < 0.f || min > 1.f || max < 0.f || max > 1.f)
-    {
-        throw std::invalid_argument("min and max must be in the range [0, 1]");
-    }
+    return cell;
+}
 
-    auto &gen = sequence::random::engine();
-    auto dis = std::uniform_real_distribution{min, max};
-
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.gate = dis(gen);
+auto shift_pitch(MusicElement element, Pattern const &pattern, int amount)
+    -> MusicElement
+{
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.pitch += amount;
         return n;
     });
 }
 
 auto shift_pitch(Cell cell, Pattern const &pattern, int amount) -> Cell
 {
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.pitch += amount;
+    for (auto &elem : cell.elements)
+    {
+        elem = shift_pitch(elem, pattern, amount);
+    }
+    return cell;
+}
+
+auto shift_velocity(MusicElement element, Pattern const &pattern, float amount)
+    -> MusicElement
+{
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.velocity = std::clamp(n.velocity + amount, 0.f, 1.f);
         return n;
     });
 }
 
 auto shift_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.velocity = std::clamp(n.velocity + amount, 0.f, 1.f);
+    for (auto &elem : cell.elements)
+    {
+        elem = shift_velocity(elem, pattern, amount);
+    }
+    return cell;
+}
+
+auto shift_delay(MusicElement element, Pattern const &pattern, float amount)
+    -> MusicElement
+{
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.delay = std::clamp(n.delay + amount, 0.f, 1.f);
         return n;
     });
 }
 
 auto shift_delay(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.delay = std::clamp(n.delay + amount, 0.f, 1.f);
+    for (auto &elem : cell.elements)
+    {
+        elem = shift_delay(elem, pattern, amount);
+    }
+    return cell;
+}
+
+auto shift_gate(MusicElement element, Pattern const &pattern, float amount)
+    -> MusicElement
+{
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.gate = std::clamp(n.gate + amount, 0.f, 1.f);
         return n;
     });
 }
 
 auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell
 {
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.gate = std::clamp(n.gate + amount, 0.f, 1.f);
+    for (auto &elem : cell.elements)
+    {
+        elem = shift_gate(elem, pattern, amount);
+    }
+    return cell;
+}
+
+auto set_pitch(MusicElement element, Pattern const &pattern, int pitch) -> MusicElement
+{
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.pitch = pitch;
         return n;
     });
 }
 
 auto set_pitch(Cell cell, Pattern const &pattern, int pitch) -> Cell
 {
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.pitch = pitch;
-        return n;
-    });
+    for (auto &elem : cell.elements)
+    {
+        elem = set_pitch(elem, pattern, pitch);
+    }
+    return cell;
 }
 
-auto set_octave(Cell cell, Pattern const &pattern, int octave,
-                std::size_t tuning_length) -> Cell
+auto set_octave(MusicElement element,
+                Pattern const &pattern,
+                int octave,
+                std::size_t tuning_length) -> MusicElement
 {
     if (tuning_length == 0)
     {
         throw std::invalid_argument("tuning_length must be greater than 0");
     }
 
-    return visit_recursive(cell, pattern, [&](Note n) {
+    return visit_recursive(element, pattern, [&](Note n) {
         auto const tuning_length_i = static_cast<int>(tuning_length);
         auto degree_in_current_octave =
             (n.pitch % tuning_length_i + tuning_length_i) % tuning_length_i;
@@ -199,42 +288,80 @@ auto set_octave(Cell cell, Pattern const &pattern, int octave,
     });
 }
 
-auto set_velocity(Cell cell, Pattern const &pattern, float velocity) -> Cell
+auto set_octave(Cell cell,
+                Pattern const &pattern,
+                int octave,
+                std::size_t tuning_length) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = set_octave(elem, pattern, octave, tuning_length);
+    }
+    return cell;
+}
+
+auto set_velocity(MusicElement element, Pattern const &pattern, float velocity)
+    -> MusicElement
 {
     velocity = std::clamp(velocity, 0.f, 1.f);
-    return visit_recursive(cell, pattern, [&](Note n) {
+    return visit_recursive(element, pattern, [&](Note n) {
         n.velocity = velocity;
+        return n;
+    });
+}
+
+auto set_velocity(Cell cell, Pattern const &pattern, float velocity) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = set_velocity(elem, pattern, velocity);
+    }
+    return cell;
+}
+
+auto set_delay(MusicElement element, Pattern const &pattern, float delay)
+    -> MusicElement
+{
+    delay = std::clamp(delay, 0.f, 1.f);
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.delay = delay;
         return n;
     });
 }
 
 auto set_delay(Cell cell, Pattern const &pattern, float delay) -> Cell
 {
-    delay = std::clamp(delay, 0.f, 1.f);
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.delay = delay;
+    for (auto &elem : cell.elements)
+    {
+        elem = set_delay(elem, pattern, delay);
+    }
+    return cell;
+}
+
+auto set_gate(MusicElement element, Pattern const &pattern, float gate) -> MusicElement
+{
+    gate = std::clamp(gate, 0.f, 1.f);
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.gate = gate;
         return n;
     });
 }
 
 auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell
 {
-    gate = std::clamp(gate, 0.f, 1.f);
-    return visit_recursive(cell, pattern, [&](Note n) {
-        n.gate = gate;
-        return n;
-    });
+    for (auto &elem : cell.elements)
+    {
+        elem = set_gate(elem, pattern, gate);
+    }
+    return cell;
 }
 
-auto rotate(Cell cell, int amount) -> Cell
+auto rotate(MusicElement element, int amount) -> MusicElement
 {
-    using namespace utility;
-
     amount *= -1;
 
-    std::visit(overload{
+    std::visit(utility::overload{
                    [](Note &) {},
-                   [](Rest) {},
                    [&](Sequence &seq) {
                        if (seq.cells.empty())
                        {
@@ -246,65 +373,76 @@ auto rotate(Cell cell, int amount) -> Cell
                                    seq.cells.end());
                    },
                },
-               cell.element);
+               element);
 
-    return cell;
+    return element;
 }
 
-auto swing(Cell cell, float amount, bool is_odd) -> Cell
+auto rotate(Cell cell, int amount) -> Cell
 {
-    using namespace utility;
-
-    if (amount < 0.f || amount > 1.f)
+    for (auto &elem : cell.elements)
     {
-        throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
+        elem = rotate(elem, amount);
     }
-
-    std::visit(overload{
-                   [&](Note &note) { note.delay = is_odd ? amount : 0.f; },
-                   [](Rest) {},
-                   [&](Sequence &seq) {
-                       for (auto i = 0u; i < seq.cells.size(); ++i)
-                       {
-                           auto &c = seq.cells[i];
-                           c = swing(c, amount, (i % 2) == 1);
-                       }
-                   },
-               },
-               cell.element);
-
     return cell;
 }
 
-auto quantize(Cell cell, Pattern const &pattern) -> Cell
+auto mirror(MusicElement element, Pattern const &pattern, int center_note)
+    -> MusicElement
 {
-    return visit_recursive(cell, pattern, [](Note n) {
-        n.delay = 0.f;
-        n.gate = 1.f;
-        return n;
-    });
-}
-
-auto mirror(Cell cell, Pattern const &pattern, int center_note) -> Cell
-{
-    return visit_recursive(cell, pattern, [&](Note n) {
+    return visit_recursive(element, pattern, [&](Note n) {
         auto const diff = center_note - n.pitch;
         n.pitch = center_note + diff;
         return n;
     });
 }
 
-auto reverse(Cell cell) -> Cell
+auto mirror(Cell cell, Pattern const &pattern, int center_note) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = mirror(elem, pattern, center_note);
+    }
+    return cell;
+}
+
+auto reverse(MusicElement element) -> MusicElement
 {
     return visit_recursive(
-        cell, {0, {1}}, [](Note n) { return n; }, [](Rest r) { return r; },
+        element, {0, {1}}, [](Note n) { return n; },
         [](Sequence seq) {
             std::ranges::reverse(seq.cells);
             return seq;
         });
 }
 
-auto repeat(Cell const &cell, std::size_t count) -> Cell
+auto reverse(Cell cell) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = reverse(elem);
+    }
+    return cell;
+}
+
+auto repeat(MusicElement element, std::size_t count) -> MusicElement
+{
+    if (count == 0)
+    {
+        throw std::invalid_argument{"Invalid count: " + std::to_string(count)};
+    }
+    auto seq = Sequence{};
+    seq.cells.reserve(count);
+
+    for (auto i = std::size_t{0}; i < count; ++i)
+    {
+        seq.cells.push_back({.elements = {element}, .weight = 1.f});
+    }
+
+    return seq;
+}
+
+auto repeat(Cell cell, std::size_t count) -> Cell
 {
     if (count == 0)
     {
@@ -318,324 +456,87 @@ auto repeat(Cell const &cell, std::size_t count) -> Cell
         seq.cells.push_back(cell);
     }
 
-    return {.element = seq, .weight = cell.weight};
+    return {.elements = {seq}, .weight = cell.weight};
 }
 
-auto stretch(Cell const &cell, Pattern const &pattern, std::size_t amount) -> Cell
+auto stretch(MusicElement element, Pattern const &pattern, std::size_t amount)
+    -> MusicElement
 {
+    if (amount == 0)
+    {
+        throw std::invalid_argument{"Invalid amount: " + std::to_string(amount)};
+    }
+
     return std::visit(
         utility::overload{
-            [&](Note const &note) -> Cell {
-                return repeat({.element = note, .weight = cell.weight}, amount);
-            },
-            [&](Rest const &rest) -> Cell {
-                return repeat({.element = rest, .weight = cell.weight}, amount);
-            },
-            [&](Sequence seq) -> Cell {
+            [&](Note note) -> MusicElement { return repeat(note, amount); },
+            [&](Sequence seq) -> MusicElement {
                 auto view = PatternView{seq.cells, pattern};
                 for (auto &c : view)
                 {
                     c = stretch(c, pattern, amount);
                 }
-                return {.element = seq, .weight = cell.weight};
+                return seq;
             },
         },
-        cell.element);
+        element);
 }
 
-auto compress(Cell const &cell, Pattern const &pattern) -> Cell
+auto stretch(Cell cell, Pattern const &pattern, std::size_t amount) -> Cell
 {
-    using namespace utility;
+    for (auto &elem : cell.elements)
+    {
+        elem = stretch(elem, pattern, amount);
+    }
+    return cell;
+}
 
-    return std::visit(overload{
-                          [&](Note const &note) -> Cell { return {note, cell.weight}; },
-                          [&](Rest const &rest) -> Cell { return {rest, cell.weight}; },
-                          [&](Sequence const &seq) -> Cell {
+auto compress(MusicElement element, Pattern const &pattern) -> MusicElement
+{
+    return std::visit(utility::overload{
+                          [&](Note const &note) -> MusicElement { return note; },
+                          [&](Sequence const &seq) -> MusicElement {
                               auto new_seq = Sequence{};
                               auto view = ConstPatternView{seq.cells, pattern};
                               for (auto const &c : view)
                               {
                                   new_seq.cells.push_back(c);
                               }
-                              return {new_seq, cell.weight};
+                              return new_seq;
                           },
                       },
-                      cell.element);
+                      element);
 }
 
-auto extract(Cell const &cell, std::size_t index) -> Cell
+auto compress(Cell cell, Pattern const &pattern) -> Cell
 {
-    using namespace utility;
-
-    return std::visit(overload{
-                          [&](Note const &note) -> Cell { return {note, cell.weight}; },
-                          [&](Rest const &rest) -> Cell { return {rest, cell.weight}; },
-                          [&](Sequence const &seq) -> Cell {
-                              if (index >= seq.cells.size())
-                              {
-                                  throw std::invalid_argument("index out of bounds");
-                              }
-                              return seq.cells[index];
-                          },
-                      },
-                      cell.element);
+    for (auto &elem : cell.elements)
+    {
+        elem = compress(elem, pattern);
+    }
+    return cell;
 }
 
-auto first(Cell const &cell) -> Cell
-{
-    return extract(cell, 0u);
-}
-
-auto last(Cell const &cell) -> Cell
-{
-    // Can't easily implement with extract(...) because size is unknown at Cell level
-    using namespace utility;
-
-    return std::visit(overload{
-                          [&](Note const &note) -> Cell { return {note, cell.weight}; },
-                          [&](Rest const &rest) -> Cell { return {rest, cell.weight}; },
-                          [](Sequence const &seq) -> Cell {
-                              if (seq.cells.empty())
-                              {
-                                  throw std::invalid_argument("index out of bounds");
-                              }
-                              else
-                              {
-                                  return seq.cells.back();
-                              }
-                          },
-                      },
-                      cell.element);
-}
-
-auto shuffle(Cell cell) -> Cell
+auto shuffle(MusicElement element) -> MusicElement
 {
     return visit_recursive(
-        cell, {0, {1}}, [](Note n) { return n; }, [](Rest r) { return r; },
+        element, {0, {1}}, [](Note n) { return n; },
         [](Sequence seq) {
             std::ranges::shuffle(seq.cells, sequence::random::engine());
             return seq;
         });
 }
 
-auto concat(Cell const &cell_a, Cell const &cell_b) -> Cell
+auto shuffle(Cell cell) -> Cell
 {
-    auto const weight_a = cell_a.weight;
-    auto const weight_b = cell_b.weight;
-
-    return std::visit(
-        utility::overload{
-            [&](Note const &note_a, Note const &note_b) -> Cell {
-                return {
-                    .element = Sequence{{{note_a, weight_a}, {note_b, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Note const &note, Rest const &rest) -> Cell {
-                return {
-                    .element = Sequence{{{note, weight_a}, {rest, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Rest const &rest, Note const &note) -> Cell {
-                return {
-                    .element = Sequence{{{rest, weight_a}, {note, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Rest const &rest_a, Rest const &rest_b) -> Cell {
-                return {
-                    .element = Sequence{{{rest_a, weight_a}, {rest_b, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Note const &note, Sequence const &seq) -> Cell {
-                auto concat_seq = seq;
-                concat_seq.cells.insert(std::cbegin(concat_seq.cells),
-                                        Cell{note, weight_a});
-                return {
-                    .element = concat_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Rest const &rest, Sequence const &seq) -> Cell {
-                auto concat_seq = seq;
-                concat_seq.cells.insert(std::cbegin(concat_seq.cells),
-                                        Cell{rest, weight_a});
-                return {
-                    .element = concat_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Sequence const &seq, Note const &note) -> Cell {
-                auto concat_seq = seq;
-                concat_seq.cells.push_back({note, weight_b});
-                return {
-                    .element = concat_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Sequence const &seq, Rest const &rest) -> Cell {
-                auto concat_seq = seq;
-                concat_seq.cells.push_back({rest, weight_b});
-                return {
-                    .element = concat_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Sequence const &seq_a, Sequence const &seq_b) -> Cell {
-                auto concat_seq = seq_a;
-                concat_seq.cells.insert(std::cend(concat_seq.cells),
-                                        std::cbegin(seq_b.cells),
-                                        std::cend(seq_b.cells));
-                return {
-                    .element = concat_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-        },
-        cell_a.element, cell_b.element);
+    for (auto &elem : cell.elements)
+    {
+        elem = shuffle(elem);
+    }
+    return cell;
 }
 
-auto merge(Cell const &cell_a, Cell const &cell_b) -> Cell
-{
-    auto const weight_a = cell_a.weight;
-    auto const weight_b = cell_b.weight;
-
-    return std::visit(
-        utility::overload{
-            [&](Note const &note_a, Note const &note_b) -> Cell {
-                return {
-                    .element = Sequence{{{note_a, weight_a}, {note_b, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Note const &note, Rest const &rest) -> Cell {
-                return {
-                    .element = Sequence{{{note, weight_a}, {rest, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Rest const &rest, Note const &note) -> Cell {
-                return {
-                    .element = Sequence{{{rest, weight_a}, {note, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Rest const &rest_a, Rest const &rest_b) -> Cell {
-                return {
-                    .element = Sequence{{{rest_a, weight_a}, {rest_b, weight_b}}},
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Note const &note, Sequence const &seq) -> Cell {
-                auto merged_seq = Sequence{};
-                merged_seq.cells.reserve(seq.cells.size() * 2);
-                for (auto const &c : seq.cells)
-                {
-                    merged_seq.cells.push_back({note, weight_a});
-                    merged_seq.cells.push_back(c);
-                }
-                return {
-                    .element = merged_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Rest const &rest, Sequence const &seq) -> Cell {
-                auto merged_seq = Sequence{};
-                merged_seq.cells.reserve(seq.cells.size() * 2);
-                for (auto const &c : seq.cells)
-                {
-                    merged_seq.cells.push_back({rest, weight_a});
-                    merged_seq.cells.push_back(c);
-                }
-                return {
-                    .element = merged_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Sequence const &seq, Note const &note) -> Cell {
-                auto merged_seq = Sequence{};
-                merged_seq.cells.reserve(seq.cells.size() * 2);
-                for (auto const &c : seq.cells)
-                {
-                    merged_seq.cells.push_back(c);
-                    merged_seq.cells.push_back({note, weight_b});
-                }
-                return {
-                    .element = merged_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Sequence const &seq, Rest const &rest) -> Cell {
-                auto merged_seq = Sequence{};
-                merged_seq.cells.reserve(seq.cells.size() * 2);
-                for (auto const &c : seq.cells)
-                {
-                    merged_seq.cells.push_back(c);
-                    merged_seq.cells.push_back({rest, weight_b});
-                }
-                return {
-                    .element = merged_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-            [&](Sequence const &seq_a, Sequence const &seq_b) -> Cell {
-                if (seq_a.cells.empty())
-                {
-                    return {seq_b, weight_b};
-                }
-                if (seq_b.cells.empty())
-                {
-                    return {seq_a, weight_a};
-                }
-                auto merged_seq = Sequence{};
-                auto const max_size = std::max(seq_a.cells.size(), seq_b.cells.size());
-                merged_seq.cells.reserve(max_size * 2);
-
-                for (auto i = 0u; i < max_size; ++i)
-                {
-                    merged_seq.cells.push_back(seq_a.cells[i % seq_a.cells.size()]);
-                    merged_seq.cells.push_back(seq_b.cells[i % seq_b.cells.size()]);
-                }
-
-                return {
-                    .element = merged_seq,
-                    .weight = weight_a + weight_b,
-                };
-            },
-        },
-        cell_a.element, cell_b.element);
-}
-
-auto divide(Cell const &cell, std::size_t index) -> Cell
-{
-    using namespace utility;
-
-    return std::visit(
-        overload{[&](Note const &note) -> Cell {
-                     return {Sequence{{{note, cell.weight}}}, cell.weight};
-                 },
-                 [&](Rest const &rest) -> Cell {
-                     return {Sequence{{{rest, cell.weight}}}, cell.weight};
-                 },
-                 [&](Sequence const &seq) -> Cell {
-                     index = std::min(index, seq.cells.size());
-                     auto const begin = std::cbegin(seq.cells);
-                     auto const mid = std::cbegin(seq.cells) + (std::ptrdiff_t)index;
-                     auto const end = std::cend(seq.cells);
-                     return {.element =
-                                 Sequence{
-                                     std::vector<Cell>{
-                                         {Sequence{std::vector(begin, mid)}, 1.f},
-                                         {Sequence{std::vector(mid, end)}, 1.f}},
-                                 },
-                             .weight = cell.weight};
-                 }},
-        cell.element);
-}
-
-auto note(int pitch, float velocity, float delay, float gate) -> Cell
+auto note(int pitch, float velocity, float delay, float gate) -> MusicElement
 {
     if (velocity < 0.f || velocity > 1.f)
     {
@@ -649,104 +550,7 @@ auto note(int pitch, float velocity, float delay, float gate) -> Cell
     {
         throw std::invalid_argument("gate must be in the range [0.0, 1.0]");
     }
-    return {.element = Note{pitch, velocity, delay, gate}, .weight = 1.f};
-}
-
-auto rest() -> Cell
-{
-    return {.element = Rest{}, .weight = 1.f};
-}
-
-auto sequence(std::vector<Cell> cells) -> Cell
-{
-    return {.element = Sequence{std::move(cells)}, .weight = 1.f};
-}
-
-auto flip(Cell cell, Pattern const &pattern, Note n) -> Cell
-{
-    using namespace utility;
-
-    return std::visit(overload{
-                          [&](Note &) -> Cell { return {Rest{}, cell.weight}; },
-                          [&](Rest &) -> Cell { return {n, cell.weight}; },
-                          [&](Sequence seq) -> Cell {
-                              auto view = PatternView{seq.cells, pattern};
-                              for (auto &c : view)
-                              {
-                                  c = flip(c, pattern, n);
-                              }
-                              return {seq, cell.weight};
-                          },
-                      },
-                      cell.element);
-}
-
-auto humanize_velocity(Cell cell, Pattern const &pattern, float amount) -> Cell
-{
-    if (amount < 0.f || amount > 1.f)
-    {
-        throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
-    }
-
-    auto &gen = sequence::random::engine();
-
-    return visit_recursive(cell, pattern, [&](Note n) {
-        auto const min = std::clamp(n.velocity - amount, 0.f, 1.f);
-        auto const max = std::clamp(n.velocity + amount, 0.f, 1.f);
-        auto dis = std::uniform_real_distribution{min, max};
-        n.velocity = dis(gen);
-        return n;
-    });
-}
-
-auto humanize_delay(Cell cell, sequence::Pattern const &pattern, float amount) -> Cell
-{
-    if (amount < 0.f || amount > 1.f)
-    {
-        throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
-    }
-
-    auto &gen = sequence::random::engine();
-
-    return visit_recursive(cell, pattern, [&](Note n) {
-        auto const min = std::clamp(n.delay - amount, 0.f, 1.f);
-        auto const max = std::clamp(n.delay + amount, 0.f, 1.f);
-        auto dis = std::uniform_real_distribution{min, max};
-        n.delay = dis(gen);
-        return n;
-    });
-}
-
-auto humanize_gate(Cell cell, sequence::Pattern const &pattern, float amount) -> Cell
-{
-    if (amount < 0.f || amount > 1.f)
-    {
-        throw std::invalid_argument("amount must be in the range [0.0, 1.0]");
-    }
-
-    auto &gen = sequence::random::engine();
-
-    return visit_recursive(cell, pattern, [&](Note n) {
-        auto const min = std::clamp(n.gate - amount, 0.f, 1.f);
-        auto const max = std::clamp(n.gate + amount, 0.f, 1.f);
-        auto dis = std::uniform_real_distribution{min, max};
-        n.gate = dis(gen);
-        return n;
-    });
-}
-
-auto notes_fill(Cell cell, Pattern const &pattern, Note note) -> Cell
-{
-    return visit_recursive(
-        cell, pattern, [&](Note const &) { return note; },
-        [&](Rest const &) { return note; });
-}
-
-auto rests_fill(Cell cell, Pattern const &pattern) -> Cell
-{
-    return visit_recursive(
-        cell, pattern, [](Note const &) { return Rest{}; },
-        [](Rest const &) { return Rest{}; });
+    return Note{pitch, velocity, delay, gate};
 }
 
 } // namespace sequence::modify

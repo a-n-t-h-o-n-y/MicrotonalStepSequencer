@@ -1,32 +1,61 @@
 #include <filesystem>
-#include <variant>
+#include <vector>
 
 #include "catch.hpp"
 
-#include "helper.hpp"
 #include <sequence/sequence.hpp>
 #include <sequence/tuning.hpp>
 
 using namespace sequence;
-using namespace sequence::test::helper;
 
-TEST_CASE("Sequence", "[sequence]")
+TEST_CASE("Cell and Sequence model", "[sequence]")
 {
-    auto s = Sequence{};
-    s.cells.push_back({Note{0, 0.5, 0.5, 0.5}});
-    s.cells.push_back({Rest{}});
-    s.cells.push_back({Rest{}});
-    s.cells.push_back({Sequence{}});
-    get<Sequence>(s.cells[3]).cells.push_back({Note{0, 0.5, 0.5, 0.5}});
-    get<Sequence>(s.cells[3]).cells.push_back({Rest{}});
-    get<Sequence>(s.cells[3]).cells.push_back({Rest{}});
-    REQUIRE(holds<Note>(s.cells[0]));
-    REQUIRE(holds<Rest>(s.cells[1]));
-    REQUIRE(holds<Rest>(s.cells[2]));
-    REQUIRE(holds<Sequence>(s.cells[3]));
-    REQUIRE(holds<Note>(get<Sequence>(s.cells[3]).cells[0]));
-    REQUIRE(holds<Rest>(get<Sequence>(s.cells[3]).cells[1]));
-    REQUIRE(holds<Rest>(get<Sequence>(s.cells[3]).cells[2]));
+    SECTION("a cell may be silent")
+    {
+        auto const cell = Cell{};
+
+        REQUIRE(cell.elements.empty());
+        REQUIRE(cell.weight == 1.f);
+    }
+
+    SECTION("a cell may contain simultaneous elements")
+    {
+        auto const cell = Cell{
+            .elements =
+                {
+                    Note{.pitch = 1, .velocity = 0.4f, .delay = 0.1f, .gate = 0.8f},
+                    Note{.pitch = 8, .velocity = 0.7f, .delay = 0.f, .gate = 1.f},
+                },
+            .weight = 2.f,
+        };
+
+        REQUIRE(cell.elements.size() == 2);
+        REQUIRE(std::holds_alternative<Note>(cell.elements[0]));
+        REQUIRE(std::holds_alternative<Note>(cell.elements[1]));
+        REQUIRE(std::get<Note>(cell.elements[0]).pitch == 1);
+        REQUIRE(std::get<Note>(cell.elements[1]).pitch == 8);
+        REQUIRE(cell.weight == 2.f);
+    }
+
+    SECTION("a sequence may contain nested sequence elements")
+    {
+        auto nested = Sequence{};
+        nested.cells.push_back(Cell{.elements = {Note{.pitch = 3}}, .weight = 1.f});
+        nested.cells.push_back(Cell{.elements = {}, .weight = 1.f});
+
+        auto root = Sequence{};
+        root.cells.push_back(Cell{.elements = {Note{.pitch = 0}}, .weight = 1.f});
+        root.cells.push_back(Cell{.elements = {nested}, .weight = 3.f});
+
+        REQUIRE(root.cells.size() == 2);
+        REQUIRE(std::holds_alternative<Note>(root.cells[0].elements[0]));
+        REQUIRE(std::holds_alternative<Sequence>(root.cells[1].elements[0]));
+
+        auto const &child = std::get<Sequence>(root.cells[1].elements[0]);
+        REQUIRE(child.cells.size() == 2);
+        REQUIRE(std::get<Note>(child.cells[0].elements[0]).pitch == 3);
+        REQUIRE(child.cells[1].elements.empty());
+    }
 }
 
 TEST_CASE("Scala file import", "[sequence]")
@@ -60,56 +89,31 @@ TEST_CASE("No scl archive files will throw errors", "[sequence]")
     }
 }
 
-TEST_CASE("Generate Empty Sequences", "[sequence]")
+TEST_CASE("Sequence generation helpers via direct construction", "[sequence]")
 {
-    SECTION("Zero Cells")
-    {
-        auto const size = 0;
-        auto const s = Sequence{std::vector<Cell>(size, {Rest{}})};
-        REQUIRE(s.cells.size() == size);
-    }
-
-    SECTION("4 Cells")
+    SECTION("constructing silent sequences")
     {
         auto const size = 4;
-        auto const s = Sequence{std::vector<Cell>(size, {Rest{}})};
-        REQUIRE(s.cells.size() == size);
+        auto const seq = Sequence{std::vector<Cell>(size, Cell{.elements = {}, .weight = 1.f})};
 
-        for (auto const &cell : s.cells)
+        REQUIRE(seq.cells.size() == size);
+        for (auto const &cell : seq.cells)
         {
-            REQUIRE(holds<Rest>(cell));
+            REQUIRE(cell.elements.empty());
         }
     }
-}
 
-TEST_CASE("Generate Full Sequences", "[sequence]")
-{
-    SECTION("Zero Cells")
+    SECTION("constructing note sequences")
     {
-        auto const size = 0;
-        auto const velocity = 0.4f;
-        auto const delay = 0.01f;
-        auto const gate = 0.8f;
-        auto const note = Note{5, velocity, delay, gate};
-        auto const s = Sequence{std::vector<Cell>(size, {note})};
+        auto const note = Note{5, 0.4f, 0.01f, 0.8f};
+        auto const seq =
+            Sequence{std::vector<Cell>(3, Cell{.elements = {note}, .weight = 1.f})};
 
-        REQUIRE(s.cells.size() == size);
-    }
-
-    SECTION("100 Cells")
-    {
-        auto const size = 100;
-        auto const velocity = 0.4f;
-        auto const delay = 0.01f;
-        auto const gate = 0.8f;
-        auto const note = Note{5, velocity, delay, gate};
-        auto const s = Sequence{std::vector<Cell>(size, {note})};
-
-        REQUIRE(s.cells.size() == size);
-
-        for (auto const &cell : s.cells)
+        REQUIRE(seq.cells.size() == 3);
+        for (auto const &cell : seq.cells)
         {
-            REQUIRE((holds<Note>(cell) && get<Note>(cell) == note));
+            REQUIRE(cell.elements.size() == 1);
+            REQUIRE(std::get<Note>(cell.elements[0]) == note);
         }
     }
 }

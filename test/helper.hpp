@@ -13,23 +13,46 @@
 namespace sequence::test::helper
 {
 
-/// Shorthand for std::holds_alternative
-template <typename T, typename X>
-[[nodiscard]] auto holds(X const &x) -> bool
+template <typename T>
+[[nodiscard]]
+auto holds(MusicElement const &element) -> bool
 {
-    return std::holds_alternative<T>(x.element);
+    return std::holds_alternative<T>(element);
 }
 
-template <typename T, typename X>
-[[nodiscard]] auto get(X &x) -> T &
+template <typename T>
+[[nodiscard]]
+auto holds(Cell const &cell) -> bool
 {
-    return std::get<T>(x.element);
+    return cell.elements.size() == 1 && holds<T>(cell.elements.front());
 }
 
-template <typename T, typename X>
-[[nodiscard]] auto get(X const &x) -> T const &
+template <typename T>
+[[nodiscard]]
+auto get(MusicElement &element) -> T &
 {
-    return std::get<T>(x.element);
+    return std::get<T>(element);
+}
+
+template <typename T>
+[[nodiscard]]
+auto get(MusicElement const &element) -> T const &
+{
+    return std::get<T>(element);
+}
+
+template <typename T>
+[[nodiscard]]
+auto get(Cell &cell) -> T &
+{
+    return get<T>(cell.elements.front());
+}
+
+template <typename T>
+[[nodiscard]]
+auto get(Cell const &cell) -> T const &
+{
+    return get<T>(cell.elements.front());
 }
 
 template <typename Fn>
@@ -38,48 +61,61 @@ concept NoteChecker = requires(Fn fn, Note const &note) {
 };
 
 template <NoteChecker Fn>
-auto check_sequence(Cell const &cell, Fn &&checker) -> void
+auto check_sequence(MusicElement const &element, Fn &&checker) -> void
 {
     using namespace sequence::utility;
 
     std::visit(overload{
                    [&checker](Note const &note) { checker(note); },
-                   [](Rest) {},
                    [&checker](Sequence const &seq) {
-                       for (auto const &c : seq.cells)
+                       for (auto const &cell : seq.cells)
                        {
-                           check_sequence(c, checker);
+                           for (auto const &nested : cell.elements)
+                           {
+                               check_sequence(nested, checker);
+                           }
                        }
                    },
                },
-               cell.element);
+               element);
+}
+
+template <NoteChecker Fn>
+auto check_sequence(Cell const &cell, Fn &&checker) -> void
+{
+    for (auto const &element : cell.elements)
+    {
+        check_sequence(element, checker);
+    }
 }
 
 template <typename Fn>
-auto modify_notes(Cell &cell, Fn &&modifier) -> void
+auto modify_notes(MusicElement &element, Fn &&modifier) -> void
 {
     using namespace sequence::utility;
 
     std::visit(overload{
                    [&modifier](Note &note) { modifier(note); },
-                   [](Rest) {},
                    [&modifier](Sequence &seq) {
-                       for (auto &c : seq.cells)
+                       for (auto &cell : seq.cells)
                        {
-                           modify_notes(c, modifier);
+                           modify_notes(cell, modifier);
                        }
                    },
                },
-               cell.element);
+               element);
 }
 
-/**
- * @brief Prints a Sequence to stdout.
- *
- * @param seq The Sequence to print.
- * @param indent The indentation level, used for recursion into sub-Sequences.
- */
-inline auto print_sequence(Cell const &cell, int indent = 0) -> void
+template <typename Fn>
+auto modify_notes(Cell &cell, Fn &&modifier) -> void
+{
+    for (auto &element : cell.elements)
+    {
+        modify_notes(element, modifier);
+    }
+}
+
+inline auto print_sequence(MusicElement const &element, int indent = 0) -> void
 {
     using namespace sequence::utility;
 
@@ -91,26 +127,36 @@ inline auto print_sequence(Cell const &cell, int indent = 0) -> void
                                  << ", delay=" << note.delay << ", gate=" << note.gate
                                  << ")\n";
                    },
-                   [](Rest) { std::cout << "Rest\n"; },
                    [&](Sequence const &seq) {
-                       std::cout << "Sequence(\n";
-                       for (auto const &c : seq.cells)
+                       std::cout << std::string(indent * 2, ' ') << "Sequence(\n";
+                       for (auto const &cell : seq.cells)
                        {
-                           print_sequence(c, indent + 1);
+                           print_sequence(cell, indent + 1);
                        }
-                       std::cout << ")\n";
+                       std::cout << std::string(indent * 2, ' ') << ")\n";
                    },
                },
-               cell.element);
+               element);
 }
 
-inline auto print_midi_timeline(std::vector<midi::TimedMidiNote> const &timeline) -> void
+inline auto print_sequence(Cell const &cell, int indent = 0) -> void
+{
+    std::cout << std::string(indent * 2, ' ') << "Cell(weight=" << cell.weight
+              << ", elements=" << cell.elements.size() << ")\n";
+    for (auto const &element : cell.elements)
+    {
+        print_sequence(element, indent + 1);
+    }
+}
+
+inline auto print_midi_timeline(std::vector<midi::TimedMidiNote> const &timeline)
+    -> void
 {
     for (auto const &note : timeline)
     {
         std::cout << "TimedMidiNote(begin=" << note.begin << ", end=" << note.end
-                  << ", note=" << (int)note.note
-                  << ", velocity=" << (int)note.velocity
+                  << ", note=" << static_cast<int>(note.note)
+                  << ", velocity=" << static_cast<int>(note.velocity)
                   << ", pitch_bend=" << note.pitch_bend << ")\n";
     }
 }

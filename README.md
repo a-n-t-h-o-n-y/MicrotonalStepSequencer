@@ -15,15 +15,16 @@ target_link_libraries(your_target PRIVATE sequence::sequencer)
 ## Core Types
 
 - `sequence::Note`: pitch, velocity, delay, and gate for one note event.
-- `sequence::Rest`: an empty step.
 - `sequence::MusicElement`: the variant payload stored inside a `Cell`; it holds a
-  `Note`, `Rest`, or nested `Sequence`.
-- `sequence::Cell`: the weighted wrapper around a `MusicElement`.
+  `Note` or nested `Sequence`.
+- `sequence::Cell`: a weighted time span containing zero or more simultaneous
+  `MusicElement`s.
 - `sequence::Sequence`: a nested collection of `Cell`s.
 - `sequence::Tuning`: microtonal scale intervals and octave size.
 
 `Cell` is the unit most APIs operate on. A `Sequence` is recursive because each child is
-itself a `Cell`, which means a child can be another `Sequence`.
+itself a `Cell`, and each `Cell` may contain multiple simultaneous notes or nested
+sequences. An empty `Cell.elements` vector represents silence for that span.
 
 ## Example
 
@@ -40,14 +41,18 @@ int main()
 {
     using namespace sequence;
 
-    auto seq = Cell{Sequence{{
-        {Note{0, 0.8f, 0.0f, 1.0f}},
-        {Note{2, 0.8f, 0.0f, 1.0f}},
-        {Note{4, 0.8f, 0.0f, 1.0f}},
-        {Note{5, 0.8f, 0.0f, 1.0f}},
-    }}};
+    auto cell = Cell{
+        .elements =
+            {Sequence{{
+                {.elements = {Note{0, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+                {.elements = {Note{2, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+                {.elements = {Note{4, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+                {.elements = {Note{5, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+            }}},
+        .weight = 1.0f,
+    };
     auto pattern = Pattern{0, {2}};
-    auto cell = modify::shift_pitch(Cell{seq}, pattern, 7);
+    auto shifted = modify::shift_pitch(cell, pattern, 7);
 
     auto tuning = Tuning{
         {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100},
@@ -55,11 +60,12 @@ int main()
         "12-EDO",
     };
 
-    auto timeline = midi::translate_to_midi_timeline(
-        cell,
-        TimeSignature{4, 4},
-        std::uint32_t{48000},
-        120.0f,
+    auto total_samples = samples_count(TimeSignature{4, 4}, std::uint32_t{48000}, 120.0f);
+
+    auto timeline = midi::flatten_to_midi(
+        shifted.elements,
+        0,
+        total_samples,
         tuning,
         440.0f,
         48.0f
@@ -85,11 +91,23 @@ and so on at each visited `Sequence` level:
 ```cpp
 using namespace sequence;
 
-auto cell = Cell{Sequence{{
-    {Note{0, 0.8f, 0.0f, 1.0f}},
-    {Sequence{{{Note{1, 0.8f, 0.0f, 1.0f}}}}},
-    {Sequence{{{Note{2, 0.8f, 0.0f, 1.0f}}}}},
-}}};
+auto nested_a = Sequence{{
+    {.elements = {Note{1, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+}};
+
+auto nested_b = Sequence{{
+    {.elements = {Note{2, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+}};
+
+auto cell = Cell{
+    .elements =
+        {Sequence{{
+            {.elements = {Note{0, 0.8f, 0.0f, 1.0f}}, .weight = 1.0f},
+            {.elements = {nested_a}, .weight = 1.0f},
+            {.elements = {nested_b}, .weight = 1.0f},
+        }}},
+    .weight = 1.0f,
+};
 
 auto shifted = modify::shift_pitch(cell, Pattern{0, {2}}, 12);
 
@@ -102,8 +120,8 @@ auto shifted = modify::shift_pitch(cell, Pattern{0, {2}}, 12);
 
 - `sequence::modify`: transform existing material by pattern.
 - `sequence::from_scala`: load a tuning from a Scala `.scl` file.
-- `sequence::samples_count`: derive total duration in samples from a cell and time signature.
-- `sequence::midi::translate_to_midi_timeline`: convert a timed cell into MIDI events.
+- `sequence::samples_count`: derive total duration in samples from a time signature, sample rate, and BPM.
+- `sequence::midi::flatten_to_midi`: convert simultaneous recursive music elements into timed MIDI notes over a sample span.
 
 Tests in [`test/`](/Users/anthony/Documents/code/MicrotonalStepSequencer/test) show more
 complete usage.

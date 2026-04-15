@@ -15,12 +15,6 @@ struct Note
     float gate = 1.f;      // 0.0 to 1.0, percentage of note length to play
 };
 
-struct Rest
-{
-    bool operator==(Rest const &) const = default;
-    bool operator!=(Rest const &) const = default;
-};
-
 struct Cell;
 
 struct Sequence
@@ -31,11 +25,11 @@ struct Sequence
     bool operator!=(Sequence const &) const = default;
 };
 
-using MusicElement = std::variant<Note, Rest, Sequence>;
+using MusicElement = std::variant<Note, Sequence>;
 
 struct Cell
 {
-    MusicElement element;
+    std::vector<MusicElement> elements;
     float weight = 1.f; // Defines length, in relation to sibling Cells
 };
 
@@ -44,7 +38,8 @@ struct Cell
 /**
  * @brief Compares two Notes for equality.
  */
-[[nodiscard]] constexpr auto operator==(Note const &lhs, Note const &rhs) -> bool
+[[nodiscard]]
+constexpr auto operator==(Note const &lhs, Note const &rhs) -> bool
 {
     constexpr float tolerance = 0.0001f; // set a small tolerance value
     return lhs.pitch == rhs.pitch &&
@@ -56,17 +51,20 @@ struct Cell
 /**
  * @brief Compares two Notes for inequality.
  */
-[[nodiscard]] constexpr auto operator!=(Note const &lhs, Note const &rhs) -> bool
+[[nodiscard]]
+constexpr auto operator!=(Note const &lhs, Note const &rhs) -> bool
 {
     return !(lhs == rhs);
 }
 
-[[nodiscard]] constexpr auto operator==(Cell const &lhs, Cell const &rhs) -> bool
+[[nodiscard]]
+constexpr auto operator==(Cell const &lhs, Cell const &rhs) -> bool
 {
-    return lhs.element == rhs.element && std::fabs(lhs.weight - rhs.weight) < 0.0001f;
+    return lhs.elements == rhs.elements && std::fabs(lhs.weight - rhs.weight) < 0.0001f;
 }
 
-[[nodiscard]] constexpr auto operator!=(Cell const &lhs, Cell const &rhs) -> bool
+[[nodiscard]]
+constexpr auto operator!=(Cell const &lhs, Cell const &rhs) -> bool
 {
     return !(lhs == rhs);
 }

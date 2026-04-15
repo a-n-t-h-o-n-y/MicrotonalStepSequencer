@@ -3,14 +3,14 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include <sequence/sequence.hpp>
 #include <sequence/time_signature.hpp>
 
 namespace sequence
 {
 
-auto samples_count(Cell const &, TimeSignature const &time_signature,
-                   std::uint32_t sample_rate, float bpm) -> std::uint32_t
+auto samples_count(TimeSignature const &time_signature,
+                   std::uint32_t sample_rate,
+                   float bpm) -> std::uint32_t
 {
     if (time_signature.denominator == 0)
     {

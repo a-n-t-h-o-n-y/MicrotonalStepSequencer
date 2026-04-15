@@ -34,7 +34,7 @@ AlignTrailingComments:
     Kind: Always
     OverEmptyLines: 0
 AllowAllArgumentsOnNextLine: true
-AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
@@ -49,7 +49,7 @@ AlwaysBreakTemplateDeclarations: true
 AttributeMacros:
     - __capability
 BinPackArguments: true
-BinPackParameters: true
+BinPackParameters: false
 BitFieldColonSpacing: Both
 BraceWrapping:
     AfterCaseLabel: false
@@ -70,7 +70,7 @@ BraceWrapping:
     SplitEmptyFunction: true
     SplitEmptyRecord: true
     SplitEmptyNamespace: true
-BreakAfterAttributes: Never
+BreakAfterAttributes: Always
 BreakAfterJavaFieldAnnotations: false
 BreakArrays: true
 BreakBeforeBinaryOperators: None
@@ -222,4 +222,3 @@ WhitespaceSensitiveMacros:
     - PP_STRINGIZE
     - STRINGIZE
 ---
-

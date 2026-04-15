@@ -35,13 +35,20 @@ inline thread_local auto rng = std::mt19937{std::random_device{}()};
 
 inline auto sync_rng() -> void
 {
-    auto const lock = std::lock_guard{seed_mutex()};
-    if (local_seed_version == seed_version())
+    auto version = std::uint64_t{};
+    auto seed = std::optional<std::uint32_t>{};
+
     {
-        return;
+        auto const lock = std::lock_guard{seed_mutex()};
+        version = seed_version();
+        if (local_seed_version == version)
+        {
+            return;
+        }
+        seed = configured_seed();
     }
 
-    if (auto const seed = configured_seed(); seed.has_value())
+    if (seed.has_value())
     {
         rng.seed(*seed);
     }
@@ -50,7 +57,7 @@ inline auto sync_rng() -> void
         rng.seed(std::random_device{}());
     }
 
-    local_seed_version = seed_version();
+    local_seed_version = version;
 }
 
 } // namespace detail
@@ -69,13 +76,15 @@ inline auto clear_seed() -> void
     ++detail::seed_version();
 }
 
-[[nodiscard]] inline auto get_seed() -> std::optional<std::uint32_t>
+[[nodiscard]]
+inline auto get_seed() -> std::optional<std::uint32_t>
 {
     auto const lock = std::lock_guard{detail::seed_mutex()};
     return detail::configured_seed();
 }
 
-[[nodiscard]] inline auto engine() -> std::mt19937 &
+[[nodiscard]]
+inline auto engine() -> std::mt19937 &
 {
     detail::sync_rng();
     return detail::rng;

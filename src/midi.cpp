@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 #include <variant>
@@ -51,13 +52,23 @@ auto create_midi_note(int pitch,
                       float tuning_base,
                       float pb_range) -> MicrotonalNote
 {
-    if (tuning.intervals.empty())
+    if (tuning.intervals.empty() ||
+        tuning.intervals.size() >
+            static_cast<std::size_t>(std::numeric_limits<int>::max()))
     {
         throw std::invalid_argument("Tuning must not be empty");
     }
-    if (pb_range <= 0.f)
+    if (!std::isfinite(pb_range) || pb_range <= 0.f)
     {
         throw std::invalid_argument("pb_range must be greater than 0");
+    }
+
+    if (!std::isfinite(tuning_base) || !std::isfinite(tuning.octave) ||
+        tuning.octave <= 0.f || std::ranges::any_of(tuning.intervals, [](float value) {
+            return !std::isfinite(value);
+        }))
+    {
+        throw std::invalid_argument("Tuning values must be finite and octave positive");
     }
 
     auto const fractional_note = tuning_base + [&] {
@@ -81,12 +92,21 @@ auto create_midi_note(int pitch,
         return (octave_offset + interval_offset) / semitone_cents;
     }();
 
+    if (!std::isfinite(fractional_note))
+    {
+        throw std::overflow_error("MIDI note calculation is not finite");
+    }
+
     auto integral = 0.f;
     auto const fractional =
         std::modf(std::clamp(fractional_note, 0.f, 127.f), &integral);
-    return MicrotonalNote{
-        static_cast<std::uint8_t>(integral),
-        static_cast<std::uint16_t>(8'192 + (fractional * 8'192.f / pb_range))};
+    auto const pitch_bend = 8'192.f + (fractional * 8'192.f / pb_range);
+    if (!std::isfinite(pitch_bend) || pitch_bend > 16'383.f)
+    {
+        throw std::overflow_error("pitch bend exceeds MIDI range");
+    }
+    return MicrotonalNote{static_cast<std::uint8_t>(integral),
+                          static_cast<std::uint16_t>(pitch_bend)};
 }
 
 /**
@@ -107,7 +127,7 @@ auto create_timed_midi_note(sequence::Note const &note,
                             float base_frequency,
                             float pb_range) -> sequence::midi::TimedMidiNote
 {
-    if (base_frequency <= 0.f)
+    if (!std::isfinite(base_frequency) || base_frequency <= 0.f)
     {
         throw std::invalid_argument("base_frequency must be greater than 0");
     }
@@ -120,10 +140,21 @@ auto create_timed_midi_note(sequence::Note const &note,
     auto const [midi_note, pitch_bend] =
         create_midi_note(note.pitch, tuning, base_midi_note, pb_range);
 
+    if (!std::isfinite(note.velocity) || note.velocity < 0.f || note.velocity > 1.f ||
+        !std::isfinite(note.delay) || note.delay < 0.f || note.delay > 1.f ||
+        !std::isfinite(note.gate) || note.gate < 0.f || note.gate > 1.f)
+    {
+        throw std::invalid_argument("note velocity, delay, and gate must be in [0, 1]");
+    }
+    if (sample_count > std::numeric_limits<std::uint32_t>::max() - sample_offset)
+    {
+        throw std::overflow_error("sample span exceeds uint32_t range");
+    }
+
     auto const delay =
-        static_cast<std::uint32_t>(static_cast<float>(sample_count) * note.delay);
+        static_cast<std::uint32_t>(static_cast<double>(sample_count) * note.delay);
     auto const note_samples = static_cast<std::uint32_t>(
-        (static_cast<float>(sample_count) - static_cast<float>(delay)) * note.gate);
+        (static_cast<double>(sample_count) - static_cast<double>(delay)) * note.gate);
 
     return sequence::midi::TimedMidiNote{
         .begin = sample_offset + delay,
@@ -150,11 +181,11 @@ auto flatten_to_midi(std::vector<MusicElement> const &elements,
     {
         throw std::invalid_argument("Tuning must not be empty");
     }
-    if (base_frequency <= 0.f)
+    if (!std::isfinite(base_frequency) || base_frequency <= 0.f)
     {
         throw std::invalid_argument("base_frequency must be greater than 0");
     }
-    if (pb_range <= 0.f)
+    if (!std::isfinite(pb_range) || pb_range <= 0.f)
     {
         throw std::invalid_argument("pb_range must be greater than 0");
     }
@@ -171,6 +202,13 @@ auto flatten_to_midi(std::vector<MusicElement> const &elements,
                         pb_range));
                 },
                 [&](Sequence const &seq) {
+                    if (std::ranges::any_of(seq.cells, [](Cell const &cell) {
+                            return !std::isfinite(cell.weight) || cell.weight <= 0.f;
+                        }))
+                    {
+                        throw std::invalid_argument(
+                            "sequence cell weights must be finite and positive");
+                    }
                     auto const total_weight = std::accumulate(
                         std::cbegin(seq.cells), std::cend(seq.cells), 0.,
                         [](double sum, Cell const &cell) {
@@ -183,6 +221,11 @@ auto flatten_to_midi(std::vector<MusicElement> const &elements,
                     }
 
                     auto current_offset = static_cast<double>(sample_offset);
+                    if (sample_count >
+                        std::numeric_limits<std::uint32_t>::max() - sample_offset)
+                    {
+                        throw std::overflow_error("sample span exceeds uint32_t range");
+                    }
                     auto const sequence_end = sample_offset + sample_count;
 
                     for (auto i = 0u; i < seq.cells.size(); ++i)

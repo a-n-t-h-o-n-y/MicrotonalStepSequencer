@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include <sequence/modify.hpp>
@@ -107,6 +108,12 @@ TEST_CASE("note creates a note element and validates ranges", "[modify]")
     REQUIRE_THROWS_AS(modify::note(0, -0.1f, 0.f, 1.f), std::invalid_argument);
     REQUIRE_THROWS_AS(modify::note(0, 0.5f, 1.1f, 1.f), std::invalid_argument);
     REQUIRE_THROWS_AS(modify::note(0, 0.5f, 0.5f, -0.1f), std::invalid_argument);
+    REQUIRE_THROWS_AS(
+        modify::note(0, std::numeric_limits<float>::quiet_NaN(), 0.f, 1.f),
+        std::invalid_argument);
+    REQUIRE_THROWS_AS(
+        modify::note(0, 0.5f, std::numeric_limits<float>::infinity(), 1.f),
+        std::invalid_argument);
 }
 
 TEST_CASE("randomize family supports element and cell targets", "[modify]")
@@ -255,6 +262,14 @@ TEST_CASE("set family supports element and cell targets", "[modify]")
         REQUIRE(collect_pitches(updated) == std::vector<int>{47, 38, 36});
         REQUIRE_THROWS_AS(modify::set_octave(target, {0, {1}}, 3, 0),
                           std::invalid_argument);
+        REQUIRE_THROWS_AS(
+            modify::set_octave(
+                target, {0, {1}}, 3,
+                static_cast<std::size_t>(std::numeric_limits<int>::max()) + 1),
+            std::invalid_argument);
+        REQUIRE_THROWS_AS(
+            modify::set_octave(target, {0, {1}}, std::numeric_limits<int>::max(), 12),
+            std::overflow_error);
     }
 
     SECTION("set_velocity, set_delay, and set_gate clamp in a cell target")

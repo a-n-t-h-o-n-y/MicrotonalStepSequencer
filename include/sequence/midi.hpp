@@ -42,9 +42,10 @@ struct TimedMidiNote
  * @param pb_range The pitch bend range expected by the MIDI receiver.
  * @return std::vector<TimedMidiNote>
  *
- * @throws std::invalid_argument if \p tuning is empty, if \p base_frequency is not
- * greater than zero, if \p pb_range is not greater than zero, or if any visited
- * Sequence has a total child weight that is not greater than zero.
+ * @throws std::invalid_argument if tuning, note, pitch-bend range, base-frequency, or
+ * cell-weight values are invalid or non-finite.
+ * @throws std::overflow_error if MIDI pitch-bend or sample-position arithmetic exceeds
+ * its output range.
  */
 [[nodiscard]]
 auto flatten_to_midi(std::vector<MusicElement> const &elements,

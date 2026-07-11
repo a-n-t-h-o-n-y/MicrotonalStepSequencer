@@ -1,5 +1,6 @@
 #include "catch.hpp"
 
+#include <limits>
 #include <vector>
 
 #include <sequence/midi.hpp>
@@ -78,6 +79,10 @@ TEST_CASE("flatten_to_midi validates input", "[midi]")
                           std::invalid_argument);
         REQUIRE_THROWS_AS(midi::flatten_to_midi(note, 0, 100, tuning, -440.f, pb_range),
                           std::invalid_argument);
+        REQUIRE_THROWS_AS(midi::flatten_to_midi(note, 0, 100, tuning,
+                                                std::numeric_limits<float>::quiet_NaN(),
+                                                pb_range),
+                          std::invalid_argument);
     }
 
     SECTION("throws on nonpositive pitch bend range")
@@ -90,6 +95,9 @@ TEST_CASE("flatten_to_midi validates input", "[midi]")
         REQUIRE_THROWS_AS(
             midi::flatten_to_midi(note, 0, 100, tuning, base_frequency, -1.f),
             std::invalid_argument);
+        REQUIRE_THROWS_AS(midi::flatten_to_midi(note, 0, 100, tuning, base_frequency,
+                                                std::numeric_limits<float>::infinity()),
+                          std::invalid_argument);
     }
 
     SECTION("throws when a visited sequence has zero total weight")
@@ -102,6 +110,63 @@ TEST_CASE("flatten_to_midi validates input", "[midi]")
         REQUIRE_THROWS_AS(
             midi::flatten_to_midi(elements, 0, 100, tuning, base_frequency, pb_range),
             std::invalid_argument);
+    }
+
+    SECTION("throws on invalid cell weights")
+    {
+        auto const tuning = twelve_edo();
+        for (auto const weight : {-1.f, std::numeric_limits<float>::quiet_NaN(),
+                                  std::numeric_limits<float>::infinity()})
+        {
+            auto const elements = std::vector<MusicElement>{
+                Sequence{{Cell{{Note{0}}, weight}, Cell{{Note{1}}, 1.f}}},
+            };
+            REQUIRE_THROWS_AS(midi::flatten_to_midi(elements, 0, 100, tuning,
+                                                    base_frequency, pb_range),
+                              std::invalid_argument);
+        }
+    }
+
+    SECTION("throws on invalid note values")
+    {
+        auto invalid = Note{};
+        invalid.velocity = std::numeric_limits<float>::quiet_NaN();
+        REQUIRE_THROWS_AS(midi::flatten_to_midi({invalid}, 0, 100, twelve_edo(),
+                                                base_frequency, pb_range),
+                          std::invalid_argument);
+        invalid = Note{};
+        invalid.delay = -0.1f;
+        REQUIRE_THROWS_AS(midi::flatten_to_midi({invalid}, 0, 100, twelve_edo(),
+                                                base_frequency, pb_range),
+                          std::invalid_argument);
+        invalid = Note{};
+        invalid.gate = std::numeric_limits<float>::infinity();
+        REQUIRE_THROWS_AS(midi::flatten_to_midi({invalid}, 0, 100, twelve_edo(),
+                                                base_frequency, pb_range),
+                          std::invalid_argument);
+    }
+
+    SECTION("throws on invalid tuning values and arithmetic overflow")
+    {
+        auto tuning = twelve_edo();
+        tuning.octave = std::numeric_limits<float>::quiet_NaN();
+        REQUIRE_THROWS_AS(
+            midi::flatten_to_midi(note, 0, 100, tuning, base_frequency, pb_range),
+            std::invalid_argument);
+
+        tuning = twelve_edo();
+        tuning.intervals[0] = std::numeric_limits<float>::infinity();
+        REQUIRE_THROWS_AS(
+            midi::flatten_to_midi(note, 0, 100, tuning, base_frequency, pb_range),
+            std::invalid_argument);
+
+        REQUIRE_THROWS_AS(
+            midi::flatten_to_midi(note, std::numeric_limits<std::uint32_t>::max(), 1,
+                                  twelve_edo(), base_frequency, pb_range),
+            std::overflow_error);
+        REQUIRE_THROWS_AS(midi::flatten_to_midi({Note{.pitch = 1}}, 0, 100,
+                                                grail_tuning(), base_frequency, 0.01f),
+                          std::overflow_error);
     }
 }
 

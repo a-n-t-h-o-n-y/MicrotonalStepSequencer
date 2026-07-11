@@ -1,8 +1,10 @@
 #include <sequence/modify.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <type_traits>
 #include <variant>
@@ -273,9 +275,10 @@ auto set_octave(MusicElement element,
                 int octave,
                 std::size_t tuning_length) -> MusicElement
 {
-    if (tuning_length == 0)
+    if (tuning_length == 0 ||
+        tuning_length > static_cast<std::size_t>(std::numeric_limits<int>::max()))
     {
-        throw std::invalid_argument("tuning_length must be greater than 0");
+        throw std::invalid_argument("tuning_length must be in the range [1, INT_MAX]");
     }
 
     return visit_recursive(element, pattern, [&](Note n) {
@@ -283,7 +286,14 @@ auto set_octave(MusicElement element,
         auto degree_in_current_octave =
             (n.pitch % tuning_length_i + tuning_length_i) % tuning_length_i;
 
-        n.pitch = degree_in_current_octave + (octave * tuning_length_i);
+        auto const pitch = static_cast<long long>(degree_in_current_octave) +
+                           static_cast<long long>(octave) * tuning_length_i;
+        if (pitch < std::numeric_limits<int>::min() ||
+            pitch > std::numeric_limits<int>::max())
+        {
+            throw std::overflow_error("octave pitch exceeds int range");
+        }
+        n.pitch = static_cast<int>(pitch);
         return n;
     });
 }
@@ -538,15 +548,15 @@ auto shuffle(Cell cell) -> Cell
 
 auto note(int pitch, float velocity, float delay, float gate) -> MusicElement
 {
-    if (velocity < 0.f || velocity > 1.f)
+    if (!std::isfinite(velocity) || velocity < 0.f || velocity > 1.f)
     {
         throw std::invalid_argument("velocity must be in the range [0.0, 1.0]");
     }
-    else if (delay < 0.f || delay > 1.f)
+    else if (!std::isfinite(delay) || delay < 0.f || delay > 1.f)
     {
         throw std::invalid_argument("delay must be in the range [0.0, 1.0]");
     }
-    else if (gate < 0.f || gate > 1.f)
+    else if (!std::isfinite(gate) || gate < 0.f || gate > 1.f)
     {
         throw std::invalid_argument("gate must be in the range [0.0, 1.0]");
     }

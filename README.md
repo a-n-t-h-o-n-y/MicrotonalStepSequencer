@@ -123,5 +123,8 @@ auto shifted = modify::shift_pitch(cell, Pattern{0, {2}}, 12);
 - `sequence::samples_count`: derive total duration in samples from a time signature, sample rate, and BPM.
 - `sequence::midi::flatten_to_midi`: convert simultaneous recursive music elements into timed MIDI notes over a sample span.
 
-Tests in [`test/`](/Users/anthony/Documents/code/MicrotonalStepSequencer/test) show more
-complete usage.
+Tests in [`test/`](test) show more complete usage.
+
+## License
+
+Microtonal Step Sequencer is available under the [MIT License](LICENSE).

@@ -17,7 +17,8 @@ namespace sequence
  * @return std::uint32_t - The number of samples in the measure.
  *
  * @throws std::invalid_argument if \p time_signature.denominator is zero, if
- * \p sample_rate is zero, or if \p bpm is not greater than zero.
+ * \p sample_rate is zero, or if \p bpm is not finite and greater than zero.
+ * @throws std::overflow_error if the result exceeds the return type's range.
  */
 [[nodiscard]]
 auto samples_count(TimeSignature const &time_signature,

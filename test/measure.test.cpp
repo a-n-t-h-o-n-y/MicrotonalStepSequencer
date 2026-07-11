@@ -1,5 +1,7 @@
 #include "catch.hpp"
 
+#include <limits>
+
 #include <sequence/timing.hpp>
 
 TEST_CASE("samples_count", "[timing]")
@@ -34,5 +36,18 @@ TEST_CASE("samples_count", "[timing]")
                           std::invalid_argument);
         REQUIRE_THROWS_AS(samples_count(TimeSignature{4, 4}, 44'100, -1.f),
                           std::invalid_argument);
+        REQUIRE_THROWS_AS(samples_count(TimeSignature{4, 4}, 44'100,
+                                        std::numeric_limits<float>::quiet_NaN()),
+                          std::invalid_argument);
+        REQUIRE_THROWS_AS(samples_count(TimeSignature{4, 4}, 44'100,
+                                        std::numeric_limits<float>::infinity()),
+                          std::invalid_argument);
+    }
+
+    SECTION("throws if the sample count overflows")
+    {
+        REQUIRE_THROWS_AS(samples_count(TimeSignature{4, 1},
+                                        std::numeric_limits<std::uint32_t>::max(), 1.f),
+                          std::overflow_error);
     }
 }

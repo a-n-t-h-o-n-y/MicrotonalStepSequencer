@@ -88,6 +88,21 @@ auto shift_gate(MusicElement element, Pattern const &pattern, float amount)
 [[nodiscard]]
 auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell;
 
+/// Shifts a MIDI controller value, clamped to [0, 1]. Missing values start at
+/// MIDI_CC_NEUTRAL_VALUE. Pattern matching is evaluated independently at each
+/// sequence level.
+[[nodiscard]]
+auto shift_midi_cc(MusicElement element,
+                   Pattern const &pattern,
+                   MidiControllerNumber controller,
+                   float amount) -> MusicElement;
+
+[[nodiscard]]
+auto shift_midi_cc(Cell cell,
+                   Pattern const &pattern,
+                   MidiControllerNumber controller,
+                   float amount) -> Cell;
+
 /// Sets note pitch to a constant value. Pattern matching is evaluated independently at
 /// each sequence level.
 [[nodiscard]]
@@ -135,6 +150,31 @@ auto set_gate(MusicElement element, Pattern const &pattern, float gate) -> Music
 
 [[nodiscard]]
 auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell;
+
+/// Sets a normalized MIDI controller value. Pattern matching is evaluated
+/// independently at each sequence level.
+[[nodiscard]]
+auto set_midi_cc(MusicElement element,
+                 Pattern const &pattern,
+                 MidiControllerNumber controller,
+                 float value) -> MusicElement;
+
+[[nodiscard]]
+auto set_midi_cc(Cell cell,
+                 Pattern const &pattern,
+                 MidiControllerNumber controller,
+                 float value) -> Cell;
+
+/// Removes a MIDI controller value. Pattern matching is evaluated independently at
+/// each sequence level.
+[[nodiscard]]
+auto remove_midi_cc(MusicElement element,
+                    Pattern const &pattern,
+                    MidiControllerNumber controller) -> MusicElement;
+
+[[nodiscard]]
+auto remove_midi_cc(Cell cell, Pattern const &pattern, MidiControllerNumber controller)
+    -> Cell;
 
 /// Rotates sequence cell order. Positive values shift right, negative values shift
 /// left. Non-sequence cells are unchanged.

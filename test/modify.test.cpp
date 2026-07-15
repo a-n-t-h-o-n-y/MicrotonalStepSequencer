@@ -120,10 +120,9 @@ TEST_CASE("randomize family supports element and cell targets", "[modify]")
 {
     SECTION("randomize_pitch updates nested notes in a music element")
     {
-        auto const target = MusicElement{Sequence{{note_cell(0),
-                                                   silent_cell(),
-                                                   sequence_cell(
-                                                       {note_cell(1), note_cell(2)})}}};
+        auto const target =
+            MusicElement{Sequence{{note_cell(0), silent_cell(),
+                                   sequence_cell({note_cell(1), note_cell(2)})}}};
 
         auto const randomized = modify::randomize_pitch(target, {0, {1}}, 10, 12);
         auto const pitches = collect_pitches(randomized);
@@ -145,7 +144,8 @@ TEST_CASE("randomize family supports element and cell targets", "[modify]")
             .weight = 2.5f,
         };
 
-        auto const randomized = modify::randomize_velocity(target, {0, {1}}, 0.3f, 0.6f);
+        auto const randomized =
+            modify::randomize_velocity(target, {0, {1}}, 0.3f, 0.6f);
 
         REQUIRE(randomized.weight == target.weight);
         REQUIRE(as_sequence(randomized.elements[1]).cells[1].elements.empty());
@@ -157,8 +157,8 @@ TEST_CASE("randomize family supports element and cell targets", "[modify]")
 
     SECTION("randomize_delay validates bounds and updates note delays")
     {
-        auto const target =
-            MusicElement{Sequence{{note_cell(0, 0.7f, 0.1f), note_cell(1, 0.7f, 0.8f)}}};
+        auto const target = MusicElement{
+            Sequence{{note_cell(0, 0.7f, 0.1f), note_cell(1, 0.7f, 0.8f)}}};
 
         auto const randomized = modify::randomize_delay(target, {0, {1}}, 0.2f, 0.7f);
         for_each_note(randomized, [](Note const &note) {
@@ -177,8 +177,8 @@ TEST_CASE("randomize family supports element and cell targets", "[modify]")
     SECTION("randomize_gate validates bounds and updates note gates")
     {
         auto const target = Cell{
-            .elements = {Sequence{{note_cell(0, 0.7f, 0.1f, 0.2f),
-                                   note_cell(1, 0.7f, 0.1f, 0.9f)}}},
+            .elements = {Sequence{
+                {note_cell(0, 0.7f, 0.1f, 0.2f), note_cell(1, 0.7f, 0.1f, 0.9f)}}},
             .weight = 1.25f,
         };
 
@@ -201,8 +201,8 @@ TEST_CASE("shift family supports element and cell targets", "[modify]")
 {
     SECTION("shift_pitch updates nested pitches in an element")
     {
-        auto const target =
-            MusicElement{Sequence{{note_cell(1), sequence_cell({note_cell(2), note_cell(3)})}}};
+        auto const target = MusicElement{
+            Sequence{{note_cell(1), sequence_cell({note_cell(2), note_cell(3)})}}};
 
         auto const shifted = modify::shift_pitch(target, {0, {1}}, 5);
 
@@ -244,8 +244,8 @@ TEST_CASE("set family supports element and cell targets", "[modify]")
 {
     SECTION("set_pitch updates note pitch in an element target")
     {
-        auto const target =
-            MusicElement{Sequence{{note_cell(1), sequence_cell({note_cell(2), note_cell(3)})}}};
+        auto const target = MusicElement{
+            Sequence{{note_cell(1), sequence_cell({note_cell(2), note_cell(3)})}}};
 
         auto const updated = modify::set_pitch(target, {0, {1}}, 9);
 
@@ -318,8 +318,8 @@ TEST_CASE("rotate, mirror, and reverse transform sequential content", "[modify]"
 
     SECTION("mirror respects center note across nested sequences")
     {
-        auto const target =
-            MusicElement{Sequence{{note_cell(0), sequence_cell({note_cell(2), note_cell(4)})}}};
+        auto const target = MusicElement{
+            Sequence{{note_cell(0), sequence_cell({note_cell(2), note_cell(4)})}}};
 
         auto const mirrored = modify::mirror(target, {0, {1}}, 5);
 
@@ -332,10 +332,8 @@ TEST_CASE("rotate, mirror, and reverse transform sequential content", "[modify]"
             .elements =
                 {
                     Note{9, 0.4f, 0.1f, 0.7f},
-                    Sequence{{note_cell(0),
-                              sequence_cell({note_cell(1), note_cell(2)}),
-                              silent_cell(),
-                              note_cell(3)}},
+                    Sequence{{note_cell(0), sequence_cell({note_cell(1), note_cell(2)}),
+                              silent_cell(), note_cell(3)}},
                 },
             .weight = 1.f,
         };
@@ -412,7 +410,8 @@ TEST_CASE("repeat, stretch, and compress reshape sequential structure", "[modify
     }
 }
 
-TEST_CASE("shuffle preserves sequence contents while reordering sequence cells", "[modify]")
+TEST_CASE("shuffle preserves sequence contents while reordering sequence cells",
+          "[modify]")
 {
     auto const target = Cell{
         .elements =
@@ -433,7 +432,8 @@ TEST_CASE("shuffle preserves sequence contents while reordering sequence cells",
     REQUIRE(std::ranges::is_permutation(original_seq.cells, shuffled_seq.cells));
 }
 
-TEST_CASE("cell and element overloads support common plugin-style selection", "[modify]")
+TEST_CASE("cell and element overloads support common plugin-style selection",
+          "[modify]")
 {
     auto const selected_element = MusicElement{Note{3, 0.5f, 0.2f, 0.4f}};
     auto const selected_cell = Cell{
@@ -451,4 +451,31 @@ TEST_CASE("cell and element overloads support common plugin-style selection", "[
     REQUIRE(as_note(shifted_element).pitch == 15);
     REQUIRE(collect_pitches(set_cell) == std::vector<int>{4, 4});
     REQUIRE(set_cell.weight == selected_cell.weight);
+}
+
+TEST_CASE("MIDI controller modifications preserve absence and clamp shifts",
+          "[modify][midi-cc]")
+{
+    auto const target = MusicElement{Note{.pitch = 3}};
+
+    auto const set = modify::set_midi_cc(target, {0, {1}}, 74, 0.f);
+    REQUIRE(as_note(set).midi_cc.contains(74));
+    REQUIRE(as_note(set).midi_cc.at(74) == 0.f);
+
+    auto const shifted_missing = modify::shift_midi_cc(target, {0, {1}}, 71, 0.6f);
+    REQUIRE(as_note(shifted_missing).midi_cc.at(71) == 1.f);
+
+    auto const shifted_existing = modify::shift_midi_cc(set, {0, {1}}, 74, -0.5f);
+    REQUIRE(as_note(shifted_existing).midi_cc.at(74) == 0.f);
+
+    auto const removed = modify::remove_midi_cc(set, {0, {1}}, 74);
+    REQUIRE_FALSE(as_note(removed).midi_cc.contains(74));
+
+    REQUIRE_THROWS_AS(modify::set_midi_cc(target, {0, {1}}, 74,
+                                          std::numeric_limits<float>::quiet_NaN()),
+                      std::invalid_argument);
+    REQUIRE_THROWS_AS(modify::set_midi_cc(target, {0, {1}}, 128, 0.5f),
+                      std::invalid_argument);
+    REQUIRE_THROWS_AS(modify::set_midi_cc(target, {0, {1}}, -1, 0.5f),
+                      std::invalid_argument);
 }

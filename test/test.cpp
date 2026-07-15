@@ -94,7 +94,8 @@ TEST_CASE("Sequence generation helpers via direct construction", "[sequence]")
     SECTION("constructing silent sequences")
     {
         auto const size = 4;
-        auto const seq = Sequence{std::vector<Cell>(size, Cell{.elements = {}, .weight = 1.f})};
+        auto const seq =
+            Sequence{std::vector<Cell>(size, Cell{.elements = {}, .weight = 1.f})};
 
         REQUIRE(seq.cells.size() == size);
         for (auto const &cell : seq.cells)
@@ -116,4 +117,17 @@ TEST_CASE("Sequence generation helpers via direct construction", "[sequence]")
             REQUIRE(std::get<Note>(cell.elements[0]) == note);
         }
     }
+}
+
+TEST_CASE("Note equality distinguishes absent MIDI controllers from zero values",
+          "[sequence][midi-cc]")
+{
+    auto absent = Note{};
+    auto zero = absent;
+    zero.midi_cc.emplace(1, 0.f);
+    auto approximately_zero = zero;
+    approximately_zero.midi_cc.at(1) = 0.00001f;
+
+    REQUIRE(absent != zero);
+    REQUIRE(zero == approximately_zero);
 }

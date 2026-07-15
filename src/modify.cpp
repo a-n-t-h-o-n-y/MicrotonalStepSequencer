@@ -58,6 +58,23 @@ auto visit_recursive(MusicElement const &element,
     return visit_recursive(element, pattern, note_fn, [](Sequence s) { return s; });
 }
 
+void validate_midi_controller(MidiControllerNumber controller)
+{
+    if (controller < 0 || controller > MAX_MIDI_CONTROLLER_NUMBER)
+    {
+        throw std::invalid_argument("MIDI controller must be in the range [0, 127]");
+    }
+}
+
+void validate_midi_cc_value(float value)
+{
+    if (!std::isfinite(value) || value < 0.f || value > 1.f)
+    {
+        throw std::invalid_argument(
+            "MIDI controller value must be in the range [0, 1]");
+    }
+}
+
 } // namespace
 
 namespace sequence::modify
@@ -253,6 +270,36 @@ auto shift_gate(Cell cell, Pattern const &pattern, float amount) -> Cell
     return cell;
 }
 
+auto shift_midi_cc(MusicElement element,
+                   Pattern const &pattern,
+                   MidiControllerNumber controller,
+                   float amount) -> MusicElement
+{
+    validate_midi_controller(controller);
+    if (!std::isfinite(amount))
+    {
+        throw std::invalid_argument("MIDI controller shift must be finite");
+    }
+    return visit_recursive(element, pattern, [&](Note n) {
+        auto const at = n.midi_cc.find(controller);
+        auto const current = at == n.midi_cc.end() ? MIDI_CC_NEUTRAL_VALUE : at->second;
+        n.midi_cc[controller] = std::clamp(current + amount, 0.f, 1.f);
+        return n;
+    });
+}
+
+auto shift_midi_cc(Cell cell,
+                   Pattern const &pattern,
+                   MidiControllerNumber controller,
+                   float amount) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = shift_midi_cc(elem, pattern, controller, amount);
+    }
+    return cell;
+}
+
 auto set_pitch(MusicElement element, Pattern const &pattern, int pitch) -> MusicElement
 {
     return visit_recursive(element, pattern, [&](Note n) {
@@ -362,6 +409,52 @@ auto set_gate(Cell cell, Pattern const &pattern, float gate) -> Cell
     for (auto &elem : cell.elements)
     {
         elem = set_gate(elem, pattern, gate);
+    }
+    return cell;
+}
+
+auto set_midi_cc(MusicElement element,
+                 Pattern const &pattern,
+                 MidiControllerNumber controller,
+                 float value) -> MusicElement
+{
+    validate_midi_controller(controller);
+    validate_midi_cc_value(value);
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.midi_cc[controller] = value;
+        return n;
+    });
+}
+
+auto set_midi_cc(Cell cell,
+                 Pattern const &pattern,
+                 MidiControllerNumber controller,
+                 float value) -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = set_midi_cc(elem, pattern, controller, value);
+    }
+    return cell;
+}
+
+auto remove_midi_cc(MusicElement element,
+                    Pattern const &pattern,
+                    MidiControllerNumber controller) -> MusicElement
+{
+    validate_midi_controller(controller);
+    return visit_recursive(element, pattern, [&](Note n) {
+        n.midi_cc.erase(controller);
+        return n;
+    });
+}
+
+auto remove_midi_cc(Cell cell, Pattern const &pattern, MidiControllerNumber controller)
+    -> Cell
+{
+    for (auto &elem : cell.elements)
+    {
+        elem = remove_midi_cc(elem, pattern, controller);
     }
     return cell;
 }
